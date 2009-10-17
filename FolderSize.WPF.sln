@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FolderSize.WPF", "FolderSize.WPF\FolderSize.WPF.csproj", "{C8BB4701-80F5-4C72-8D5C-2D55C03180C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FolderSize.Common", "FolderSize.Common\FolderSize.Common.csproj", "{E011970A-F528-4EEB-819F-1858B9555F63}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C8BB4701-80F5-4C72-8D5C-2D55C03180C8}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{C8BB4701-80F5-4C72-8D5C-2D55C03180C8}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{C8BB4701-80F5-4C72-8D5C-2D55C03180C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8BB4701-80F5-4C72-8D5C-2D55C03180C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E011970A-F528-4EEB-819F-1858B9555F63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E011970A-F528-4EEB-819F-1858B9555F63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E011970A-F528-4EEB-819F-1858B9555F63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E011970A-F528-4EEB-819F-1858B9555F63}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

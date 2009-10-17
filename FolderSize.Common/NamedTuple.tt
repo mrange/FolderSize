@@ -1,0 +1,41 @@
+﻿<#
+   var tupleDefinitions = new []
+   {
+      new NamedTupleClass
+      {
+         Name = "CountAndSize",
+         IsPublic = true,
+         IsStruct = true,
+         Properties = new []
+         {
+            S.P("long"              ,  "Count"           ),
+            S.P("long"              ,  "Size"            ),
+         },
+      },
+      new NamedTupleClass
+      {
+         Name = "FolderInfo",
+         IsPublic = false,
+         IsStruct = true,
+         Properties = new []
+         {
+            S.P("int"               ,  "Depth"           ),
+            S.P("long"              ,  "Count"           ),
+            S.P("long"              ,  "Size"            ),
+         },
+      },
+      new NamedTupleClass
+      {
+         Name = "SizeIndex",
+         IsPublic = true,
+         IsStruct = true,
+         Properties = new []
+         {
+            S.P("int"                                                            ,  "Depth"           ),
+            S.P("System.Collections.Generic.Dictionary<Folder, CountAndSize>"    ,  "CountsAndSizes"  ),
+            
+         },
+      },
+   };
+#>   
+<#@ include file="..\Shared\NamedTuple.ttinclude" #>
