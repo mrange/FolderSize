@@ -1,0 +1,362 @@
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Mårten Rånge.
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ *
+ * ***************************************************************************/
+<#@ template language="C#v3.5" extension=".cs" hostspecific="True"  #> 
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+
+using System;
+
+namespace <#=Host.ResolveParameterValue("DUMMY", "DUMMY", "projectDefaultNamespace")#>
+{
+<#
+   foreach(var cls in tupleDefinitions)
+   {
+      var prepend = "   ";
+#>
+   /// <summary>
+   /// <#=cls.Name#> (A named tuple class)
+   /// </summary>
+   <#=cls.IsPublic ? "public " : ""#>partial <#=cls.IsStruct ? "struct" : "class"#> <#=cls.Name#> : IEquatable<<#=cls.Name#>><#=cls.IsStruct ? "" : ", ICloneable"#>
+   {
+      const int DefaultHash = 0x55555555;
+      
+<#
+      if (!cls.IsStruct)
+      {      
+#>      
+      /// <summary>
+      /// Constructs a <#=cls.Name#> instance
+      /// </summary>
+      public <#=cls.Name#> ()
+      {
+<#
+         foreach(var prop in cls.Properties)
+         {
+#>
+         m_<#=S.LowerCaseFirst (prop.Name)#> = <#=prop.DefaultValue ?? "default (" + prop.Type + ")"#>;
+<#
+         }
+#>
+      }         
+<#
+      }
+#>
+      
+      /// <summary>
+      /// Constructs a <#=cls.Name#> instance
+<#
+      foreach(var prop in cls.Properties)
+      {
+#>
+      /// <param name="<#=S.LowerCaseFirst (prop.Name)#>"><#=S.LowerCaseFirst (prop.Name)#> is stored in <#=prop.Name#> property</param>
+<#
+      }
+#>            
+      /// </summary>
+      public <#=cls.Name#> (
+<#
+      prepend = "   ";
+      foreach(var prop in cls.Properties)
+      {
+#>
+         <#=prepend#><#=prop.Type#> <#=S.LowerCaseFirst (prop.Name)#>
+<#
+         prepend = ",  ";
+      }
+#>      
+         )
+      {
+<#
+      foreach(var prop in cls.Properties)
+      {
+#>
+         m_<#=S.LowerCaseFirst (prop.Name)#> = <#=S.LowerCaseFirst (prop.Name)#>;
+<#
+      }
+#>      
+      }
+
+      /// <summary>
+      /// Creats a <#=cls.Name#> instance
+<#
+      foreach(var prop in cls.Properties)
+      {
+#>
+      /// <param name="<#=S.LowerCaseFirst (prop.Name)#>"><#=S.LowerCaseFirst (prop.Name)#> is stored in <#=prop.Name#> property</param>
+<#
+      }
+#>            
+      /// </summary>
+      public static <#=cls.Name#> Create (
+<#
+      prepend = "   ";
+      foreach(var prop in cls.Properties)
+      {
+#>
+         <#=prepend#><#=prop.Type#> <#=S.LowerCaseFirst (prop.Name)#>
+<#
+         prepend = ",  ";
+      }
+#>      
+         )
+      {
+      
+         return new <#=cls.Name#> (
+<#
+      prepend = "   ";
+      foreach(var prop in cls.Properties)
+      {
+#>
+               <#=prepend#><#=S.LowerCaseFirst (prop.Name)#>
+<#
+         prepend = ",  ";
+      }
+#>      
+            );
+      }
+
+<#
+      foreach(var prop in cls.Properties)
+      {
+#>
+      <#=prop.Type#> m_<#=S.LowerCaseFirst (prop.Name)#>;
+      /// <summary>
+      /// Gets and sets <#=prop.Name#> (<#=prop.Type#>)
+      /// </summary>
+      public <#=prop.Type#> <#=prop.Name#> 
+      { 
+         get
+         {
+            return m_<#=S.LowerCaseFirst (prop.Name)#>;
+         }
+         set
+         {
+            m_<#=S.LowerCaseFirst (prop.Name)#> = value;
+         }
+      }
+      
+<#
+      }
+#>      
+      /// <summary>
+      /// Indicates whether the current object is equal to another object of the same type.
+      /// </summary>
+      /// <returns>
+      /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+      /// </returns>
+      /// <param name="other">An object to compare with this object.
+      ///                 </param>
+      public bool Equals (<#=cls.Name#> other)
+      {
+<#
+         if (!cls.IsStruct)
+         {      
+#>         
+         if (other != null)
+         {
+<#
+         }
+#>                  
+            bool equals = true;
+<#
+      foreach(var prop in cls.Properties)
+      {
+#>
+            equals = 
+                  equals && (<#=prop.Name#> != default (<#=prop.Type#>) & other.<#=prop.Name#> != default (<#=prop.Type#>)) 
+               ?  <#=prop.Name#>.Equals(other.<#=prop.Name#>)
+               :  <#=prop.Name#> == default (<#=prop.Type#>) & other.<#=prop.Name#> == default (<#=prop.Type#>);
+<#
+      }
+#>            
+            return equals;
+<#
+         if (!cls.IsStruct)
+         {      
+#>         
+         }
+         else
+         {
+            return false;
+         }
+<#
+         }
+#>                  
+      }
+      
+      /// <summary>
+      /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+      /// </summary>
+      /// <returns>
+      /// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
+      /// </returns>
+      /// <param name="other">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. 
+      ///                 </param><exception cref="T:System.NullReferenceException">The <paramref name="obj"/> parameter is null.
+      ///                 </exception><filterpriority>2</filterpriority>
+      public override bool Equals(object other)
+      {
+<#
+         if (cls.IsStruct)
+         {      
+#>         
+         if (other is <#=cls.Name#>)
+         {
+            return Equals ((<#=cls.Name#>)other);
+         }
+         else
+         {
+            return false;
+         }
+<#
+         }
+         else
+         {
+#>         
+         return Equals (other as <#=cls.Name#>);
+<#         
+         }
+#>         
+      }
+      
+      /// <summary>
+      /// Serves as a hash function for a particular type. 
+      /// </summary>
+      /// <returns>
+      /// A hash code for the current <see cref="T:System.Object"/>.
+      /// </returns>
+      /// <filterpriority>2</filterpriority>
+      public override int GetHashCode ()
+      {
+         unchecked
+         {
+            var result = 0;
+<#
+      foreach(var prop in cls.Properties)
+      {
+#>
+            result = (result * 397) ^ (<#=prop.Name#> != default (<#=prop.Type#>) ? <#=prop.Name#>.GetHashCode() : DefaultHash);
+<#
+      }
+#>            
+            return result;
+         }
+      }
+      
+      /// <summary>
+      /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+      /// </summary>
+      /// <returns>
+      /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+      /// </returns>
+      /// <filterpriority>2</filterpriority>
+      public override string ToString ()
+      {
+         return new 
+            {
+               TypeName = "<#=cls.Name#>",
+<#
+      foreach(var prop in cls.Properties)
+      {
+#>
+               <#=prop.Name#>,
+<#
+      }
+#>            
+            }.ToString ();
+      
+      }
+      
+<#
+      if (!cls.IsStruct)
+      {
+#>      
+      /// <summary>
+      /// Creates a new object that is a copy of the current instance.
+      /// </summary>
+      /// <returns>
+      /// A new object that is a copy of this instance.
+      /// </returns>
+      public <#=cls.Name#> Clone ()
+      {
+         return new <#=cls.Name#> (
+<#
+      prepend = "   ";
+      foreach(var prop in cls.Properties)
+      {
+#>
+               <#=prepend#><#=prop.Name#>
+<#
+         prepend = ",  ";
+      }
+#>            
+            );
+      }
+
+      object ICloneable.Clone ()
+      {
+         return Clone ();
+      }
+<#
+      }
+#>      
+   }
+<#   
+   }
+#>
+}
+<#+
+   struct NamedTupleClass
+   {
+      public string Name;
+      public bool IsPublic;
+      public bool IsStruct;
+      public NamedTupleProperty[] Properties;
+   };
+   struct NamedTupleProperty
+   {
+      public string Type;
+      public string Name;
+      public string DefaultValue;
+   };
+   
+   static class S
+   {
+      public static string LowerCaseFirst(string name)
+      {
+         if (!string.IsNullOrEmpty (name))
+         {
+            var first = char.ToLower (name[0]);
+            return first + name.Substring(1);
+         }
+         else
+         {
+            return "";
+         }
+      }
+      public static NamedTupleProperty P(string type, string name)
+      {
+         return P(type, name, null);
+      }
+      public static NamedTupleProperty P(string type, string name, string defaultValue)
+      {
+         return new NamedTupleProperty
+         {
+            Type = type ?? "<NULL>",
+            Name = name ?? "<NULL>",
+            DefaultValue = defaultValue,
+         };
+      }
+   }
+#>

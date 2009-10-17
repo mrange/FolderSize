@@ -1,0 +1,17 @@
+﻿<#
+   var tupleDefinitions = new []
+   {
+      new NamedTupleClass
+      {
+         Name = "JobId",
+         IsPublic = false,
+         IsStruct = true,
+         Properties = new []
+         {
+            S.P("Guid"              ,  "Id"              ),
+            S.P("long"              ,  "NumberOfJobs"    ),
+         },
+      },
+   };
+#>   
+<#@ include file="..\Shared\NamedTuple.ttinclude" #>
