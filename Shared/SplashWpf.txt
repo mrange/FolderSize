@@ -1,0 +1,35 @@
+	<Grid x:Name="LayoutRoot">
+		<Grid.Background>
+			<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+				<GradientStop Color="#FFBBBBBB" Offset="1"/>
+				<GradientStop Color="White"/>
+			</LinearGradientBrush>
+		</Grid.Background>
+		<Rectangle Stroke="#FF006EFF" Margin="28.6,68.2,28.2,73.4" RadiusX="10" RadiusY="10" StrokeThickness="2">
+			<Rectangle.Fill>
+				<LinearGradientBrush EndPoint="0,200" StartPoint="0,0" MappingMode="Absolute">
+					<GradientStop Color="#FF7BAAFF" Offset="0.009"/>
+					<GradientStop Color="#FF38447D" Offset="1"/>
+					<GradientStop Color="#FF4F82F0" Offset="0.517"/>
+					<GradientStop Color="#FF71A1FB" Offset="0.123"/>
+				</LinearGradientBrush>
+			</Rectangle.Fill>
+		</Rectangle>
+		<Rectangle Margin="28.6,68.2,28.2,73.4">
+			<Rectangle.Fill>
+				<RadialGradientBrush GradientOrigin="-280.692,283.897" MappingMode="Absolute" Center="-280.692,283.897" RadiusX="706.89" RadiusY="404.066">
+					<RadialGradientBrush.RelativeTransform>
+						<TransformGroup>
+							<ScaleTransform CenterX="0.457" CenterY="0.985" ScaleX="1" ScaleY="1"/>
+							<SkewTransform AngleX="0" AngleY="0" CenterX="0.457" CenterY="0.985"/>
+							<RotateTransform Angle="83.271" CenterX="0.457" CenterY="0.985"/>
+							<TranslateTransform Y="0"/>
+						</TransformGroup>
+					</RadialGradientBrush.RelativeTransform>
+					<GradientStop Offset="0.503"/>
+					<GradientStop Color="White" Offset="0.084"/>
+				</RadialGradientBrush>
+			</Rectangle.Fill></Rectangle>
+		<TextBlock HorizontalAlignment="Right" Margin="0,0,28.2,89.4" VerticalAlignment="Bottom" Width="122.4" Height="32.8" Text="Loading..." TextWrapping="Wrap" Foreground="#FF6395F7" FontSize="24" RenderTransformOrigin="0.026,-1.213"/>
+		<TextBlock Margin="104.6,180.8,101.8,200" RenderTransformOrigin="0.026,-1.213" FontSize="64" Foreground="White" Text="FolderSize.WPF" TextWrapping="Wrap"/>
+	</Grid>
