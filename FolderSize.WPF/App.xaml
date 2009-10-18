@@ -4,15 +4,18 @@
 	x:Class="FolderSize.WPF.App"
 	StartupUri="MainForm.xaml">
 	<Application.Resources>
-      <LinearGradientBrush x:Key="FolderGradient" EndPoint="0,200" StartPoint="0,0" MappingMode="Absolute">
+      <LinearGradientBrush x:Key="WindowGradient" EndPoint="0,600" StartPoint="0,0" MappingMode="Absolute">
+         <GradientStop Color="White"/>
+         <GradientStop Color="#FFBBBBBB" Offset="1"/>
+      </LinearGradientBrush>
+      <SolidColorBrush x:Key="FolderTreeBackGroundBrush" Color="#20FFFFFF" />
+      <Pen x:Key="FolderTreeBorderPen" Brush="Black" Thickness="1" />
+      <Pen x:Key="FolderTreeFolderBorderPen" Brush="#FF006EFF" Thickness="0.5" />
+      <LinearGradientBrush x:Key="FolderTreeFolderGradient" EndPoint="0,200" StartPoint="0,0" MappingMode="Absolute">
          <GradientStop Color="#FF7BAAFF" Offset="0"/>
          <GradientStop Color="#FF71A1FB" Offset="0.1"/>
          <GradientStop Color="#FF4F82F0" Offset="0.5"/>
          <GradientStop Color="#FF38447D" Offset="1"/>
-      </LinearGradientBrush>
-      <LinearGradientBrush x:Key="WindowGradient" EndPoint="0,600" StartPoint="0,0" MappingMode="Absolute">
-         <GradientStop Color="White"/>
-         <GradientStop Color="#FFBBBBBB" Offset="1"/>
       </LinearGradientBrush>
    </Application.Resources>
 </Application>
