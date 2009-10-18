@@ -66,7 +66,8 @@ namespace FolderSize.WPF
       const double s_minDim = 4.0;
       const double s_width = 0.5;
 
-      readonly Pen m_backGroundPen;
+      readonly Pen m_backgroundPen;
+      readonly Brush m_backgroundBrush;
       readonly Brush m_folderBrush;
       readonly Pen m_folderPen;
       readonly Typeface m_folderTypeFace;
@@ -74,23 +75,16 @@ namespace FolderSize.WPF
       FolderTraverserJob m_job;
 
       Transform m_viewTransform = Transform.Identity;
+      Point? m_dragPosition;
 
       public FolderTree()
       {
-         m_backGroundPen = new Pen(
-             Brushes.Black,
-             1.0);
+         m_backgroundPen = (Pen)Application.Current.Resources["FolderTreeBorderPen"];
+         m_backgroundBrush = (Brush)Application.Current.Resources["FolderTreeBackGroundBrush"];
+         m_folderPen = (Pen)Application.Current.Resources["FolderTreeFolderBorderPen"];
+         m_folderBrush = (Brush)Application.Current.Resources["FolderTreeFolderGradient"];
 
-         m_folderBrush = (Brush) Application.Current.Resources["FolderGradient"];
-
-         
-
-         m_folderPen = new Pen(
-             new  SolidColorBrush(Color.FromRgb (0x00, 0x6E, 0xFF)),
-             s_width);
-
-         m_folderTypeFace = new Typeface(
-             "Segoe UI");
+         m_folderTypeFace = new Typeface("Segoe UI");
       }
 
       public FolderTreeDisplayMode DisplayMode
@@ -197,13 +191,13 @@ namespace FolderSize.WPF
          var bottomLeft = generalTransform.Transform(rect.BottomLeft);
          var topRight = generalTransform.Transform(rect.TopRight);
 
-         var l_diff_height = bottomLeft - topLeft;
-         var l_diff_width = topRight - topLeft;
+         var diffHeight = bottomLeft - topLeft;
+         var diffWidth = topRight - topLeft;
 
-         var heightSquared = l_diff_height.LengthSquared;
+         var heightSquared = diffHeight.LengthSquared;
 
          if (heightSquared <= s_minDim*s_minDim
-             || l_diff_width.LengthSquared <= s_minDim*s_minDim)
+             || diffWidth.LengthSquared <= s_minDim*s_minDim)
          {
             return 0;
          }
@@ -239,7 +233,7 @@ namespace FolderSize.WPF
 
          var runningY = y;
 
-         foreach (var l_f in folder.Children)
+         foreach (var childFolder in folder.Children)
          {
             runningY += DrawFolder(
                drawingContext,
@@ -249,7 +243,7 @@ namespace FolderSize.WPF
                runningY,
                xRatio,
                yRatio,
-               l_f);
+               childFolder);
          }
 
          return rect.Height;
@@ -260,10 +254,50 @@ namespace FolderSize.WPF
          m_viewTransform = Transform.Identity;
 
          InvalidateVisual();
+
+         base.OnMouseRightButtonUp (e);
+      }
+
+      protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+      {
+         m_dragPosition = e.MouseDevice.GetPosition (this);
+         base.OnMouseLeftButtonDown (e);
+      }
+
+      protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+      {
+         m_dragPosition = null;
+         base.OnMouseLeftButtonUp(e);
+      }
+
+      protected override void OnMouseMove(MouseEventArgs e)
+      {
+         if(m_dragPosition != null)
+         {
+            var currentPosition = e.MouseDevice.GetPosition (this);
+
+            var diff = currentPosition - m_dragPosition.Value;
+
+            var translate = new TranslateTransform(
+                diff.X,
+                diff.Y);
+
+            var transformGroup = new TransformGroup();
+
+            transformGroup.Children.Add(m_viewTransform);
+            transformGroup.Children.Add(translate);
+            m_viewTransform = new MatrixTransform(transformGroup.Value);
+
+            m_dragPosition = currentPosition;
+
+            InvalidateVisual();
+         }
+         base.OnMouseMove(e);
       }
 
       protected override void OnMouseWheel(MouseWheelEventArgs e)
       {
+
          var position = e.MouseDevice.GetPosition(this);
 
          var zoomFactor = Math.Pow(1.1, e.Delta / 120.0);
@@ -290,6 +324,8 @@ namespace FolderSize.WPF
          m_viewTransform = new MatrixTransform(transformGroup.Value);
 
          InvalidateVisual();
+
+         base.OnMouseWheel(e);
       }
 
       protected override void OnRender(DrawingContext drawingContext)
@@ -307,8 +343,8 @@ namespace FolderSize.WPF
             drawingContext.PushClip(new RectangleGeometry(rect));
 
             drawingContext.DrawRectangle(
-                null,
-                m_backGroundPen,
+                m_backgroundBrush,
+                m_backgroundPen,
                 rect);
 
             drawingContext.PushTransform(m_viewTransform);
