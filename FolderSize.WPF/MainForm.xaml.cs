@@ -107,7 +107,7 @@ namespace FolderSize.WPF
                       m_jobId.HasValue
                       && m_jobId.Equals(newJob)))
                 {
-                    FolderTreeView.InvalidateVisual();
+                    FolderTreeView.Refresh();
                 }
 
                 m_jobId = newJob;
