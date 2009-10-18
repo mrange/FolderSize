@@ -20,6 +20,7 @@
     </UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
     <AssemblyOriginatorKeyFile>..\Shared\FolderSize.pfx</AssemblyOriginatorKeyFile>
+    <TargetFrameworkSubset>Client</TargetFrameworkSubset>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>true</DebugSymbols>
@@ -82,6 +83,7 @@
     <None Include="..\Shared\FolderSize.pfx">
       <Link>FolderSize.pfx</Link>
     </None>
+    <None Include="app.config" />
     <None Include="NamedTuple.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>NamedTuple.cs</LastGenOutput>
