@@ -20,46 +20,52 @@ using System;
 namespace FolderSize.WPF
 {
    /// <summary>
-   /// JobId (A named tuple class)
+   /// JobProgress (A named tuple class)
    /// </summary>
-   partial struct JobId : IEquatable<JobId>
+   partial struct JobProgress : IEquatable<JobProgress>
    {
       const int DefaultHash = 0x55555555;
       
       
       /// <summary>
-      /// Constructs a JobId instance
+      /// Constructs a JobProgress instance
       /// <param name="id">id is stored in Id property</param>
       /// <param name="numberOfJobs">numberOfJobs is stored in NumberOfJobs property</param>
+      /// <param name="numberOfFinishedJobs">numberOfFinishedJobs is stored in NumberOfFinishedJobs property</param>
             
       /// </summary>
-      public JobId (
+      public JobProgress (
             Guid id
          ,  long numberOfJobs
+         ,  long numberOfFinishedJobs
       
          )
       {
          m_id = id;
          m_numberOfJobs = numberOfJobs;
+         m_numberOfFinishedJobs = numberOfFinishedJobs;
       
       }
 
       /// <summary>
-      /// Creats a JobId instance
+      /// Creats a JobProgress instance
       /// <param name="id">id is stored in Id property</param>
       /// <param name="numberOfJobs">numberOfJobs is stored in NumberOfJobs property</param>
+      /// <param name="numberOfFinishedJobs">numberOfFinishedJobs is stored in NumberOfFinishedJobs property</param>
             
       /// </summary>
-      public static JobId Create (
+      public static JobProgress Create (
             Guid id
          ,  long numberOfJobs
+         ,  long numberOfFinishedJobs
       
          )
       {
       
-         return new JobId (
+         return new JobProgress (
                   id
                ,  numberOfJobs
+               ,  numberOfFinishedJobs
       
             );
       }
@@ -96,6 +102,22 @@ namespace FolderSize.WPF
          }
       }
       
+      long m_numberOfFinishedJobs;
+      /// <summary>
+      /// Gets and sets NumberOfFinishedJobs (long)
+      /// </summary>
+      public long NumberOfFinishedJobs 
+      { 
+         get
+         {
+            return m_numberOfFinishedJobs;
+         }
+         set
+         {
+            m_numberOfFinishedJobs = value;
+         }
+      }
+      
       
       /// <summary>
       /// Indicates whether the current object is equal to another object of the same type.
@@ -105,7 +127,7 @@ namespace FolderSize.WPF
       /// </returns>
       /// <param name="other">An object to compare with this object.
       ///                 </param>
-      public bool Equals (JobId other)
+      public bool Equals (JobProgress other)
       {
                   
             bool equals = true;
@@ -117,6 +139,10 @@ namespace FolderSize.WPF
                   equals && (NumberOfJobs != default (long) & other.NumberOfJobs != default (long)) 
                ?  NumberOfJobs.Equals(other.NumberOfJobs)
                :  NumberOfJobs == default (long) & other.NumberOfJobs == default (long);
+            equals = 
+                  equals && (NumberOfFinishedJobs != default (long) & other.NumberOfFinishedJobs != default (long)) 
+               ?  NumberOfFinishedJobs.Equals(other.NumberOfFinishedJobs)
+               :  NumberOfFinishedJobs == default (long) & other.NumberOfFinishedJobs == default (long);
             
             return equals;
                   
@@ -134,9 +160,9 @@ namespace FolderSize.WPF
       public override bool Equals(object other)
       {
          
-         if (other is JobId)
+         if (other is JobProgress)
          {
-            return Equals ((JobId)other);
+            return Equals ((JobProgress)other);
          }
          else
          {
@@ -159,6 +185,7 @@ namespace FolderSize.WPF
             var result = 0;
             result = (result * 397) ^ (Id != default (Guid) ? Id.GetHashCode() : DefaultHash);
             result = (result * 397) ^ (NumberOfJobs != default (long) ? NumberOfJobs.GetHashCode() : DefaultHash);
+            result = (result * 397) ^ (NumberOfFinishedJobs != default (long) ? NumberOfFinishedJobs.GetHashCode() : DefaultHash);
             
             return result;
          }
@@ -175,14 +202,30 @@ namespace FolderSize.WPF
       {
          return new 
             {
-               TypeName = "JobId",
+               TypeName = "JobProgress",
                Id,
                NumberOfJobs,
+               NumberOfFinishedJobs,
             
             }.ToString ();
       
       }
       
+
+      public static bool operator== (JobProgress left, JobProgress right)
+      {
+            
+            return left.Equals(right);
+            
+      }
+
+      public static bool operator!= (JobProgress left, JobProgress right)
+      {
+            
+            return !left.Equals(right);
+            
+      }
+
       
    }
 }

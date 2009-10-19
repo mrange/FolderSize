@@ -3,13 +3,14 @@
    {
       new NamedTupleClass
       {
-         Name = "JobId",
+         Name = "JobProgress",
          IsPublic = false,
          IsStruct = true,
          Properties = new []
          {
-            S.P("Guid"              ,  "Id"              ),
-            S.P("long"              ,  "NumberOfJobs"    ),
+            S.P("Guid"              ,  "Id"                       ),
+            S.P("long"              ,  "NumberOfJobs"             ),
+            S.P("long"              ,  "NumberOfFinishedJobs"     ),
          },
       },
    };

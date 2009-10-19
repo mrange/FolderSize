@@ -19,15 +19,12 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Threading;
-using System.Windows.Threading;
-using System.ComponentModel;
 using FolderSize.Common;
 
 
 namespace FolderSize.WPF
 {
-    public partial class MainForm
+    partial class MainForm
     {
        [StructLayout(LayoutKind.Sequential)]
        public struct MARGINS
@@ -44,87 +41,16 @@ namespace FolderSize.WPF
            IntPtr hwnd,
            ref MARGINS pMarInset);
 
-       JobId? m_jobId;
-
-       readonly BackgroundWorker m_worker;
-
         public MainForm()
         {
             InitializeComponent();
-
-            m_worker = new BackgroundWorker();
-
-            m_worker.DoWork += DoWork;
-            m_worker.WorkerSupportsCancellation = true;
-
-            m_worker.RunWorkerAsync();
         }
-
-        void DoWork(object sender, DoWorkEventArgs e)
-        {
-            EventHandler onUpdate = OnUpdate;
-
-            while (!m_worker.CancellationPending)
-            {
-                Thread.Sleep(500);
-
-                OnUpdateDispatch(
-                   onUpdate,
-                   this,
-                   new EventArgs());
-            }
-
-            e.Cancel = true;
-        }
-
 
         void OnClosing(
            object sender,
            EventArgs e)
         {
-            m_worker.CancelAsync();
-        }
-
-        void OnUpdate(
-           object sender,
-           EventArgs e)
-        {
-            var job = FolderTreeView.Job;
-            if (job != null)
-            {
-
-                Title = string.Format(
-                   "FolderSize.WPF [{0}, {1}]",
-                   (job.IsRunning ? "Running" : "Finished"),
-                   job.Jobs - job.FinishedJobs);
-
-                var newJob = JobId.Create(
-                   job.Id,
-                   job.Jobs);
-
-                if (
-                   !(
-                      m_jobId.HasValue
-                      && m_jobId.Equals(newJob)))
-                {
-                    FolderTreeView.Refresh();
-                }
-
-                m_jobId = newJob;
-            }
-            else
-            {
-                m_jobId = null;
-            }
-        }
-
-        void OnUpdateDispatch(EventHandler eh, object sender, EventArgs e)
-        {
-            Dispatcher.Invoke(
-               DispatcherPriority.Normal,
-               eh,
-               sender,
-               e);
+           StopJob();
         }
 
         public void OnClickGo(object sender, RoutedEventArgs value)

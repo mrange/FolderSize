@@ -28,7 +28,7 @@ namespace <#=Host.ResolveParameterValue("DUMMY", "DUMMY", "projectDefaultNamespa
    /// <summary>
    /// <#=cls.Name#> (A named tuple class)
    /// </summary>
-   <#=cls.IsPublic ? "public " : ""#>partial <#=cls.IsStruct ? "struct" : "class"#> <#=cls.Name#> : IEquatable<<#=cls.Name#>><#=cls.IsStruct ? "" : ", ICloneable"#>
+   <#=cls.IsPublic ? "public " : ""#><#=cls.IsStruct ? "partial struct" : "sealed partial class"#> <#=cls.Name#> : IEquatable<<#=cls.Name#>><#=cls.IsStruct ? "" : ", ICloneable"#>
    {
       const int DefaultHash = 0x55555555;
       
@@ -278,6 +278,59 @@ namespace <#=Host.ResolveParameterValue("DUMMY", "DUMMY", "projectDefaultNamespa
       
       }
       
+
+      public static bool operator== (<#=cls.Name#> left, <#=cls.Name#> right)
+      {
+<#
+      if (!cls.IsStruct)
+      {
+#>
+         if (left != null)      
+         {
+<#
+      }
+#>            
+            return left.Equals(right);
+<#
+      if (!cls.IsStruct)
+      {
+#>
+         }
+         else
+         {
+            return false;
+         }
+<#
+      }
+#>            
+      }
+
+      public static bool operator!= (<#=cls.Name#> left, <#=cls.Name#> right)
+      {
+<#
+      if (!cls.IsStruct)
+      {
+#>
+         if (left != null)      
+         {
+<#
+      }
+#>            
+            return !left.Equals(right);
+<#
+      if (!cls.IsStruct)
+      {
+#>
+         }
+         else
+         {
+            return false;
+         }
+<#
+      }
+#>            
+      }
+
 <#
       if (!cls.IsStruct)
       {

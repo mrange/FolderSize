@@ -49,6 +49,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -56,6 +58,11 @@
     </ApplicationDefinition>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DependencyProperties.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DependencyProperties.tt</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FolderTree.cs" />
@@ -84,6 +91,10 @@
       <Link>FolderSize.pfx</Link>
     </None>
     <None Include="app.config" />
+    <None Include="DependencyProperties.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DependencyProperties.cs</LastGenOutput>
+    </None>
     <None Include="NamedTuple.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>NamedTuple.cs</LastGenOutput>
