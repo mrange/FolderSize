@@ -121,6 +121,8 @@ namespace FolderSize.Common
          ThreadPool.QueueUserWorkItem(
             state =>
                {
+                  var threadPriority = Thread.CurrentThread.Priority;
+                  Thread.CurrentThread.Priority = ThreadPriority.Lowest;
                   try
                   {
                      var folders = new List<Folder>(fds.Count);
@@ -148,6 +150,7 @@ namespace FolderSize.Common
                   finally
                   {
                      m_finishedJobCount.Add(1);
+                     Thread.CurrentThread.Priority = threadPriority;
                   }
                });
       }
