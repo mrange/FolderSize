@@ -432,14 +432,13 @@ namespace FolderSize.WPF
 
       partial void OnJobPropertyChangedPartial(FolderTraverserJob oldValue, FolderTraverserJob newValue)
       {
+         Refresh();
          if (newValue != null)
          {
-            Refresh();
             m_dispatcher.Start();
          }
          else
          {
-            Refresh();
             m_dispatcher.Stop();
          }
       }
