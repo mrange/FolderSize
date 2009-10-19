@@ -19,7 +19,6 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
-using FolderSize.Common;
 
 
 namespace FolderSize.WPF
@@ -49,26 +48,6 @@ namespace FolderSize.WPF
       void OnClosing(
          object sender,
          EventArgs e)
-      {
-         StopJob();
-      }
-
-      public void OnClickGo(object sender, RoutedEventArgs value)
-      {
-         StopJob();
-
-         try
-         {
-            var job = FolderTraverser.StartTraverse(PathTextBox.Text);
-            FolderTreeView.Job = job;
-         }
-         catch (Exception exc)
-         {
-            MessageBox.Show(exc.Message);
-         }
-      }
-
-      public void OnClickStop(object sender, RoutedEventArgs value)
       {
          StopJob();
       }
