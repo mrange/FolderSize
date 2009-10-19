@@ -16,52 +16,45 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Globalization;
+using System.Windows.Threading;
 using FolderSize.Common;
 
 namespace FolderSize.WPF
 {
-   public class FolderTree : FrameworkElement
+   partial class FolderTree : FrameworkElement
    {
-      public static readonly DependencyProperty DisplayModeProperty =
-         DependencyProperty.Register (
-            "DisplayMode",
-            typeof (FolderTreeDisplayMode),
-            typeof (FolderTree),
-            new PropertyMetadata (
-               FolderTreeDisplayMode.Size,
-               (source, e) =>
-                  {
-                     var folderTree = source as FolderTree;
 
-                     if (folderTree != null)
-                     {
-                        folderTree.InvalidateVisual ();
-                     }
-
-                  }));
-
-      static ObservableCollection<FolderTreeDisplayMode> GetDefaultDisplayModes ()
+      partial void OnDisplayModePropertyChangedPartial(FolderTreeDisplayMode oldValue, FolderTreeDisplayMode newValue)
       {
-         return new ObservableCollection<FolderTreeDisplayMode> (
+         Refresh();
+      }
+
+
+      partial void OnJobPropertyChangedPartial(FolderTraverserJob oldValue, FolderTraverserJob newValue)
+      {
+         Refresh ();
+         if (!m_dispatcher.IsEnabled)
+         {
+            m_dispatcher.Start ();
+         }
+      }
+
+      static FolderTreeDisplayMode[] GetDefaultDisplayModes ()
+      {
+         return
             Enum
                .GetValues (typeof (FolderTreeDisplayMode))
-               .Cast<FolderTreeDisplayMode> ());
+               .Cast<FolderTreeDisplayMode> ()
+               .ToArray ();
 
       }
 
-      public static readonly DependencyProperty DisplayModesProperty =
-         DependencyProperty.Register (
-            "DisplayModes",
-            typeof (ObservableCollection<FolderTreeDisplayMode>),
-            typeof (FolderTree),
-            new PropertyMetadata (
-               GetDefaultDisplayModes ()));
+
 
       const double s_minDim = 4.0;
       const double s_width = 0.5;
@@ -71,8 +64,10 @@ namespace FolderSize.WPF
       readonly Brush m_folderBrush;
       readonly Pen m_folderPen;
       readonly Typeface m_folderTypeFace;
+      readonly DispatcherTimer m_dispatcher = new DispatcherTimer(
+         DispatcherPriority.SystemIdle);
 
-      FolderTraverserJob m_job;
+      JobProgress? m_jobId;
 
       Transform m_viewTransform = Transform.Identity;
       Point? m_dragPosition;
@@ -86,45 +81,49 @@ namespace FolderSize.WPF
          m_folderBrush = (Brush)Application.Current.Resources["FolderTreeFolderGradient"];
 
          m_folderTypeFace = new Typeface("Segoe UI");
+
+         m_dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 500);
+         m_dispatcher.Tick += DispatcherTick;
       }
 
-      public FolderTreeDisplayMode DisplayMode
+      void DispatcherTick(object sender, EventArgs e)
       {
-         get
+         var job = Job;
+
+         ProgressInfo = string.Format(
+            "FolderSize.WPF [{0}, {1}]",
+            (job.IsRunning ? "Running" : "Finished"),
+            job.Jobs - job.FinishedJobs);
+
+
+         if (job.IsRunning)
          {
-            return (FolderTreeDisplayMode)GetValue(DisplayModeProperty);
+            var newJob = JobProgress.Create(
+               job.Id,
+               job.Jobs,
+               job.FinishedJobs);
+
+            if (!m_jobId.HasValue || !m_jobId.Equals(newJob))
+            {
+               Refresh();
+            }
+
+            m_jobId = newJob;
          }
-         set
+         else
          {
-            SetValue(DisplayModeProperty, value);
+            m_dispatcher.Stop();
          }
       }
 
-      public ObservableCollection<FolderTreeDisplayMode> DisplayModes
+      void Refresh()
       {
-         get
+         var job = Job;
+         if (job != null)
          {
-            return (ObservableCollection<FolderTreeDisplayMode>) GetValue(DisplayModesProperty);
+            m_buildSizeIndex = job.BuildSizeIndex();
+            InvalidateVisual ();
          }
-      }
-
-      public FolderTraverserJob Job
-      {
-         get
-         {
-            return m_job;
-         }
-         set
-         {
-            m_job = value;
-            m_buildSizeIndex = null;
-         }
-      }
-
-      public void Refresh()
-      {
-         m_buildSizeIndex = m_job.BuildSizeIndex ();
-         InvalidateVisual ();
       }
 
       static string ToString(long s)
@@ -329,7 +328,9 @@ namespace FolderSize.WPF
       {
          // base.OnRender(drawingContext);
 
-         if (m_job != null && m_buildSizeIndex != null)
+         var job = Job;
+
+         if (job != null && m_buildSizeIndex != null)
          {
             var rect = new Rect(
                 0,
@@ -350,7 +351,7 @@ namespace FolderSize.WPF
             {
                var measurementPicker = GetMeasurementPicker ();
 
-               var size = measurementPicker(m_buildSizeIndex.Value.CountsAndSizes[m_job.Root]);
+               var size = measurementPicker(m_buildSizeIndex.Value.CountsAndSizes[job.Root]);
 
                var xRatio = ActualWidth / m_buildSizeIndex.Value.Depth;
                var yRatio = ActualHeight / size;
@@ -362,7 +363,7 @@ namespace FolderSize.WPF
                    0,
                    xRatio,
                    yRatio,
-                   m_job.Root,
+                   job.Root,
                    measurementPicker,
                    (measurement, heightSquared, folder, r) => DrawFolderImpl(drawingContext, measurement, heightSquared, folder, r));
             }
