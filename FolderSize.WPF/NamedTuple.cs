@@ -197,7 +197,6 @@ namespace FolderSize.WPF
       /// <returns>
       /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
       /// </returns>
-      /// <filterpriority>2</filterpriority>
       public override string ToString ()
       {
          return new 
@@ -212,6 +211,12 @@ namespace FolderSize.WPF
       }
       
 
+      /// <summary>
+      /// Determines whether two instance of JobProgress are equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are equal, false otherwise</returns>
       public static bool operator== (JobProgress left, JobProgress right)
       {
             
@@ -219,6 +224,12 @@ namespace FolderSize.WPF
             
       }
 
+      /// <summary>
+      /// Determines whether two instance of JobProgress are not equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are not equal, false otherwise</returns>
       public static bool operator!= (JobProgress left, JobProgress right)
       {
             

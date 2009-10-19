@@ -260,7 +260,6 @@ namespace <#=Host.ResolveParameterValue("DUMMY", "DUMMY", "projectDefaultNamespa
       /// <returns>
       /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
       /// </returns>
-      /// <filterpriority>2</filterpriority>
       public override string ToString ()
       {
          return new 
@@ -279,6 +278,12 @@ namespace <#=Host.ResolveParameterValue("DUMMY", "DUMMY", "projectDefaultNamespa
       }
       
 
+      /// <summary>
+      /// Determines whether two instance of <#=cls.Name#> are equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are equal, false otherwise</returns>
       public static bool operator== (<#=cls.Name#> left, <#=cls.Name#> right)
       {
 <#
@@ -305,6 +310,12 @@ namespace <#=Host.ResolveParameterValue("DUMMY", "DUMMY", "projectDefaultNamespa
 #>            
       }
 
+      /// <summary>
+      /// Determines whether two instance of <#=cls.Name#> are not equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are not equal, false otherwise</returns>
       public static bool operator!= (<#=cls.Name#> left, <#=cls.Name#> right)
       {
 <#

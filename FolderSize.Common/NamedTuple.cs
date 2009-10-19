@@ -170,7 +170,6 @@ namespace FolderSize.Common
       /// <returns>
       /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
       /// </returns>
-      /// <filterpriority>2</filterpriority>
       public override string ToString ()
       {
          return new 
@@ -183,6 +182,33 @@ namespace FolderSize.Common
       
       }
       
+
+      /// <summary>
+      /// Determines whether two instance of CountAndSize are equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are equal, false otherwise</returns>
+      public static bool operator== (CountAndSize left, CountAndSize right)
+      {
+            
+            return left.Equals(right);
+            
+      }
+
+      /// <summary>
+      /// Determines whether two instance of CountAndSize are not equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are not equal, false otherwise</returns>
+      public static bool operator!= (CountAndSize left, CountAndSize right)
+      {
+            
+            return !left.Equals(right);
+            
+      }
+
       
    }
    /// <summary>
@@ -363,7 +389,6 @@ namespace FolderSize.Common
       /// <returns>
       /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
       /// </returns>
-      /// <filterpriority>2</filterpriority>
       public override string ToString ()
       {
          return new 
@@ -377,6 +402,33 @@ namespace FolderSize.Common
       
       }
       
+
+      /// <summary>
+      /// Determines whether two instance of FolderInfo are equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are equal, false otherwise</returns>
+      public static bool operator== (FolderInfo left, FolderInfo right)
+      {
+            
+            return left.Equals(right);
+            
+      }
+
+      /// <summary>
+      /// Determines whether two instance of FolderInfo are not equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are not equal, false otherwise</returns>
+      public static bool operator!= (FolderInfo left, FolderInfo right)
+      {
+            
+            return !left.Equals(right);
+            
+      }
+
       
    }
    /// <summary>
@@ -530,7 +582,6 @@ namespace FolderSize.Common
       /// <returns>
       /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
       /// </returns>
-      /// <filterpriority>2</filterpriority>
       public override string ToString ()
       {
          return new 
@@ -543,6 +594,33 @@ namespace FolderSize.Common
       
       }
       
+
+      /// <summary>
+      /// Determines whether two instance of SizeIndex are equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are equal, false otherwise</returns>
+      public static bool operator== (SizeIndex left, SizeIndex right)
+      {
+            
+            return left.Equals(right);
+            
+      }
+
+      /// <summary>
+      /// Determines whether two instance of SizeIndex are not equal
+      /// </summary>
+      /// <param name="left">Left value</param>
+      /// <param name="right">Right value</param>
+      /// <returns>True if instances are not equal, false otherwise</returns>
+      public static bool operator!= (SizeIndex left, SizeIndex right)
+      {
+            
+            return !left.Equals(right);
+            
+      }
+
       
    }
 }
