@@ -330,6 +330,9 @@ namespace FolderSize.WPF
 
          var job = Job;
 
+         string s = "";
+
+
          if (job != null && m_buildSizeIndex != null)
          {
             var rect = new Rect(
