@@ -37,10 +37,15 @@ namespace FolderSize.WPF
 
       partial void OnJobPropertyChangedPartial(FolderTraverserJob oldValue, FolderTraverserJob newValue)
       {
-         Refresh ();
-         if (!m_dispatcher.IsEnabled)
+         if (newValue != null)
          {
-            m_dispatcher.Start ();
+            Refresh();
+            m_dispatcher.Start();
+         }
+         else
+         {
+            Refresh();
+            m_dispatcher.Stop();
          }
       }
 
@@ -90,14 +95,15 @@ namespace FolderSize.WPF
       {
          var job = Job;
 
-         ProgressInfo = string.Format(
-            "FolderSize.WPF [{0}, {1}]",
-            (job.IsRunning ? "Running" : "Finished"),
-            job.Jobs - job.FinishedJobs);
-
-
-         if (job.IsRunning)
+         if (job != null)
          {
+
+            ProgressInfo = string.Format(
+               "FolderSize.WPF [{0}, {1}]",
+               (job.IsRunning ? "Running" : "Finished"),
+               job.Jobs - job.FinishedJobs);
+
+
             var newJob = JobProgress.Create(
                job.Id,
                job.Jobs,
@@ -109,10 +115,11 @@ namespace FolderSize.WPF
             }
 
             m_jobId = newJob;
-         }
-         else
-         {
-            m_dispatcher.Stop();
+
+            if (!job.IsRunning)
+            {
+               m_dispatcher.Stop();
+            }
          }
       }
 
@@ -122,8 +129,12 @@ namespace FolderSize.WPF
          if (job != null)
          {
             m_buildSizeIndex = job.BuildSizeIndex();
-            InvalidateVisual ();
          }
+         else
+         {
+            m_buildSizeIndex = null;
+         }
+         InvalidateVisual();
       }
 
       static string ToString(long s)
