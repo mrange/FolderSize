@@ -29,27 +29,7 @@ namespace FolderSize.WPF
    partial class FolderTree : FrameworkElement
    {
 
-      partial void OnDisplayModePropertyChangedPartial(FolderTreeDisplayMode oldValue, FolderTreeDisplayMode newValue)
-      {
-         Refresh();
-      }
-
-
-      partial void OnJobPropertyChangedPartial(FolderTraverserJob oldValue, FolderTraverserJob newValue)
-      {
-         if (newValue != null)
-         {
-            Refresh();
-            m_dispatcher.Start();
-         }
-         else
-         {
-            Refresh();
-            m_dispatcher.Stop();
-         }
-      }
-
-      static FolderTreeDisplayMode[] GetDefaultDisplayModes ()
+      static FolderTreeDisplayMode[] GetDefaultDisplayModes()
       {
          return
             Enum
@@ -121,6 +101,8 @@ namespace FolderSize.WPF
                m_dispatcher.Stop();
             }
          }
+
+         InvalidateCommands ();
       }
 
       void Refresh()
@@ -425,6 +407,84 @@ namespace FolderSize.WPF
 
          return true;
       }
+
+      void StopJob()
+      {
+         var job = Job;
+         if (job != null)
+         {
+            job.StopJob = true;
+         }
+      }
+
+
+      void InvalidateCommands()
+      {
+         RaiseCanExecuteStopCommandChanged();
+         RaiseCanExecuteGoCommandChanged();
+      }
+
+      partial void OnDisplayModePropertyChangedPartial(FolderTreeDisplayMode oldValue, FolderTreeDisplayMode newValue)
+      {
+         Refresh();
+      }
+
+
+      partial void OnJobPropertyChangedPartial(FolderTraverserJob oldValue, FolderTraverserJob newValue)
+      {
+         if (newValue != null)
+         {
+            Refresh();
+            m_dispatcher.Start();
+         }
+         else
+         {
+            Refresh();
+            m_dispatcher.Stop();
+         }
+      }
+
+      partial void OnCanExecuteStopCommandPartial(object parameter, ref bool canExecute)
+      {
+         var job = Job;
+         if (job != null)
+         {
+            canExecute = job.IsRunning;
+         }
+      }
+
+      partial void OnExecuteStopCommandPartial(object parameter)
+      {
+         StopJob();
+         InvalidateCommands();
+      }
+
+      partial void OnCanExecuteGoCommandPartial(object parameter, ref bool canExecute)
+      {
+         canExecute = true;
+         var job = Job;
+         if (job != null)
+         {
+            canExecute = !job.IsRunning;
+         }
+      }
+
+      partial void OnExecuteGoCommandPartial(object parameter)
+      {
+         OnExecuteStopCommand(parameter);
+
+         try
+         {
+            var job = FolderTraverser.StartTraverse(Path);
+            Job = job;
+         }
+         catch (Exception exc)
+         {
+            MessageBox.Show(exc.Message);
+         }
+         InvalidateCommands();
+      }
+
    }
 }
    

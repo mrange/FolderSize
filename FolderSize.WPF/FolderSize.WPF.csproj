@@ -59,6 +59,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CustomCommand.cs" />
     <Compile Include="DependencyProperties.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

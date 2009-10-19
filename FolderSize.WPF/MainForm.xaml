@@ -3,7 +3,6 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
    xmlns:local="clr-namespace:FolderSize.WPF"
 	x:Class="FolderSize.WPF.MainForm"
-	x:Name="Window"
 	Title="{Binding ElementName=FolderTreeView,Path=ProgressInfo}"
    Closed="OnUnloadedForm" 
    Loaded="Window_Loaded"
@@ -12,62 +11,61 @@
    Closing="OnClosing" 
    WindowStyle="SingleBorderWindow" 
    Background="Transparent">
-
-	<Grid x:Name="LayoutRoot" OpacityMask="{x:Null}" RenderTransformOrigin="0.5,0.5">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-
-	  <TextBox Margin="44,0,254,8" VerticalAlignment="Bottom" Height="27" Text="." TextWrapping="Wrap" x:Name="PathTextBox"/>
-
-		<HorizontalAlignment:ComboBox xmlns:HorizontalAlignment="http://schemas.microsoft.com/winfx/2006/xaml/presentation" x:Name="SizeOrCountCombo" HorizontalAlignment="Right" Margin="0,0,171.968,8" VerticalAlignment="Bottom" Width="78.032" Height="27" IsSynchronizedWithCurrentItem="True" SelectedIndex="0"  ItemsSource="{Binding Path=DisplayModes,ElementName=FolderTreeView,Mode=OneWay}" SelectedValue="{Binding Path=DisplayMode,ElementName=FolderTreeView}"/>
-		<Button Height="27" Content="_Stop" x:Name="StopButton" RenderTransformOrigin="0.5,0.5" Margin="0,0,90,8" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="77.968" Click="OnClickStop" BorderBrush="#FF000000" >
-			<Button.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform ScaleX="1" ScaleY="1"/>
-					<SkewTransform AngleX="0" AngleY="0"/>
-					<RotateTransform Angle="0"/>
-					<TranslateTransform X="0" Y="0"/>
-				</TransformGroup>
-			</Button.RenderTransform>
-		</Button>
-		<Button HorizontalAlignment="Right" Margin="0,0,8,8" VerticalAlignment="Bottom" Width="78" Height="27" Content="_Go" x:Name="GoButton" Click="OnClickGo" RenderTransformOrigin="0.5,0.5" IsDefault="True">
-			<Button.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform ScaleX="1" ScaleY="1"/>
-					<SkewTransform AngleX="0" AngleY="0"/>
-					<RotateTransform Angle="0"/>
-					<TranslateTransform X="0" Y="0"/>
-				</TransformGroup>
-			</Button.RenderTransform>
-		</Button>
-
-		<TextBlock RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Left" Margin="8,0,0,12.48" VerticalAlignment="Bottom" Width="32" Height="17" TextWrapping="Wrap">
-			<TextBlock.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform ScaleX="1" ScaleY="1"/>
-					<SkewTransform AngleX="0" AngleY="0"/>
-					<RotateTransform Angle="0"/>
-					<TranslateTransform X="0" Y="0"/>
-				</TransformGroup>
-			</TextBlock.RenderTransform>
+	<Grid>
+      <TextBlock 
+         HorizontalAlignment="Left" 
+         Margin="8,0,0,12" 
+         VerticalAlignment="Bottom" 
+         Width="32" 
+         Height="17" 
+         Text="Path:">
 			<TextBlock.BitmapEffect>
 				<OuterGlowBitmapEffect GlowColor="#FFFFFFFF" GlowSize="6"/>
 			</TextBlock.BitmapEffect>
-			<Run Language="sv-se">Path:</Run>
-		</TextBlock>
-		
-		<local:FolderTree Margin="8,8,8,41" x:Name="FolderTreeView" OpacityMask="{x:Null}" RenderTransformOrigin="0.5,0.5">
-			<local:FolderTree.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform ScaleX="1" ScaleY="1"/>
-					<SkewTransform AngleX="0" AngleY="0"/>
-					<RotateTransform Angle="0"/>
-					<TranslateTransform X="0" Y="0"/>
-				</TransformGroup>
-			</local:FolderTree.RenderTransform>
-		</local:FolderTree>
+      </TextBlock>
 
+      <TextBox 
+         Margin="44,0,254,8" 
+         VerticalAlignment="Bottom" 
+         Height="27" 
+         Text="{Binding ElementName=FolderTreeView,Path=Path,UpdateSourceTrigger=PropertyChanged}" 
+         />
+
+		<ComboBox 
+         HorizontalAlignment="Right" 
+         Margin="0,0,172,8" 
+         VerticalAlignment="Bottom" 
+         Width="78" 
+         Height="27" 
+         IsSynchronizedWithCurrentItem="True" 
+         SelectedIndex="0"  
+         ItemsSource="{Binding Path=DisplayModes,ElementName=FolderTreeView,Mode=OneWay}" 
+         SelectedValue="{Binding Path=DisplayMode,ElementName=FolderTreeView}"
+         />
+		<Button 
+         Height="27" 
+         Content="_Stop" 
+         Margin="0,0,90,8" 
+         VerticalAlignment="Bottom" 
+         HorizontalAlignment="Right" 
+         Width="78" 
+         Command="{Binding ElementName=FolderTreeView,Path=StopCommand}"
+         />
+		<Button 
+         HorizontalAlignment="Right" 
+         Margin="0,0,8,8" 
+         VerticalAlignment="Bottom" 
+         Width="78" 
+         Height="27" 
+         Content="_Go" 
+         IsDefault="True"  
+         Command="{Binding ElementName=FolderTreeView,Path=GoCommand}"
+         />
+
+		<local:FolderTree 
+         Margin="8,8,8,41" 
+         x:Name="FolderTreeView"
+         />
 
 	</Grid>
 </Window>
