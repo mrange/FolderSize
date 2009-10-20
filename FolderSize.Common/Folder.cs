@@ -19,13 +19,20 @@ namespace FolderSize.Common
 {
    public class Folder
    {
+
+      // ----------------------------------------------------------------------
+
       public readonly string Path;
       public readonly string Name;
       public readonly long Size;
       public readonly long Count;
       public readonly CountAndSize CountAndSize;
 
+      // ----------------------------------------------------------------------
+
       List<Folder> m_folders = new List<Folder>();
+
+      // ----------------------------------------------------------------------
 
       public Folder(
          string path,
@@ -40,15 +47,21 @@ namespace FolderSize.Common
          CountAndSize = CountAndSize.Create(Count, Size);
       }
 
+      // ----------------------------------------------------------------------
+
       public void SetFolder(List<Folder> folders)
       {
          m_folders = folders;
       }
 
+      // ----------------------------------------------------------------------
+
       public override string ToString()
       {
          return Path;
       }
+
+      // ----------------------------------------------------------------------
 
       public IEnumerable<Folder> Children
       {
@@ -57,6 +70,8 @@ namespace FolderSize.Common
             return m_folders;
          }
       }
+
+      // ----------------------------------------------------------------------
 
    }
 }

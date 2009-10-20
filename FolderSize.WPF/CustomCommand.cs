@@ -18,12 +18,18 @@ using System.Windows.Input;
 
 namespace FolderSize.WPF
 {
-   public class CustomCommand : ICommand
+   class CustomCommand : ICommand
    {
-      static readonly EventArgs s_eventArgs = new EventArgs ();
+      // ----------------------------------------------------------------------
+
+      static readonly EventArgs s_eventArgs = new EventArgs();
+
+      // ----------------------------------------------------------------------
 
       readonly Func<object, bool> m_canExecute;
       readonly Action<object> m_execute;
+
+      // ----------------------------------------------------------------------
 
       public CustomCommand(
          Func<object, bool> canExecute,
@@ -34,7 +40,9 @@ namespace FolderSize.WPF
          m_canExecute = canExecute;
       }
 
-      public void Execute (object parameter)
+      // ----------------------------------------------------------------------
+
+      public void Execute(object parameter)
       {
          if (m_execute != null)
          {
@@ -42,7 +50,9 @@ namespace FolderSize.WPF
          }
       }
 
-      public bool CanExecute (object parameter)
+      // ----------------------------------------------------------------------
+
+      public bool CanExecute(object parameter)
       {
          if (m_canExecute != null)
          {
@@ -54,6 +64,8 @@ namespace FolderSize.WPF
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public void RaiseCanExecuteChanged(object sender)
       {
          if(CanExecuteChanged != null)
@@ -62,6 +74,11 @@ namespace FolderSize.WPF
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public event EventHandler CanExecuteChanged;
+
+      // ----------------------------------------------------------------------
+
    }
 }

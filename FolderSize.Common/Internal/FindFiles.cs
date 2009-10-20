@@ -23,9 +23,13 @@ namespace FolderSize.Common.Internal
 {
    class FindFiles : IEnumerator<FileData>
    {
+
+      // ----------------------------------------------------------------------
       // ReSharper disable InconsistentNaming
       // The CharSet must match the CharSet of the
       // corresponding PInvoke signature
+      // ----------------------------------------------------------------------
+
       [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
       struct WIN32_FIND_DATA
       {
@@ -42,7 +46,11 @@ namespace FolderSize.Common.Internal
          [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)]
          public string cAlternateFileName;
       }
+
+      // ----------------------------------------------------------------------
       // ReSharper restore InconsistentNaming
+      // ----------------------------------------------------------------------
+
       [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
       static extern IntPtr FindFirstFile(string lpFileName, out WIN32_FIND_DATA
                                                                lpFindFileData);
@@ -54,20 +62,30 @@ namespace FolderSize.Common.Internal
       [DllImport("kernel32.dll")]
       static extern bool FindClose(IntPtr hFindFile);
 
+      // ----------------------------------------------------------------------
+
       readonly string m_path;
+
+      // ----------------------------------------------------------------------
 
       IntPtr m_hnd = IntPtr.Zero;
       WIN32_FIND_DATA m_findData;
+
+      // ----------------------------------------------------------------------
 
       public FindFiles(string path)
       {
          m_path = path;
       }
 
+      // ----------------------------------------------------------------------
+
       ~FindFiles()
       {
          Dispose(false);
       }
+
+      // ----------------------------------------------------------------------
 
       public FileData Current
       {
@@ -81,11 +99,15 @@ namespace FolderSize.Common.Internal
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public void Dispose()
       {
          GC.SuppressFinalize(this);
          Dispose(true);
       }
+
+      // ----------------------------------------------------------------------
 
       void Dispose(bool p)
       {
@@ -96,6 +118,8 @@ namespace FolderSize.Common.Internal
          }
       }
 
+      // ----------------------------------------------------------------------
+
       object IEnumerator.Current
       {
          get
@@ -103,6 +127,8 @@ namespace FolderSize.Common.Internal
             return Current;
          }
       }
+
+      // ----------------------------------------------------------------------
 
       public bool MoveNext()
       {
@@ -117,6 +143,8 @@ namespace FolderSize.Common.Internal
             out m_findData);
       }
 
+      // ----------------------------------------------------------------------
+
       public void Reset()
       {
          if (m_hnd != IntPtr.Zero)
@@ -130,5 +158,8 @@ namespace FolderSize.Common.Internal
             out m_findData);
 
       }
+
+      // ----------------------------------------------------------------------
+
    }
 }

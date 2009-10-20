@@ -20,17 +20,25 @@ namespace FolderSize.Common.Internal
    struct ThreadSafeCounter
    {
 
+      // ----------------------------------------------------------------------
+
       long m_counter;
+
+      // ----------------------------------------------------------------------
 
       public ThreadSafeCounter(long c)
       {
          m_counter = c;
       }
 
+      // ----------------------------------------------------------------------
+
       public long Add(long c)
       {
          return Interlocked.Add(ref m_counter, c);
       }
+
+      // ----------------------------------------------------------------------
 
       public long Value
       {
@@ -44,15 +52,21 @@ namespace FolderSize.Common.Internal
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public override string ToString()
       {
          return Value.ToString();
       }
 
+      // ----------------------------------------------------------------------
+
       public override int GetHashCode()
       {
          return Value.GetHashCode();
       }
+
+      // ----------------------------------------------------------------------
 
    }
 }

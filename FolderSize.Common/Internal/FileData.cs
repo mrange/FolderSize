@@ -17,10 +17,15 @@ namespace FolderSize.Common.Internal
 {
    struct FileData
    {
+
+      // ----------------------------------------------------------------------
+
       public readonly string FullName;
       public readonly string Name;
       public readonly bool IsDictionary;
       public readonly long Length;
+
+      // ----------------------------------------------------------------------
 
       public FileData(
          string fullName,
@@ -33,6 +38,8 @@ namespace FolderSize.Common.Internal
          IsDictionary = isDictionary;
          Length = length;
       }
+
+      // ----------------------------------------------------------------------
 
    }
 }

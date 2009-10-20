@@ -29,20 +29,12 @@ namespace FolderSize.WPF
    partial class FolderTree : FrameworkElement
    {
 
-      static FolderTreeDisplayMode[] GetDefaultDisplayModes()
-      {
-         return
-            Enum
-               .GetValues (typeof (FolderTreeDisplayMode))
-               .Cast<FolderTreeDisplayMode> ()
-               .ToArray ();
-
-      }
-
-
+      // ----------------------------------------------------------------------
 
       const double s_minDim = 4.0;
       const double s_width = 0.5;
+
+      // ----------------------------------------------------------------------
 
       readonly Pen m_backgroundPen;
       readonly Brush m_backgroundBrush;
@@ -52,72 +44,27 @@ namespace FolderSize.WPF
       readonly DispatcherTimer m_dispatcher = new DispatcherTimer(
          DispatcherPriority.SystemIdle);
 
-      JobProgress? m_jobId;
+      // ----------------------------------------------------------------------
+
+      JobProgress? m_jobProgress;
 
       Transform m_viewTransform = Transform.Identity;
       Point? m_dragPosition;
       SizeIndex? m_buildSizeIndex;
 
-      public FolderTree()
+      // ----------------------------------------------------------------------
+
+      static FolderTreeDisplayMode[] GetDefaultDisplayModes()
       {
-         m_backgroundPen = (Pen)Application.Current.Resources["FolderTreeBorderPen"];
-         m_backgroundBrush = (Brush)Application.Current.Resources["FolderTreeBackGroundBrush"];
-         m_folderPen = (Pen)Application.Current.Resources["FolderTreeFolderBorderPen"];
-         m_folderBrush = (Brush)Application.Current.Resources["FolderTreeFolderGradient"];
+         return
+            Enum
+               .GetValues(typeof(FolderTreeDisplayMode))
+               .Cast<FolderTreeDisplayMode>()
+               .ToArray();
 
-         m_folderTypeFace = new Typeface("Segoe UI");
-
-         m_dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 500);
-         m_dispatcher.Tick += DispatcherTick;
       }
 
-      void DispatcherTick(object sender, EventArgs e)
-      {
-         var job = Job;
-
-         if (job != null)
-         {
-
-            ProgressInfo = string.Format(
-               "FolderSize.WPF [{0}, {1}]",
-               (job.IsRunning ? "Running" : "Finished"),
-               job.Jobs - job.FinishedJobs);
-
-
-            var newJob = JobProgress.Create(
-               job.Id,
-               job.Jobs,
-               job.FinishedJobs);
-
-            if (!m_jobId.HasValue || !m_jobId.Equals(newJob))
-            {
-               Refresh();
-            }
-
-            m_jobId = newJob;
-
-            if (!job.IsRunning)
-            {
-               m_dispatcher.Stop();
-            }
-         }
-
-         InvalidateCommands ();
-      }
-
-      void Refresh()
-      {
-         var job = Job;
-         if (job != null)
-         {
-            m_buildSizeIndex = job.BuildSizeIndex();
-         }
-         else
-         {
-            m_buildSizeIndex = null;
-         }
-         InvalidateVisual();
-      }
+      // ----------------------------------------------------------------------
 
       static string ToString(long s)
       {
@@ -139,17 +86,75 @@ namespace FolderSize.WPF
          }
       }
 
-      long PickProperty(CountAndSize v)
+      // ----------------------------------------------------------------------
+
+      public FolderTree()
       {
-         switch (DisplayMode)
-         {
-            case FolderTreeDisplayMode.Count:
-               return v.Count;
-            case FolderTreeDisplayMode.Size:
-            default:
-               return v.Size;
-         }
+         m_backgroundPen = (Pen)Application.Current.Resources["FolderTreeBorderPen"];
+         m_backgroundBrush = (Brush)Application.Current.Resources["FolderTreeBackGroundBrush"];
+         m_folderPen = (Pen)Application.Current.Resources["FolderTreeFolderBorderPen"];
+         m_folderBrush = (Brush)Application.Current.Resources["FolderTreeFolderGradient"];
+
+         m_folderTypeFace = new Typeface("Segoe UI");
+
+         m_dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 500);
+         m_dispatcher.Tick += DispatcherTick;
       }
+
+      // ----------------------------------------------------------------------
+
+      void DispatcherTick(object sender, EventArgs e)
+      {
+         var job = Job;
+
+         if (job != null)
+         {
+
+            ProgressInfo = string.Format(
+               "FolderSize.WPF [{0}, {1}]",
+               (job.IsRunning ? "Running" : "Finished"),
+               job.Jobs - job.FinishedJobs);
+
+
+            var newJob = JobProgress.Create(
+               job.Id,
+               job.Jobs,
+               job.FinishedJobs);
+
+            if (!m_jobProgress.HasValue || !m_jobProgress.Equals(newJob))
+            {
+               RefreshFolderTree();
+            }
+
+            m_jobProgress = newJob;
+
+            if (!job.IsRunning)
+            {
+               m_dispatcher.Stop();
+            }
+         }
+
+         InvalidateCommands ();
+      }
+
+      // ----------------------------------------------------------------------
+
+      void RefreshFolderTree()
+      {
+         var job = Job;
+         if (job != null)
+         {
+            m_buildSizeIndex = job.BuildSizeIndex();
+         }
+         else
+         {
+            m_buildSizeIndex = null;
+         }
+         InvalidateVisual();
+      }
+
+      // ----------------------------------------------------------------------
+
 
       Func<CountAndSize, long> GetMeasurementPicker()
       {
@@ -163,6 +168,10 @@ namespace FolderSize.WPF
                return cs => cs.Size;
          }
       }
+
+      // ----------------------------------------------------------------------
+      // Generalt folder visitor function
+      // ----------------------------------------------------------------------
 
       static double VisitFolder(
          GeneralTransform generalTransform,
@@ -238,6 +247,10 @@ namespace FolderSize.WPF
          return rect.Height;
       }
 
+      // ----------------------------------------------------------------------
+      // Mouse event handlers
+      // ----------------------------------------------------------------------
+
       protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
       {
          m_viewTransform = Transform.Identity;
@@ -247,17 +260,23 @@ namespace FolderSize.WPF
          base.OnMouseRightButtonUp (e);
       }
 
+      // ----------------------------------------------------------------------
+
       protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
       {
          m_dragPosition = e.MouseDevice.GetPosition (this);
          base.OnMouseLeftButtonDown (e);
       }
 
+      // ----------------------------------------------------------------------
+
       protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
       {
          m_dragPosition = null;
          base.OnMouseLeftButtonUp(e);
       }
+
+      // ----------------------------------------------------------------------
 
       protected override void OnMouseMove(MouseEventArgs e)
       {
@@ -283,6 +302,8 @@ namespace FolderSize.WPF
          }
          base.OnMouseMove(e);
       }
+
+      // ----------------------------------------------------------------------
 
       protected override void OnMouseWheel(MouseWheelEventArgs e)
       {
@@ -317,59 +338,62 @@ namespace FolderSize.WPF
          base.OnMouseWheel(e);
       }
 
+      // ----------------------------------------------------------------------
+      // Render folder tree
+      // ----------------------------------------------------------------------
+
       protected override void OnRender(DrawingContext drawingContext)
       {
-         // base.OnRender(drawingContext);
-
          var job = Job;
 
-         string s = "";
-
-
-         if (job != null && m_buildSizeIndex != null)
+         if (job == null || m_buildSizeIndex == null)
          {
-            var rect = new Rect(
-                0,
-                0,
-                ActualWidth,
-                ActualHeight);
-
-            drawingContext.PushClip(new RectangleGeometry(rect));
-
-            drawingContext.DrawRectangle(
-                m_backgroundBrush,
-                m_backgroundPen,
-                rect);
-
-            drawingContext.PushTransform(m_viewTransform);
-
-            if (m_buildSizeIndex.Value.Depth > 0)
-            {
-               var measurementPicker = GetMeasurementPicker ();
-
-               var size = measurementPicker(m_buildSizeIndex.Value.CountsAndSizes[job.Root]);
-
-               var xRatio = ActualWidth / m_buildSizeIndex.Value.Depth;
-               var yRatio = ActualHeight / size;
-
-               VisitFolder(
-                   m_viewTransform,
-                   m_buildSizeIndex.Value.CountsAndSizes,
-                   0,
-                   0,
-                   xRatio,
-                   yRatio,
-                   job.Root,
-                   measurementPicker,
-                   (measurement, heightSquared, folder, r) => DrawFolderImpl(drawingContext, measurement, heightSquared, folder, r));
-            }
-
-            drawingContext.Pop();
-            drawingContext.Pop();
+            return;
          }
+
+         var rect = new Rect(
+            0,
+            0,
+            ActualWidth,
+            ActualHeight);
+
+         drawingContext.PushClip(new RectangleGeometry(rect));
+
+         drawingContext.DrawRectangle(
+            m_backgroundBrush,
+            m_backgroundPen,
+            rect);
+
+         drawingContext.PushTransform(m_viewTransform);
+
+         if (m_buildSizeIndex.Value.Depth > 0)
+         {
+            var measurementPicker = GetMeasurementPicker ();
+
+            var size = measurementPicker(m_buildSizeIndex.Value.CountsAndSizes[job.Root]);
+
+            var xRatio = ActualWidth / m_buildSizeIndex.Value.Depth;
+            var yRatio = ActualHeight / size;
+
+            VisitFolder(
+               m_viewTransform,
+               m_buildSizeIndex.Value.CountsAndSizes,
+               0,
+               0,
+               xRatio,
+               yRatio,
+               job.Root,
+               measurementPicker,
+               (measurement, heightSquared, folder, r) => DrawFolderImpl(drawingContext, measurement, heightSquared, folder, r));
+         }
+
+         drawingContext.Pop();
+         drawingContext.Pop();
       }
 
-      bool DrawFolderImpl (
+      // ----------------------------------------------------------------------
+
+      bool DrawFolderImpl(
          DrawingContext drawingContext,
          long measurement,
          double heightSquared,
@@ -391,7 +415,7 @@ namespace FolderSize.WPF
                   string.Format(
                      "{0}\r\n{1}\r\n{2}",
                      folder.Name,
-                     ToString(PickProperty(folder.CountAndSize)),
+                     ToString(measurement),
                      ToString(measurement)),
                   CultureInfo.CurrentUICulture,
                   FlowDirection.LeftToRight,
@@ -417,22 +441,18 @@ namespace FolderSize.WPF
          }
       }
 
-
-      void InvalidateCommands()
-      {
-         RaiseCanExecuteStopCommandChanged();
-         RaiseCanExecuteGoCommandChanged();
-      }
+      // ----------------------------------------------------------------------
+      // Dependency properties change callbacks
+      // ----------------------------------------------------------------------
 
       partial void OnDisplayModePropertyChangedPartial(FolderTreeDisplayMode oldValue, FolderTreeDisplayMode newValue)
       {
-         Refresh();
+         RefreshFolderTree();
       }
-
-
+      
       partial void OnJobPropertyChangedPartial(FolderTraverserJob oldValue, FolderTraverserJob newValue)
       {
-         Refresh();
+         RefreshFolderTree();
          if (newValue != null)
          {
             m_dispatcher.Start();
@@ -442,6 +462,10 @@ namespace FolderSize.WPF
             m_dispatcher.Stop();
          }
       }
+
+      // ----------------------------------------------------------------------
+      // Stop Command
+      // ----------------------------------------------------------------------
 
       partial void OnCanExecuteStopCommandPartial(object parameter, ref bool canExecute)
       {
@@ -458,6 +482,10 @@ namespace FolderSize.WPF
          InvalidateCommands();
       }
 
+      // ----------------------------------------------------------------------
+      // Go Command
+      // ----------------------------------------------------------------------
+
       partial void OnCanExecuteGoCommandPartial(object parameter, ref bool canExecute)
       {
          canExecute = true;
@@ -472,18 +500,21 @@ namespace FolderSize.WPF
       {
          OnExecuteStopCommand(parameter);
 
-         try
-         {
-            var job = FolderTraverser.StartTraverse(Path);
-            Job = job;
-         }
-         catch (Exception exc)
-         {
-            MessageBox.Show(exc.Message);
-         }
+         var job = FolderTraverser.StartTraverse(Path);
+         Job = job;
+
          InvalidateCommands();
       }
 
+      // ----------------------------------------------------------------------
+
+      void InvalidateCommands()
+      {
+         RaiseCanExecuteStopCommandChanged();
+         RaiseCanExecuteGoCommandChanged();
+      }
+
+      // ----------------------------------------------------------------------
    }
 }
    

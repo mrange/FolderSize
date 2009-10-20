@@ -4,11 +4,10 @@
    xmlns:local="clr-namespace:FolderSize.WPF"
    x:Class="FolderSize.WPF.MainForm"
    Title="{Binding ElementName=FolderTreeView,Path=ProgressInfo}"
-   Closed="OnUnloadedForm" 
-   Loaded="Window_Loaded"
+   Closed="WindowClosed" 
+   Loaded="WindowLoaded"
    MinWidth="600" 
    MinHeight="400" 
-   Closing="OnClosing" 
    WindowStyle="SingleBorderWindow" 
    Background="Transparent">
    <Grid>

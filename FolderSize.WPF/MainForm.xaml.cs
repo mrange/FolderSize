@@ -25,8 +25,11 @@ namespace FolderSize.WPF
 {
    partial class MainForm
    {
+
+      // ----------------------------------------------------------------------
+
       [StructLayout(LayoutKind.Sequential)]
-      public struct MARGINS
+      struct MARGINS
       {
          public int cxLeftWidth;      // width of left border that retains its size
          public int cxRightWidth;     // width of right border that retains its size
@@ -34,37 +37,23 @@ namespace FolderSize.WPF
          public int cyBottomHeight;   // height of bottom border that retains its size
       };
 
+      // ----------------------------------------------------------------------
 
       [DllImport("DwmApi.dll")]
-      public static extern int DwmExtendFrameIntoClientArea(
+      static extern int DwmExtendFrameIntoClientArea(
           IntPtr hwnd,
           ref MARGINS pMarInset);
+
+      // ----------------------------------------------------------------------
 
       public MainForm()
       {
          InitializeComponent();
       }
 
-      void OnClosing(
-         object sender,
-         EventArgs e)
-      {
-         StopJob();
-      }
+      // ----------------------------------------------------------------------
 
-      public void OnUnloadedForm(object sender, EventArgs value)
-      {
-         try
-         {
-            StopJob();
-         }
-         catch
-         {
-
-         }
-      }
-
-      void StopJob()
+      public void WindowClosed(object sender, EventArgs value)
       {
          var job = FolderTreeView.Job;
          if (job != null)
@@ -73,7 +62,9 @@ namespace FolderSize.WPF
          }
       }
 
-      void Window_Loaded(object sender, RoutedEventArgs e)
+      // ----------------------------------------------------------------------
+
+      void WindowLoaded(object sender, RoutedEventArgs e)
       {
          try
          {
@@ -116,5 +107,8 @@ namespace FolderSize.WPF
          }
 
       }
+
+      // ----------------------------------------------------------------------
+
    }
 }

@@ -19,12 +19,19 @@ namespace FolderSize.Common.Internal
 {
    struct ThreadSafeFlag
    {
+
+      // ----------------------------------------------------------------------
+
       long m_flag;
+
+      // ----------------------------------------------------------------------
 
       public ThreadSafeFlag(bool b)
       {
          m_flag = b ? 1 : 0;
       }
+
+      // ----------------------------------------------------------------------
 
       public bool Value
       {
@@ -38,14 +45,21 @@ namespace FolderSize.Common.Internal
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public override string ToString()
       {
          return Value.ToString();
       }
 
+      // ----------------------------------------------------------------------
+
       public override int GetHashCode()
       {
          return Value.GetHashCode();
       }
+
+      // ----------------------------------------------------------------------
+
    }
 }
