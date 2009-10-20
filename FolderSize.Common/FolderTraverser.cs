@@ -17,10 +17,16 @@ namespace FolderSize.Common
 {
    public static class FolderTraverser
    {
+
+      // ----------------------------------------------------------------------
+
       public static FolderTraverserJob StartTraverse(string path)
       {
          return new FolderTraverserJob(
             path);
       }
+
+      // ----------------------------------------------------------------------
+
    }
 }

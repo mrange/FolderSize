@@ -14,9 +14,32 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Windows;
+
 namespace FolderSize.WPF
 {
    public partial class App
    {
+
+      // ----------------------------------------------------------------------
+
+      public App()
+      {
+         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+      }
+
+      // ----------------------------------------------------------------------
+
+      static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+      {
+         MessageBox.Show (
+            string.Format (
+               "We are sorry but a program fault occurred while running FolderSize.WPF\r\n{0}",
+               e.ExceptionObject));
+      }
+
+      // ----------------------------------------------------------------------
+
    }
 }

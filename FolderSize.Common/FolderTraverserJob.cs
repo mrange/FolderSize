@@ -22,14 +22,20 @@ namespace FolderSize.Common
 {
    public class FolderTraverserJob
    {
+      // ----------------------------------------------------------------------
+
       public readonly Folder Root;
       public readonly Guid Id = Guid.NewGuid();
+
+      // ----------------------------------------------------------------------
 
       ThreadSafeCounter m_jobCount;
       ThreadSafeCounter m_finishedJobCount;
       ThreadSafeCounter m_failedJobCount;
       ThreadSafeCounter m_failedFolderCount;
       ThreadSafeFlag m_stopJob;
+
+      // ----------------------------------------------------------------------
 
       Folder CreateFolder(
          FileData fd)
@@ -73,6 +79,8 @@ namespace FolderSize.Common
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public bool StopJob
       {
          set
@@ -80,6 +88,8 @@ namespace FolderSize.Common
             m_stopJob.Value = value;
          }
       }
+
+      // ----------------------------------------------------------------------
 
       public bool IsRunning
       {
@@ -91,6 +101,8 @@ namespace FolderSize.Common
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public long Jobs
       {
          get
@@ -99,6 +111,8 @@ namespace FolderSize.Common
          }
       }
 
+      // ----------------------------------------------------------------------
+
       public long FinishedJobs
       {
          get
@@ -106,6 +120,8 @@ namespace FolderSize.Common
             return m_finishedJobCount.Value;
          }
       }
+
+      // ----------------------------------------------------------------------
 
       void Traverse(
          Folder parentFolder,
@@ -155,6 +171,8 @@ namespace FolderSize.Common
                });
       }
 
+      // ----------------------------------------------------------------------
+
       internal FolderTraverserJob(
          string path)
       {
@@ -165,6 +183,8 @@ namespace FolderSize.Common
                true,
                0));
       }
+
+      // ----------------------------------------------------------------------
 
       static FolderInfo BuildSizeIndex(
          IDictionary<Folder, CountAndSize> folderDictionary, 
@@ -207,6 +227,8 @@ namespace FolderSize.Common
             size);
       }
 
+      // ----------------------------------------------------------------------
+
       public SizeIndex BuildSizeIndex()
       {
          var countAndSizes = new Dictionary<Folder, CountAndSize>();
@@ -215,6 +237,8 @@ namespace FolderSize.Common
 
          return SizeIndex.Create(buildSizeIndex.Depth, countAndSizes);
       }
+
+      // ----------------------------------------------------------------------
 
    }
 }
