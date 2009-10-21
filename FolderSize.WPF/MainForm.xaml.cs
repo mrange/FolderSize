@@ -15,6 +15,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -30,7 +31,27 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      Storyboard m_storyboard;
+      enum PresentState
+      {
+         InitialWait,
+         PresentingInitialInfo,
+         InitialInfoPresented,
+         HidingInitialInfo,
+         HintInfoHidden,
+         PresentingHintInfo,
+         HintInfoPresented,
+         HidingHintInfo,
+      }
+
+      // ----------------------------------------------------------------------
+
+      readonly Storyboard m_presentStoryboard;
+      readonly Storyboard m_hideStoryboard;
+      readonly Storyboard m_idlingStoryboard;
+
+      // ----------------------------------------------------------------------
+
+      PresentState m_presentState = PresentState.InitialWait;
 
       // ----------------------------------------------------------------------
 
@@ -55,28 +76,39 @@ namespace FolderSize.WPF
       public MainForm()
       {
          InitializeComponent();
-         m_storyboard = (Storyboard) Resources["InfoBlockStoryboard"];
+         m_presentStoryboard = (Storyboard) Resources["PresentInfoBlockStoryboard"];
+         m_hideStoryboard = (Storyboard)Resources["HideInfoBlockStoryboard"];
+         m_idlingStoryboard = (Storyboard) Resources["IdlingStoryboard"];
 
          var mouseMoveEvent = MouseMoveEvent;
-         MouseEventHandler eventHandler = WindowMouseMove;
-         AddHandler(
+         MouseEventHandler windowMouseMove = WindowMouseMove;
+         AddHandler (
             mouseMoveEvent,
-            eventHandler,
+            windowMouseMove,
             true);
+
+         var keydownEvent = KeyDownEvent;
+         KeyEventHandler windowKeyDown = WindowKeyDown;
+         AddHandler(
+            keydownEvent,
+            windowKeyDown,
+            true);
+
       }
 
       // ----------------------------------------------------------------------
 
-      void WindowMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+      void WindowKeyDown(object sender,
+                          KeyEventArgs e)
       {
-         if (InfoBlock.Visibility == Visibility.Visible)
-         {
-            var timeSpan = m_storyboard.GetCurrentTime ();
-            if (timeSpan.TotalSeconds > 1)
-            {
-               m_storyboard.Seek (TimeSpan.Zero, TimeSeekOrigin.BeginTime);
-            }
-        }
+         UserInputDetected();
+      }
+
+      // ----------------------------------------------------------------------
+
+      void WindowMouseMove(object sender, MouseEventArgs e)
+      {
+         UserInputDetected ();
       }
 
       // ----------------------------------------------------------------------
@@ -140,12 +172,134 @@ namespace FolderSize.WPF
 
       void GoButtonClick(object sender, RoutedEventArgs e)
       {
-         StartInfoBlock.Visibility = Visibility.Collapsed;
-         InfoBlock.Visibility = Visibility.Visible;
-         m_storyboard.Begin();
+         switch(m_presentState)
+         {
+            case PresentState.InitialWait:
+            case PresentState.PresentingInitialInfo:
+               break;
+            case PresentState.InitialInfoPresented:
+               RunHideStoryboard ();
+               m_presentState = PresentState.HidingInitialInfo;
+               break;
+            case PresentState.HidingInitialInfo:
+            case PresentState.HintInfoHidden:
+            case PresentState.PresentingHintInfo:
+            case PresentState.HintInfoPresented:
+            case PresentState.HidingHintInfo:
+               break;
+            default:
+               throw new ArgumentOutOfRangeException ();
+         }
       }
 
       // ----------------------------------------------------------------------
 
+      void StoryboardCompleted(object sender, EventArgs e)
+      {
+         switch(m_presentState)
+         {
+            case PresentState.InitialWait:
+               RunPresentStoryboard ();
+               m_presentState = PresentState.PresentingInitialInfo;
+               break;
+            case PresentState.PresentingInitialInfo:
+               if (FolderTreeView.Job != null)
+               {
+                  m_presentState = PresentState.HidingInitialInfo;
+                  RunHideStoryboard();
+               }
+               else
+               {
+                  m_presentState = PresentState.InitialInfoPresented;
+               }
+               break;
+            case PresentState.InitialInfoPresented:
+               Debug.Assert (false);
+               break;
+            case PresentState.HidingInitialInfo:
+               m_presentState = PresentState.HintInfoHidden;
+               InitialInfoText.Visibility = Visibility.Collapsed;
+               HintInfoText.Visibility = Visibility.Visible;
+               RunIdlingStoryboard();
+               break;
+            case PresentState.HintInfoHidden:
+               m_presentState = PresentState.PresentingHintInfo;
+               RunPresentStoryboard ();
+               break;
+            case PresentState.PresentingHintInfo:
+               m_presentState = PresentState.HintInfoPresented;
+               break;
+            case PresentState.HintInfoPresented:
+               break;
+            case PresentState.HidingHintInfo:
+               m_presentState = PresentState.HintInfoHidden;
+               RunIdlingStoryboard();
+               break;
+            default:
+               throw new ArgumentOutOfRangeException ();
+         }
+      }
+
+      // ----------------------------------------------------------------------
+
+      void RunHideStoryboard()
+      {
+         if (m_hideStoryboard != null)
+         {
+            m_hideStoryboard.Begin(this);
+            m_hideStoryboard.Seek (this, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
+         }
+      }
+
+      // ----------------------------------------------------------------------
+
+      void RunPresentStoryboard()
+      {
+         if (m_presentStoryboard != null)
+         {
+            m_presentStoryboard.Begin(this);
+            m_idlingStoryboard.Seek(this, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
+         }
+      }
+
+      // ----------------------------------------------------------------------
+
+      void RunIdlingStoryboard()
+      {
+         if (m_idlingStoryboard != null)
+         {
+            m_idlingStoryboard.Begin(this);
+            m_idlingStoryboard.Seek(this, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
+         }
+      }
+
+      // ----------------------------------------------------------------------
+
+      void UserInputDetected()
+      {
+         switch (m_presentState)
+         {
+            case PresentState.InitialWait:
+            case PresentState.PresentingInitialInfo:
+            case PresentState.InitialInfoPresented:
+            case PresentState.HidingInitialInfo:
+               break;
+            case PresentState.HintInfoHidden:
+               RunIdlingStoryboard();
+               break;
+            case PresentState.PresentingHintInfo:
+               break;
+            case PresentState.HintInfoPresented:
+               RunHideStoryboard();
+               m_presentState = PresentState.HidingHintInfo;
+               break;
+            case PresentState.HidingHintInfo:
+               break;
+            default:
+               throw new ArgumentOutOfRangeException();
+         }
+      }
+
+      // ----------------------------------------------------------------------
    }
 }

@@ -11,14 +11,40 @@
    WindowStyle="SingleBorderWindow" 
    Background="Transparent">
    <Window.Resources>
-      <Storyboard x:Key="InfoBlockStoryboard" TargetName="InfoBlock" TargetProperty="Opacity">
-         <DoubleAnimationUsingKeyFrames >
+      <Storyboard x:Key="InitialWaitStoryboard" Duration="00:00:01" Completed="StoryboardCompleted" />
+
+      <Storyboard x:Key="IdlingStoryboard" Duration="00:00:05" Completed="StoryboardCompleted" />
+      
+      <Storyboard x:Key="PresentInfoBlockStoryboard" Completed="StoryboardCompleted">
+         <DoubleAnimationUsingKeyFrames Storyboard.TargetName="InfoBubbleTranslation" Storyboard.TargetProperty="Y">
+            <SplineDoubleKeyFrame KeyTime="00:00:00" Value="400" />
+            <SplineDoubleKeyFrame KeyTime="00:00:00.30" Value="200" />
+            <SplineDoubleKeyFrame KeyTime="00:00:00.80" Value="0" />
+         </DoubleAnimationUsingKeyFrames>
+         <DoubleAnimationUsingKeyFrames Storyboard.TargetName="InfoBubble" Storyboard.TargetProperty="Opacity">
             <SplineDoubleKeyFrame KeyTime="00:00:00" Value="0" />
-            <SplineDoubleKeyFrame KeyTime="00:00:06" Value="0" />
-            <SplineDoubleKeyFrame KeyTime="00:00:06.4" Value="1" />
+            <SplineDoubleKeyFrame KeyTime="00:00:00.80" Value="1" />
          </DoubleAnimationUsingKeyFrames>
       </Storyboard>
+      
+      <Storyboard x:Key="HideInfoBlockStoryboard" Completed="StoryboardCompleted">
+         <DoubleAnimationUsingKeyFrames Storyboard.TargetName="InfoBubbleTranslation" Storyboard.TargetProperty="Y">
+            <SplineDoubleKeyFrame KeyTime="00:00:00" Value="0" />
+            <SplineDoubleKeyFrame KeyTime="00:00:00.30" Value="200" />
+            <SplineDoubleKeyFrame KeyTime="00:00:00.80" Value="400" />
+         </DoubleAnimationUsingKeyFrames>
+         <DoubleAnimationUsingKeyFrames Storyboard.TargetName="InfoBubble" Storyboard.TargetProperty="Opacity">
+            <SplineDoubleKeyFrame KeyTime="00:00:00" Value="1" />
+            <SplineDoubleKeyFrame KeyTime="00:00:00.80" Value="0" />
+         </DoubleAnimationUsingKeyFrames>
+      </Storyboard>
+      
    </Window.Resources>
+   <Window.Triggers>
+      <EventTrigger RoutedEvent="Window.Loaded">
+         <BeginStoryboard Storyboard="{StaticResource InitialWaitStoryboard}" />
+      </EventTrigger>
+   </Window.Triggers>
    <Grid>
       <TextBlock 
          HorizontalAlignment="Left" 
@@ -68,6 +94,7 @@
          Content="_Go" 
          IsDefault="True"  
          Command="{Binding ElementName=FolderTreeView,Path=GoCommand}"
+         x:Name="GoButton"
          Click="GoButtonClick"
          />
 
@@ -75,36 +102,47 @@
          Margin="8,8,8,41" 
          x:Name="FolderTreeView"
          />
-
-      <TextBlock
+      
+      <local:BubbleContentControl 
          IsHitTestVisible="False"
-         x:Name="StartInfoBlock"
-         FontSize="36"
-         HorizontalAlignment="Center"
-         VerticalAlignment="Center"
-         Foreground="#40FFFFFF"
+         x:Name="InfoBubble"
+         HorizontalAlignment="Right" 
+         VerticalAlignment="Bottom" 
+         Margin="0,0,40,40" 
+         Height="300"
+         MinWidth="400"
          >
-         Click Go to start scanning      
-      </TextBlock>
-
-      <TextBlock
-         x:Name="InfoBlock"
-         IsHitTestVisible="False"
-         Opacity="0"
-         FontSize="36"
-         HorizontalAlignment="Center"
-         VerticalAlignment="Center"
-         Foreground="#40FFFFFF"
-         Visibility="Collapsed"
-         >
-         <Run>Mouse wheel to zoom</Run>
-         <LineBreak/>
-         <Run>Click a folder for its path</Run>
-         <LineBreak/>
-         <Run>Drag to move folder tree</Run>
-         <LineBreak/>
-         <Run>Right mouse button to reset position</Run>
-      </TextBlock>
-
+         <local:BubbleContentControl.RenderTransform>
+            <TranslateTransform x:Name="InfoBubbleTranslation" Y="400"/>
+         </local:BubbleContentControl.RenderTransform>
+         <Grid>
+            <TextBlock
+               x:Name="InitialInfoText"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               FontSize="36"
+               Foreground="White"
+            >
+            Click to scan disk
+            </TextBlock>
+            <TextBlock
+               x:Name="HintInfoText"
+               Visibility="Collapsed"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               FontSize="36"
+               Foreground="White"
+            >
+               <Run>Mouse wheel zooms</Run>
+               <LineBreak/>
+               <Run>Click folder for path</Run>
+               <LineBreak/>
+               <Run>Drag to move</Run>
+               <LineBreak/>
+               <Run>Right button resets position</Run>
+            </TextBlock>
+         </Grid>
+      </local:BubbleContentControl>
+      
    </Grid>
 </Window>

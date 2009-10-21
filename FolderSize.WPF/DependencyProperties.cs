@@ -436,5 +436,132 @@ namespace FolderSize.WPF
          
          }
       }
+         
+   }
+}
+namespace FolderSize.WPF
+{
+   partial class BubbleContentControl 
+   {
+   
+   
+   
+      static readonly DependencyPropertyKey ContentRectPropertyKey =
+         DependencyProperty.RegisterReadOnly(
+            "ContentRect",
+            typeof (Rect),
+            typeof (FolderSize.WPF.BubbleContentControl),
+            new PropertyMetadata(
+               new Rect(0,0,100,100)
+               ));
+
+      public static DependencyProperty ContentRectProperty =
+         ContentRectPropertyKey.DependencyProperty;
+         
+      /// <summary>
+      /// Gets ContentRect(Rect) (this is a DependencyProperty)
+      /// </summary>
+      public Rect ContentRect
+      {
+         get
+         {
+            return (Rect)GetValue(ContentRectProperty);
+         }
+         private set
+         {
+            if( ContentRect != value )
+            { 
+               SetValue(
+                  ContentRectPropertyKey,
+                  value);
+            }
+         
+         }
+      }
+         
+      public static readonly DependencyProperty ContentRectMarginProperty =
+         DependencyProperty.Register(
+            "ContentRectMargin",
+            typeof (Thickness),
+            typeof (FolderSize.WPF.BubbleContentControl),
+            new PropertyMetadata(
+               new Thickness(4),
+               OnContentRectMarginPropertyChanged,
+               OnContentRectMarginPropertyCoerceValue)
+            );
+      
+      partial void OnContentRectMarginPropertyCoerceValuePartial(
+         Thickness baseValue,
+         ref Thickness newValue,
+         ref bool isProcessed);
+         
+      static object OnContentRectMarginPropertyCoerceValue(
+         DependencyObject d,
+         object baseValue)
+      {
+         var instance = (FolderSize.WPF.BubbleContentControl)d;
+         if (instance != null)
+         {
+            var bv = (Thickness)baseValue;
+            var newValue = default(Thickness);
+            var isProcessed = false;
+            instance.OnContentRectMarginPropertyCoerceValuePartial(
+               bv,
+               ref newValue,
+               ref isProcessed);
+            if (isProcessed)
+            {
+               return newValue;
+            }
+            else
+            {
+               return baseValue; 
+            }
+         }
+         else
+         {
+            return baseValue;
+         }
+      }
+
+      partial void OnContentRectMarginPropertyChangedPartial(
+         Thickness oldValue,
+         Thickness newValue);
+         
+      static void OnContentRectMarginPropertyChanged(
+         DependencyObject d,
+         DependencyPropertyChangedEventArgs e)
+      {
+         var instance = (FolderSize.WPF.BubbleContentControl)d;
+         var oldValue = (Thickness)e.OldValue;
+         var newValue = (Thickness)e.NewValue;
+         if( instance != null )
+         {
+            instance.OnContentRectMarginPropertyChangedPartial(
+               oldValue,
+               newValue);
+         }
+      }
+         
+      /// <summary>
+      /// Gets and sets ContentRectMargin(Thickness) (this is a DependencyProperty)
+      /// </summary>
+      public Thickness ContentRectMargin
+      {
+         get
+         {
+            return (Thickness)GetValue(ContentRectMarginProperty);
+         }
+         set
+         {
+            if( ContentRectMargin != value )
+            { 
+               SetValue(
+                  ContentRectMarginProperty,
+                  value);
+            }
+         }
+      }
+
    }
 }
