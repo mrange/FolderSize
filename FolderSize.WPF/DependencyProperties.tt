@@ -40,7 +40,7 @@ using FolderSize.Common;
          {
             Namespace = "FolderSize.WPF",
             Name = "FolderTree",
-            Properties = new []
+            Properties = new DependencyPropertyTemplate[]
                {
                   D.Create("DisplayMode", "FolderTreeDisplayMode", "FolderTreeDisplayMode.Size", DependencyPropertyFlags.None),
                   D.Create("DisplayModes", "FolderTreeDisplayMode[]", "GetDefaultDisplayModes ()" , DependencyPropertyFlags.IsReadOnly),
@@ -48,10 +48,23 @@ using FolderSize.Common;
                   D.Create("Path", "string", "\".\"" , DependencyPropertyFlags.None),
                   D.Create("ProgressInfo", "string", "\"FolderSize.WPF\"" , DependencyPropertyFlags.IsReadOnly),
                },
-            Commands = new []
+            Commands = new DependencyCommandTemplate[]
                {
                   C.Create("Go"),
                   C.Create("Stop"),
+               },
+         },
+         new DependencyObjectTemplate
+         {
+            Namespace = "FolderSize.WPF",
+            Name = "BubbleContentControl",
+            Properties = new DependencyPropertyTemplate[]
+               {
+                  D.Create("ContentRect", "Rect", "new Rect(0,0,100,100)", DependencyPropertyFlags.IsReadOnly),
+                  D.Create("ContentRectMargin", "Thickness", "new Thickness(4)", DependencyPropertyFlags.None),
+               },
+            Commands = new DependencyCommandTemplate[]
+               {
                },
          },
       };
