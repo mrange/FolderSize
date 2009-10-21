@@ -49,8 +49,10 @@ namespace FolderSize.WPF
       JobProgress? m_jobProgress;
 
       Transform m_viewTransform = Transform.Identity;
-      Point? m_dragPosition;
       SizeIndex? m_buildSizeIndex;
+
+      DateTime? m_leftMouseDownDateTime;
+      Point? m_dragPosition;
 
       // ----------------------------------------------------------------------
 
@@ -169,11 +171,11 @@ namespace FolderSize.WPF
          }
       }
 
-      // ----------------------------------------------------------------------
-      // Generalt folder visitor function
-      // ----------------------------------------------------------------------
+      // ======================================================================
+      // General folder tree visit functions
+      // ======================================================================
 
-      static double VisitFolder(
+      static double? VisitFolder(
          GeneralTransform generalTransform,
          IDictionary<Folder, CountAndSize> folderCountAndSizes,
          double x,
@@ -182,7 +184,7 @@ namespace FolderSize.WPF
          double yRatio,
          Folder folder,
          Func<CountAndSize, long> measurementPicker,
-         Func<long, double, Folder, Rect, bool> visit
+         Func<long, double, Folder, Rect, bool> visitor
          )
       {
          CountAndSize countAndSize;
@@ -226,13 +228,18 @@ namespace FolderSize.WPF
             return 0;
          }
 
-         visit(measurement, heightSquared, folder, rect);
+         var visitResult = visitor(measurement, heightSquared, folder, rect);
+
+         if (!visitResult)
+         {
+            return null;
+         }
 
          var runningY = y;
 
          foreach (var childFolder in folder.Children)
          {
-            runningY += VisitFolder(
+            var visitFolderResult = VisitFolder(
                generalTransform,
                folderCountAndSizes,
                x + xRatio,
@@ -241,10 +248,53 @@ namespace FolderSize.WPF
                yRatio,
                childFolder,
                measurementPicker,
-               visit);
+               visitor);
+
+            if(visitFolderResult == null)
+            {
+               return null;
+            }
+
+            runningY += visitFolderResult.Value;
          }
 
          return rect.Height;
+      }
+
+      double? VisitFolder(
+         Func<long, double, Folder, Rect, bool> visitor)
+      {
+         var job = Job;
+         var sizeIndex = m_buildSizeIndex;
+
+         if (job == null || sizeIndex == null)
+         {
+            return null;
+         }
+         if (sizeIndex.Value.Depth > 0)
+         {
+            var measurementPicker = GetMeasurementPicker ();
+
+            var size = measurementPicker(sizeIndex.Value.CountsAndSizes[job.Root]);
+
+            var xRatio = ActualWidth / sizeIndex.Value.Depth;
+            var yRatio = ActualHeight / size;
+
+            return VisitFolder(
+               m_viewTransform,
+               sizeIndex.Value.CountsAndSizes,
+               0,
+               0,
+               xRatio,
+               yRatio,
+               job.Root,
+               measurementPicker,
+               visitor);
+         }
+         else
+         {
+            return null;
+         }
       }
 
       // ----------------------------------------------------------------------
@@ -265,7 +315,8 @@ namespace FolderSize.WPF
       protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
       {
          m_dragPosition = e.MouseDevice.GetPosition (this);
-         base.OnMouseLeftButtonDown (e);
+         m_leftMouseDownDateTime = DateTime.Now;
+         base.OnMouseLeftButtonDown(e);
       }
 
       // ----------------------------------------------------------------------
@@ -273,6 +324,33 @@ namespace FolderSize.WPF
       protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
       {
          m_dragPosition = null;
+
+         if (m_leftMouseDownDateTime != null)
+         {
+            var diff = DateTime.Now - m_leftMouseDownDateTime.Value;
+            if (diff.TotalMilliseconds < 400.0)
+            {
+               var position = e.MouseDevice.GetPosition (this);
+
+               var viewPosition = m_viewTransform.Inverse.Transform (position);
+
+               VisitFolder(
+                  (measurement, heightSquared, folder, rect) =>
+                  {
+                     if (rect.Contains (viewPosition))
+                     {
+                        Path = System.IO.Path.GetFullPath (folder.Path);
+                        return false;
+                     }
+                     else
+                     {
+                        return true;
+                     }
+                  });
+            }
+         }
+         m_leftMouseDownDateTime = null;
+
          base.OnMouseLeftButtonUp(e);
       }
 
@@ -280,11 +358,13 @@ namespace FolderSize.WPF
 
       protected override void OnMouseMove(MouseEventArgs e)
       {
-         if(m_dragPosition != null)
+         var dragPosition = m_dragPosition;
+
+         if (dragPosition != null)
          {
             var currentPosition = e.MouseDevice.GetPosition (this);
 
-            var diff = currentPosition - m_dragPosition.Value;
+            var diff = currentPosition - dragPosition.Value;
 
             var translate = new TranslateTransform(
                 diff.X,
@@ -338,15 +418,16 @@ namespace FolderSize.WPF
          base.OnMouseWheel(e);
       }
 
-      // ----------------------------------------------------------------------
+      // ======================================================================
       // Render folder tree
-      // ----------------------------------------------------------------------
+      // ======================================================================
 
       protected override void OnRender(DrawingContext drawingContext)
       {
          var job = Job;
+         var sizeIndex = m_buildSizeIndex;
 
-         if (job == null || m_buildSizeIndex == null)
+         if (job == null || sizeIndex == null)
          {
             return;
          }
@@ -366,26 +447,13 @@ namespace FolderSize.WPF
 
          drawingContext.PushTransform(m_viewTransform);
 
-         if (m_buildSizeIndex.Value.Depth > 0)
-         {
-            var measurementPicker = GetMeasurementPicker ();
-
-            var size = measurementPicker(m_buildSizeIndex.Value.CountsAndSizes[job.Root]);
-
-            var xRatio = ActualWidth / m_buildSizeIndex.Value.Depth;
-            var yRatio = ActualHeight / size;
-
-            VisitFolder(
-               m_viewTransform,
-               m_buildSizeIndex.Value.CountsAndSizes,
-               0,
-               0,
-               xRatio,
-               yRatio,
-               job.Root,
-               measurementPicker,
-               (measurement, heightSquared, folder, r) => DrawFolderImpl(drawingContext, measurement, heightSquared, folder, r));
-         }
+         VisitFolder (
+            (measurement, heightSquared, folder, r) => DrawFolderImpl (
+               drawingContext,
+               measurement,
+               heightSquared,
+               folder,
+               r));
 
          drawingContext.Pop();
          drawingContext.Pop();
@@ -441,9 +509,9 @@ namespace FolderSize.WPF
          }
       }
 
-      // ----------------------------------------------------------------------
+      // ======================================================================
       // Dependency properties change callbacks
-      // ----------------------------------------------------------------------
+      // ======================================================================
 
       partial void OnDisplayModePropertyChangedPartial(FolderTreeDisplayMode oldValue, FolderTreeDisplayMode newValue)
       {
@@ -462,6 +530,10 @@ namespace FolderSize.WPF
             m_dispatcher.Stop();
          }
       }
+
+      // ======================================================================
+      // Commands
+      // ======================================================================
 
       // ----------------------------------------------------------------------
       // Stop Command
