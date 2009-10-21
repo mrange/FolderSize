@@ -17,14 +17,20 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 
 namespace FolderSize.WPF
 {
    partial class MainForm
    {
+
+      // ----------------------------------------------------------------------
+
+      Storyboard m_storyboard;
 
       // ----------------------------------------------------------------------
 
@@ -49,6 +55,28 @@ namespace FolderSize.WPF
       public MainForm()
       {
          InitializeComponent();
+         m_storyboard = (Storyboard) Resources["InfoBlockStoryboard"];
+
+         var mouseMoveEvent = MouseMoveEvent;
+         MouseEventHandler eventHandler = WindowMouseMove;
+         AddHandler(
+            mouseMoveEvent,
+            eventHandler,
+            true);
+      }
+
+      // ----------------------------------------------------------------------
+
+      void WindowMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+      {
+         if (InfoBlock.Visibility == Visibility.Visible)
+         {
+            var timeSpan = m_storyboard.GetCurrentTime ();
+            if (timeSpan.TotalSeconds > 1)
+            {
+               m_storyboard.Seek (TimeSpan.Zero, TimeSeekOrigin.BeginTime);
+            }
+        }
       }
 
       // ----------------------------------------------------------------------
@@ -106,6 +134,15 @@ namespace FolderSize.WPF
                (Brush)Application.Current.Resources["WindowGradient"];
          }
 
+      }
+
+      // ----------------------------------------------------------------------
+
+      void GoButtonClick(object sender, RoutedEventArgs e)
+      {
+         StartInfoBlock.Visibility = Visibility.Collapsed;
+         InfoBlock.Visibility = Visibility.Visible;
+         m_storyboard.Begin();
       }
 
       // ----------------------------------------------------------------------

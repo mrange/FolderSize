@@ -10,6 +10,15 @@
    MinHeight="400" 
    WindowStyle="SingleBorderWindow" 
    Background="Transparent">
+   <Window.Resources>
+      <Storyboard x:Key="InfoBlockStoryboard" TargetName="InfoBlock" TargetProperty="Opacity">
+         <DoubleAnimationUsingKeyFrames >
+            <SplineDoubleKeyFrame KeyTime="00:00:00" Value="0" />
+            <SplineDoubleKeyFrame KeyTime="00:00:06" Value="0" />
+            <SplineDoubleKeyFrame KeyTime="00:00:06.4" Value="1" />
+         </DoubleAnimationUsingKeyFrames>
+      </Storyboard>
+   </Window.Resources>
    <Grid>
       <TextBlock 
          HorizontalAlignment="Left" 
@@ -59,12 +68,43 @@
          Content="_Go" 
          IsDefault="True"  
          Command="{Binding ElementName=FolderTreeView,Path=GoCommand}"
+         Click="GoButtonClick"
          />
 
       <local:FolderTree 
          Margin="8,8,8,41" 
          x:Name="FolderTreeView"
          />
+
+      <TextBlock
+         IsHitTestVisible="False"
+         x:Name="StartInfoBlock"
+         FontSize="36"
+         HorizontalAlignment="Center"
+         VerticalAlignment="Center"
+         Foreground="#40FFFFFF"
+         >
+         Click Go to start scanning      
+      </TextBlock>
+
+      <TextBlock
+         x:Name="InfoBlock"
+         IsHitTestVisible="False"
+         Opacity="0"
+         FontSize="36"
+         HorizontalAlignment="Center"
+         VerticalAlignment="Center"
+         Foreground="#40FFFFFF"
+         Visibility="Collapsed"
+         >
+         <Run>Mouse wheel to zoom</Run>
+         <LineBreak/>
+         <Run>Click a folder for its path</Run>
+         <LineBreak/>
+         <Run>Drag to move folder tree</Run>
+         <LineBreak/>
+         <Run>Right mouse button to reset position</Run>
+      </TextBlock>
 
    </Grid>
 </Window>
