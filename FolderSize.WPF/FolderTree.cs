@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -36,7 +38,36 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      readonly Pen m_backgroundPen;
+      public enum ShowCommands : int
+      {
+         SW_HIDE = 0,
+         SW_SHOWNORMAL = 1,
+         SW_NORMAL = 1,
+         SW_SHOWMINIMIZED = 2,
+         SW_SHOWMAXIMIZED = 3,
+         SW_MAXIMIZE = 3,
+         SW_SHOWNOACTIVATE = 4,
+         SW_SHOW = 5,
+         SW_MINIMIZE = 6,
+         SW_SHOWMINNOACTIVE = 7,
+         SW_SHOWNA = 8,
+         SW_RESTORE = 9,
+         SW_SHOWDEFAULT = 10,
+         SW_FORCEMINIMIZE = 11,
+         SW_MAX = 11
+      }
+
+      [DllImport("shell32.dll")]
+      static extern IntPtr ShellExecute(
+          IntPtr hwnd,
+          string lpOperation,
+          string lpFile,
+          string lpParameters,
+          string lpDirectory,
+          ShowCommands nShowCmd); readonly Pen m_backgroundPen;
+
+      // ----------------------------------------------------------------------
+
       readonly Brush m_backgroundBrush;
       readonly Brush m_folderBrush;
       readonly Pen m_folderPen;
@@ -51,7 +82,7 @@ namespace FolderSize.WPF
       Transform m_viewTransform = Transform.Identity;
       SizeIndex? m_buildSizeIndex;
 
-      DateTime? m_leftMouseDownDateTime;
+      DateTime m_leftMouseDownDateTime = DateTime.Now;
       Point? m_dragPosition;
 
       // ----------------------------------------------------------------------
@@ -298,6 +329,35 @@ namespace FolderSize.WPF
       }
 
       // ----------------------------------------------------------------------
+
+      Folder FindFolderFromPoint(Point position)
+      {
+         var viewPosition = m_viewTransform.Inverse.Transform(position);
+
+         Folder result = null;
+
+         VisitFolder(
+            (measurement,
+             heightSquared,
+             folder,
+             rect) =>
+            {
+               if (rect.Contains(viewPosition))
+               {
+                  result = folder;
+                  return false;
+               }
+               else
+               {
+                  return true;
+               }
+            });
+
+         return result;
+      }
+
+
+      // ----------------------------------------------------------------------
       // Mouse event handlers
       // ----------------------------------------------------------------------
 
@@ -315,6 +375,31 @@ namespace FolderSize.WPF
       protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
       {
          m_dragPosition = e.MouseDevice.GetPosition (this);
+
+         var now = DateTime.Now;
+         var diff = now - m_leftMouseDownDateTime;
+         if (diff.TotalMilliseconds < 200)
+         {
+            var position = e.MouseDevice.GetPosition(this);
+            var folder = FindFolderFromPoint(position);
+
+            if (folder != null)
+            {
+               var path = System.IO.Path.GetFullPath(folder.Path);
+               if (Directory.Exists (path))
+               {
+                  ShellExecute (
+                     IntPtr.Zero,
+                     "explore",
+                     path,
+                     null,
+                     null,
+                     ShowCommands.SW_NORMAL);
+               }
+            }
+            
+         }
+
          m_leftMouseDownDateTime = DateTime.Now;
          base.OnMouseLeftButtonDown(e);
       }
@@ -325,33 +410,19 @@ namespace FolderSize.WPF
       {
          m_dragPosition = null;
 
-         if (m_leftMouseDownDateTime != null)
+         var diff = DateTime.Now - m_leftMouseDownDateTime;
+         if (diff.TotalMilliseconds < 400.0)
          {
-            var diff = DateTime.Now - m_leftMouseDownDateTime.Value;
-            if (diff.TotalMilliseconds < 400.0)
+            var position = e.MouseDevice.GetPosition (this);
+            var folder = FindFolderFromPoint (position);
+
+            if (folder != null)
             {
-               var position = e.MouseDevice.GetPosition (this);
-
-               var viewPosition = m_viewTransform.Inverse.Transform (position);
-
-               VisitFolder(
-                  (measurement, heightSquared, folder, rect) =>
-                  {
-                     if (rect.Contains (viewPosition))
-                     {
-                        Path = System.IO.Path.GetFullPath (folder.Path);
-                        return false;
-                     }
-                     else
-                     {
-                        return true;
-                     }
-                  });
+               Path = System.IO.Path.GetFullPath (folder.Path);
             }
          }
-         m_leftMouseDownDateTime = null;
 
-         base.OnMouseLeftButtonUp(e);
+         base.OnMouseLeftButtonUp (e);
       }
 
       // ----------------------------------------------------------------------
