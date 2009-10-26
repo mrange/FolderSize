@@ -130,19 +130,18 @@
                Visibility="Collapsed"
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
-               FontSize="36"
+               FontSize="24"
                Foreground="White"
             >
-               <Run>Mouse wheel zooms</Run>
+               <Run>Click for path</Run>
                <LineBreak/>
-               <Run>Click folder for path</Run>
+               <Run>drag to move</Run>
                <LineBreak/>
-               <Run>Drag to move</Run>
+               <Run>mouse wheel zooms</Run>
                <LineBreak/>
-               <Run>Right button resets position</Run>
+               <Run>right click resets position</Run>
             </TextBlock>
          </Grid>
       </local:BubbleContentControl>
-      
    </Grid>
 </Window>

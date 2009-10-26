@@ -1,5 +1,4 @@
-﻿
-/* ****************************************************************************
+﻿/* ****************************************************************************
  *
  * Copyright (c) Mårten Rånge.
  *
@@ -16,6 +15,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -45,13 +45,34 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      readonly Storyboard m_presentStoryboard;
-      readonly Storyboard m_hideStoryboard;
-      readonly Storyboard m_idlingStoryboard;
+      readonly StoryboardHolder m_presentStoryboard;
+      readonly StoryboardHolder m_hideStoryboard;
+      readonly StoryboardHolder m_idlingStoryboard;
 
       // ----------------------------------------------------------------------
 
       PresentState m_presentState = PresentState.InitialWait;
+
+      // ----------------------------------------------------------------------
+
+      PresentState State
+      {
+         get
+         {
+            return m_presentState;
+         }
+         set
+         {
+            Debug.WriteLine (
+               string.Format (
+                  CultureInfo.InvariantCulture,
+                  "State change: {0} -> {1}",
+                  m_presentState,
+                  value));
+
+            m_presentState = value;
+         }
+      }
 
       // ----------------------------------------------------------------------
 
@@ -76,9 +97,10 @@ namespace FolderSize.WPF
       public MainForm()
       {
          InitializeComponent();
-         m_presentStoryboard = (Storyboard) Resources["PresentInfoBlockStoryboard"];
-         m_hideStoryboard = (Storyboard)Resources["HideInfoBlockStoryboard"];
-         m_idlingStoryboard = (Storyboard) Resources["IdlingStoryboard"];
+
+         m_presentStoryboard = new StoryboardHolder(this, "PresentInfoBlockStoryboard");
+         m_hideStoryboard = new StoryboardHolder(this, "HideInfoBlockStoryboard");
+         m_idlingStoryboard = new StoryboardHolder(this, "IdlingStoryboard");
 
          var mouseMoveEvent = MouseMoveEvent;
          MouseEventHandler windowMouseMove = WindowMouseMove;
@@ -170,16 +192,45 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      void GoButtonClick(object sender, RoutedEventArgs e)
+      void UserInputDetected()
       {
-         switch(m_presentState)
+         switch (State)
          {
             case PresentState.InitialWait:
+            case PresentState.PresentingInitialInfo:
+            case PresentState.InitialInfoPresented:
+            case PresentState.HidingInitialInfo:
+               break;
+            case PresentState.HintInfoHidden:
+               RunIdlingStoryboard();
+               break;
+            case PresentState.PresentingHintInfo:
+               break;
+            case PresentState.HintInfoPresented:
+               RunHideStoryboard();
+               State = PresentState.HidingHintInfo;
+               break;
+            case PresentState.HidingHintInfo:
+               break;
+            default:
+               throw new ArgumentOutOfRangeException();
+         }
+      }
+
+      // ----------------------------------------------------------------------
+
+      void GoButtonClick(object sender, RoutedEventArgs e)
+      {
+         switch (State)
+         {
+            case PresentState.InitialWait:
+               State = PresentState.HintInfoHidden;
+               break;
             case PresentState.PresentingInitialInfo:
                break;
             case PresentState.InitialInfoPresented:
                RunHideStoryboard ();
-               m_presentState = PresentState.HidingInitialInfo;
+               State = PresentState.HidingInitialInfo;
                break;
             case PresentState.HidingInitialInfo:
             case PresentState.HintInfoHidden:
@@ -196,43 +247,49 @@ namespace FolderSize.WPF
 
       void StoryboardCompleted(object sender, EventArgs e)
       {
-         switch(m_presentState)
+         var clockGroup = (ClockGroup)sender;
+         Debug.WriteLine(
+            string.Format(
+               CultureInfo.InvariantCulture,
+               "StoryboardCompleted : {0}",
+               clockGroup.Timeline.Name ?? "NULL"));
+         switch (State)
          {
             case PresentState.InitialWait:
                RunPresentStoryboard ();
-               m_presentState = PresentState.PresentingInitialInfo;
+               State = PresentState.PresentingInitialInfo;
                break;
             case PresentState.PresentingInitialInfo:
                if (FolderTreeView.Job != null)
                {
-                  m_presentState = PresentState.HidingInitialInfo;
+                  State = PresentState.HidingInitialInfo;
                   RunHideStoryboard();
                }
                else
                {
-                  m_presentState = PresentState.InitialInfoPresented;
+                  State = PresentState.InitialInfoPresented;
                }
                break;
             case PresentState.InitialInfoPresented:
                Debug.Assert (false);
                break;
             case PresentState.HidingInitialInfo:
-               m_presentState = PresentState.HintInfoHidden;
-               InitialInfoText.Visibility = Visibility.Collapsed;
-               HintInfoText.Visibility = Visibility.Visible;
+               State = PresentState.HintInfoHidden;
                RunIdlingStoryboard();
                break;
             case PresentState.HintInfoHidden:
-               m_presentState = PresentState.PresentingHintInfo;
-               RunPresentStoryboard ();
+               State = PresentState.PresentingHintInfo;
+               InitialInfoText.Visibility = Visibility.Collapsed;
+               HintInfoText.Visibility = Visibility.Visible;
+               RunPresentStoryboard();
                break;
             case PresentState.PresentingHintInfo:
-               m_presentState = PresentState.HintInfoPresented;
+               State = PresentState.HintInfoPresented;
                break;
             case PresentState.HintInfoPresented:
                break;
             case PresentState.HidingHintInfo:
-               m_presentState = PresentState.HintInfoHidden;
+               State = PresentState.HintInfoHidden;
                RunIdlingStoryboard();
                break;
             default:
@@ -244,62 +301,30 @@ namespace FolderSize.WPF
 
       void RunHideStoryboard()
       {
-         if (m_hideStoryboard != null)
-         {
-            m_hideStoryboard.Begin(this);
-            m_hideStoryboard.Seek (this, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
-         }
+         m_idlingStoryboard.Stop ();
+         m_presentStoryboard.Stop();
+         m_hideStoryboard.Restart();
       }
 
       // ----------------------------------------------------------------------
 
       void RunPresentStoryboard()
       {
-         if (m_presentStoryboard != null)
-         {
-            m_presentStoryboard.Begin(this);
-            m_idlingStoryboard.Seek(this, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
-         }
+         m_idlingStoryboard.Stop();
+         m_hideStoryboard.Stop();
+         m_presentStoryboard.Restart();
       }
 
       // ----------------------------------------------------------------------
 
       void RunIdlingStoryboard()
       {
-         if (m_idlingStoryboard != null)
-         {
-            m_idlingStoryboard.Begin(this);
-            m_idlingStoryboard.Seek(this, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
-         }
+         m_hideStoryboard.Stop();
+         m_presentStoryboard.Stop();
+         m_idlingStoryboard.Restart();
       }
 
       // ----------------------------------------------------------------------
 
-      void UserInputDetected()
-      {
-         switch (m_presentState)
-         {
-            case PresentState.InitialWait:
-            case PresentState.PresentingInitialInfo:
-            case PresentState.InitialInfoPresented:
-            case PresentState.HidingInitialInfo:
-               break;
-            case PresentState.HintInfoHidden:
-               RunIdlingStoryboard();
-               break;
-            case PresentState.PresentingHintInfo:
-               break;
-            case PresentState.HintInfoPresented:
-               RunHideStoryboard();
-               m_presentState = PresentState.HidingHintInfo;
-               break;
-            case PresentState.HidingHintInfo:
-               break;
-            default:
-               throw new ArgumentOutOfRangeException();
-         }
-      }
-
-      // ----------------------------------------------------------------------
    }
 }
