@@ -139,6 +139,8 @@
                <LineBreak/>
                <Run>mouse wheel zooms</Run>
                <LineBreak/>
+               <Run>double click to explore</Run>
+               <LineBreak/>
                <Run>right click resets position</Run>
             </TextBlock>
          </Grid>
