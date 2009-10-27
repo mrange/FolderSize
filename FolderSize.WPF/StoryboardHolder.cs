@@ -57,30 +57,8 @@ namespace FolderSize.WPF
       {
          if (m_storyboard != null)
          {
-            if (m_isStarted)
-            {
-               var currentState = m_storyboard.GetCurrentState (m_containingElement);
-
-               switch (currentState)
-               {
-                  case ClockState.Active:
-                     m_storyboard.SeekAlignedToLastTick(m_containingElement, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
-                     break;
-                  case ClockState.Filling:
-                  case ClockState.Stopped:
-                     m_storyboard.SeekAlignedToLastTick(m_containingElement, TimeSpan.Zero, TimeSeekOrigin.BeginTime);
-                     m_storyboard.Begin(m_containingElement, true);
-                     break;
-                  default:
-                     throw new ArgumentOutOfRangeException ();
-               }
-
-            }
-            else
-            {
-               m_isStarted = true;
-               m_storyboard.Begin(m_containingElement, true);
-            }
+            m_storyboard.Begin(m_containingElement, true);
+            m_isStarted = true;
          }
       }
 

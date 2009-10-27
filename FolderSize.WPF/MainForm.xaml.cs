@@ -158,10 +158,18 @@ namespace FolderSize.WPF
       // Storyboard handlers
       // ======================================================================
 
-      void RunHideStoryboard()
+      void StopStoryboards()
       {
          m_idlingStoryboard.Stop();
          m_presentStoryboard.Stop();
+         m_hideStoryboard.Stop();
+      }
+
+      // ----------------------------------------------------------------------
+
+      void RunHideStoryboard()
+      {
+         StopStoryboards ();
          m_hideStoryboard.Restart();
       }
 
@@ -169,8 +177,7 @@ namespace FolderSize.WPF
 
       void RunPresentStoryboard()
       {
-         m_idlingStoryboard.Stop();
-         m_hideStoryboard.Stop();
+         StopStoryboards();
          m_presentStoryboard.Restart();
       }
 
@@ -178,8 +185,7 @@ namespace FolderSize.WPF
 
       void RunIdlingStoryboard()
       {
-         m_hideStoryboard.Stop();
-         m_presentStoryboard.Stop();
+         StopStoryboards();
          m_idlingStoryboard.Restart();
       }
 
