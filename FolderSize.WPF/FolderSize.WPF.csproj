@@ -96,7 +96,7 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="StoryboardHolder.xaml.cs" />
+    <Compile Include="StoryboardHolder.cs" />
     <Page Include="MainForm.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

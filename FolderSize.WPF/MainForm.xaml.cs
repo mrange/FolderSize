@@ -16,6 +16,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -29,6 +30,58 @@ namespace FolderSize.WPF
    partial class MainForm
    {
 
+      // ======================================================================
+      // DllImports
+      // ======================================================================
+      // ReSharper disable InconsistentNaming
+      // ----------------------------------------------------------------------
+
+      [StructLayout(LayoutKind.Sequential)]
+      struct MARGINS
+      {
+         public int cxLeftWidth;      // width of left border that retains its size
+         public int cxRightWidth;     // width of right border that retains its size
+         public int cyTopHeight;      // height of top border that retains its size
+         public int cyBottomHeight;   // height of bottom border that retains its size
+      };
+
+      [DllImport("DwmApi.dll")]
+      static extern int DwmExtendFrameIntoClientArea(
+          IntPtr hwnd,
+          ref MARGINS pMarInset);
+
+      // ----------------------------------------------------------------------
+
+      public enum ShowCommands
+      {
+         SW_HIDE = 0,
+         SW_SHOWNORMAL = 1,
+         SW_NORMAL = 1,
+         SW_SHOWMINIMIZED = 2,
+         SW_SHOWMAXIMIZED = 3,
+         SW_MAXIMIZE = 3,
+         SW_SHOWNOACTIVATE = 4,
+         SW_SHOW = 5,
+         SW_MINIMIZE = 6,
+         SW_SHOWMINNOACTIVE = 7,
+         SW_SHOWNA = 8,
+         SW_RESTORE = 9,
+         SW_SHOWDEFAULT = 10,
+         SW_FORCEMINIMIZE = 11,
+         SW_MAX = 11
+      }
+
+      [DllImport("shell32.dll")]
+      static extern IntPtr ShellExecute(
+          IntPtr hwnd,
+          string lpOperation,
+          string lpFile,
+          string lpParameters,
+          string lpDirectory,
+          ShowCommands nShowCmd);
+
+      // ----------------------------------------------------------------------
+      // ReSharper restore InconsistentNaming
       // ----------------------------------------------------------------------
 
       enum PresentState
@@ -76,24 +129,6 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      [StructLayout(LayoutKind.Sequential)]
-      struct MARGINS
-      {
-         public int cxLeftWidth;      // width of left border that retains its size
-         public int cxRightWidth;     // width of right border that retains its size
-         public int cyTopHeight;      // height of top border that retains its size
-         public int cyBottomHeight;   // height of bottom border that retains its size
-      };
-
-      // ----------------------------------------------------------------------
-
-      [DllImport("DwmApi.dll")]
-      static extern int DwmExtendFrameIntoClientArea(
-          IntPtr hwnd,
-          ref MARGINS pMarInset);
-
-      // ----------------------------------------------------------------------
-
       public MainForm()
       {
          InitializeComponent();
@@ -103,24 +138,83 @@ namespace FolderSize.WPF
          m_idlingStoryboard = new StoryboardHolder(this, "IdlingStoryboard");
 
          var mouseMoveEvent = MouseMoveEvent;
-         MouseEventHandler windowMouseMove = WindowMouseMove;
+         MouseEventHandler windowMouseMove = Window_MouseMove;
          AddHandler (
             mouseMoveEvent,
             windowMouseMove,
             true);
 
          var keydownEvent = KeyDownEvent;
-         KeyEventHandler windowKeyDown = WindowKeyDown;
+         KeyEventHandler windowKeyDown = Window_KeyDown;
          AddHandler(
             keydownEvent,
             windowKeyDown,
             true);
 
+         FolderTreeView.FolderDoubleClick += FolderTreeView_FolderDoubleClick;
+      }
+
+      // ======================================================================
+      // Storyboard handlers
+      // ======================================================================
+
+      void RunHideStoryboard()
+      {
+         m_idlingStoryboard.Stop();
+         m_presentStoryboard.Stop();
+         m_hideStoryboard.Restart();
       }
 
       // ----------------------------------------------------------------------
 
-      void WindowKeyDown(object sender,
+      void RunPresentStoryboard()
+      {
+         m_idlingStoryboard.Stop();
+         m_hideStoryboard.Stop();
+         m_presentStoryboard.Restart();
+      }
+
+      // ----------------------------------------------------------------------
+
+      void RunIdlingStoryboard()
+      {
+         m_hideStoryboard.Stop();
+         m_presentStoryboard.Stop();
+         m_idlingStoryboard.Restart();
+      }
+
+      // ----------------------------------------------------------------------
+
+      void UserInputDetected()
+      {
+         switch (State)
+         {
+            case PresentState.InitialWait:
+            case PresentState.PresentingInitialInfo:
+            case PresentState.InitialInfoPresented:
+            case PresentState.HidingInitialInfo:
+               break;
+            case PresentState.HintInfoHidden:
+               RunIdlingStoryboard();
+               break;
+            case PresentState.PresentingHintInfo:
+               break;
+            case PresentState.HintInfoPresented:
+               RunHideStoryboard();
+               State = PresentState.HidingHintInfo;
+               break;
+            case PresentState.HidingHintInfo:
+               break;
+            default:
+               throw new ArgumentOutOfRangeException();
+         }
+      }
+
+      // ======================================================================
+      // Event handlers
+      // ======================================================================
+
+      void Window_KeyDown(object sender,
                           KeyEventArgs e)
       {
          UserInputDetected();
@@ -128,14 +222,14 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      void WindowMouseMove(object sender, MouseEventArgs e)
+      void Window_MouseMove(object sender, MouseEventArgs e)
       {
          UserInputDetected ();
       }
 
       // ----------------------------------------------------------------------
 
-      public void WindowClosed(object sender, EventArgs value)
+      public void Window_Closed(object sender, EventArgs value)
       {
          var job = FolderTreeView.Job;
          if (job != null)
@@ -146,7 +240,7 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      void WindowLoaded(object sender, RoutedEventArgs e)
+      void Window_Loaded(object sender, RoutedEventArgs e)
       {
          try
          {
@@ -192,34 +286,24 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      void UserInputDetected()
+      static void FolderTreeView_FolderDoubleClick(object sender, FolderEventArgs e)
       {
-         switch (State)
+         var path = Path.GetFullPath(e.Folder.Path);
+         if (Directory.Exists(path))
          {
-            case PresentState.InitialWait:
-            case PresentState.PresentingInitialInfo:
-            case PresentState.InitialInfoPresented:
-            case PresentState.HidingInitialInfo:
-               break;
-            case PresentState.HintInfoHidden:
-               RunIdlingStoryboard();
-               break;
-            case PresentState.PresentingHintInfo:
-               break;
-            case PresentState.HintInfoPresented:
-               RunHideStoryboard();
-               State = PresentState.HidingHintInfo;
-               break;
-            case PresentState.HidingHintInfo:
-               break;
-            default:
-               throw new ArgumentOutOfRangeException();
+            ShellExecute(
+               IntPtr.Zero,
+               "explore",
+               path,
+               null,
+               null,
+               ShowCommands.SW_NORMAL);
          }
       }
 
       // ----------------------------------------------------------------------
 
-      void GoButtonClick(object sender, RoutedEventArgs e)
+      void GoButton_Click(object sender, RoutedEventArgs e)
       {
          switch (State)
          {
@@ -245,13 +329,13 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      void StoryboardCompleted(object sender, EventArgs e)
+      void Storyboard_Completed(object sender, EventArgs e)
       {
          var clockGroup = (ClockGroup)sender;
          Debug.WriteLine(
             string.Format(
                CultureInfo.InvariantCulture,
-               "StoryboardCompleted : {0}",
+               "Storyboard_Completed : {0}",
                clockGroup.Timeline.Name ?? "NULL"));
          switch (State)
          {
@@ -295,33 +379,6 @@ namespace FolderSize.WPF
             default:
                throw new ArgumentOutOfRangeException ();
          }
-      }
-
-      // ----------------------------------------------------------------------
-
-      void RunHideStoryboard()
-      {
-         m_idlingStoryboard.Stop ();
-         m_presentStoryboard.Stop();
-         m_hideStoryboard.Restart();
-      }
-
-      // ----------------------------------------------------------------------
-
-      void RunPresentStoryboard()
-      {
-         m_idlingStoryboard.Stop();
-         m_hideStoryboard.Stop();
-         m_presentStoryboard.Restart();
-      }
-
-      // ----------------------------------------------------------------------
-
-      void RunIdlingStoryboard()
-      {
-         m_hideStoryboard.Stop();
-         m_presentStoryboard.Stop();
-         m_idlingStoryboard.Restart();
       }
 
       // ----------------------------------------------------------------------
