@@ -21,10 +21,17 @@ namespace FolderSize.WPF
 {
    class StoryboardHolder
    {
+
+      // ----------------------------------------------------------------------
+
       readonly FrameworkElement m_containingElement;
       readonly Storyboard m_storyboard;
+
+      // ----------------------------------------------------------------------
+
       bool m_isStarted;
 
+      // ----------------------------------------------------------------------
 
       public StoryboardHolder (
          FrameworkElement containingElement,
@@ -34,7 +41,9 @@ namespace FolderSize.WPF
          m_storyboard = (Storyboard) containingElement.Resources[name];
       }
 
-      public void Stop ()
+      // ----------------------------------------------------------------------
+
+      public void Stop()
       {
          if (m_isStarted)
          {
@@ -42,7 +51,9 @@ namespace FolderSize.WPF
          }
       }
 
-      public void Restart ()
+      // ----------------------------------------------------------------------
+
+      public void Restart()
       {
          if (m_storyboard != null)
          {
@@ -72,6 +83,8 @@ namespace FolderSize.WPF
             }
          }
       }
+
+      // ----------------------------------------------------------------------
 
    }
 }

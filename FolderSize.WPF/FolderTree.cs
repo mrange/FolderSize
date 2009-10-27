@@ -1,5 +1,4 @@
-﻿
-/* ****************************************************************************
+﻿/* ****************************************************************************
  *
  * Copyright (c) Mårten Rånge.
  *
@@ -16,9 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -28,6 +25,11 @@ using FolderSize.Common;
 
 namespace FolderSize.WPF
 {
+   public class FolderEventArgs : EventArgs
+   {
+      public Folder Folder { get; set; }
+   }
+
    partial class FolderTree : FrameworkElement
    {
 
@@ -38,36 +40,7 @@ namespace FolderSize.WPF
 
       // ----------------------------------------------------------------------
 
-      public enum ShowCommands : int
-      {
-         SW_HIDE = 0,
-         SW_SHOWNORMAL = 1,
-         SW_NORMAL = 1,
-         SW_SHOWMINIMIZED = 2,
-         SW_SHOWMAXIMIZED = 3,
-         SW_MAXIMIZE = 3,
-         SW_SHOWNOACTIVATE = 4,
-         SW_SHOW = 5,
-         SW_MINIMIZE = 6,
-         SW_SHOWMINNOACTIVE = 7,
-         SW_SHOWNA = 8,
-         SW_RESTORE = 9,
-         SW_SHOWDEFAULT = 10,
-         SW_FORCEMINIMIZE = 11,
-         SW_MAX = 11
-      }
-
-      [DllImport("shell32.dll")]
-      static extern IntPtr ShellExecute(
-          IntPtr hwnd,
-          string lpOperation,
-          string lpFile,
-          string lpParameters,
-          string lpDirectory,
-          ShowCommands nShowCmd); readonly Pen m_backgroundPen;
-
-      // ----------------------------------------------------------------------
-
+      readonly Pen m_backgroundPen;
       readonly Brush m_backgroundBrush;
       readonly Brush m_folderBrush;
       readonly Pen m_folderPen;
@@ -84,6 +57,11 @@ namespace FolderSize.WPF
 
       DateTime m_leftMouseDownDateTime = DateTime.Now;
       Point? m_dragPosition;
+
+      // ----------------------------------------------------------------------
+
+      public event EventHandler<FolderEventArgs> FolderClick;
+      public event EventHandler<FolderEventArgs> FolderDoubleClick; 
 
       // ----------------------------------------------------------------------
 
@@ -302,30 +280,30 @@ namespace FolderSize.WPF
          {
             return null;
          }
-         if (sizeIndex.Value.Depth > 0)
-         {
-            var measurementPicker = GetMeasurementPicker ();
 
-            var size = measurementPicker(sizeIndex.Value.CountsAndSizes[job.Root]);
-
-            var xRatio = ActualWidth / sizeIndex.Value.Depth;
-            var yRatio = ActualHeight / size;
-
-            return VisitFolder(
-               m_viewTransform,
-               sizeIndex.Value.CountsAndSizes,
-               0,
-               0,
-               xRatio,
-               yRatio,
-               job.Root,
-               measurementPicker,
-               visitor);
-         }
-         else
+         if (sizeIndex.Value.Depth <= 0)
          {
             return null;
          }
+
+         var measurementPicker = GetMeasurementPicker ();
+
+         var size =
+            measurementPicker (sizeIndex.Value.CountsAndSizes[job.Root]);
+
+         var xRatio = ActualWidth / sizeIndex.Value.Depth;
+         var yRatio = ActualHeight / size;
+
+         return VisitFolder (
+            m_viewTransform,
+            sizeIndex.Value.CountsAndSizes,
+            0,
+            0,
+            xRatio,
+            yRatio,
+            job.Root,
+            measurementPicker,
+            visitor);
       }
 
       // ----------------------------------------------------------------------
@@ -342,24 +320,22 @@ namespace FolderSize.WPF
              folder,
              rect) =>
             {
-               if (rect.Contains(viewPosition))
-               {
-                  result = folder;
-                  return false;
-               }
-               else
+               if (!rect.Contains (viewPosition))
                {
                   return true;
                }
+
+               result = folder;
+               return false;
             });
 
          return result;
       }
 
 
-      // ----------------------------------------------------------------------
+      // ======================================================================
       // Mouse event handlers
-      // ----------------------------------------------------------------------
+      // ======================================================================
 
       protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
       {
@@ -385,16 +361,14 @@ namespace FolderSize.WPF
 
             if (folder != null)
             {
-               var path = System.IO.Path.GetFullPath(folder.Path);
-               if (Directory.Exists (path))
+               if (FolderDoubleClick != null)
                {
-                  ShellExecute (
-                     IntPtr.Zero,
-                     "explore",
-                     path,
-                     null,
-                     null,
-                     ShowCommands.SW_NORMAL);
+                  FolderDoubleClick(
+                     this,
+                     new FolderEventArgs
+                     {
+                        Folder = folder
+                     });
                }
             }
             
@@ -419,6 +393,15 @@ namespace FolderSize.WPF
             if (folder != null)
             {
                Path = System.IO.Path.GetFullPath (folder.Path);
+               if (FolderClick != null)
+               {
+                  FolderClick (
+                     this, 
+                     new FolderEventArgs
+                        {
+                           Folder = folder
+                        });
+               }
             }
          }
 
@@ -584,7 +567,7 @@ namespace FolderSize.WPF
       // Dependency properties change callbacks
       // ======================================================================
 
-      partial void OnDisplayModePropertyChangedPartial(FolderTreeDisplayMode oldValue, FolderTreeDisplayMode newValue)
+      partial void OnDisplayModePropertyChangedPartial(FolderTreeDisplayMode ldValue, FolderTreeDisplayMode newValue)
       {
          RefreshFolderTree();
       }
