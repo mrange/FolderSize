@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="MainWindow">
+      <UniqueIdentifier>{f2c8fc28-4153-42a8-adb6-c62054255769}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Painter">
+      <UniqueIdentifier>{df3868c1-36fe-4704-b55d-ff67b2ba5113}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Traverser">
+      <UniqueIdentifier>{c3fc74bc-eb26-459b-b76d-7cdb6976d459}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FolderSizeWin32.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="folder.hpp" />
+    <ClInclude Include="Linear.hpp" />
+    <ClInclude Include="Painter\Painter.hpp">
+      <Filter>Painter</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Traverser\Traverser.hpp">
+      <Filter>Traverser</Filter>
+    </ClInclude>
+    <ClInclude Include="Win32.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="folder.cpp" />
+    <ClCompile Include="FolderSizeWin32.cpp" />
+    <ClCompile Include="MainWindow\MainWindow.cpp">
+      <Filter>MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="Painter\Painter.cpp">
+      <Filter>Painter</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Traverser\Traverser.cpp">
+      <Filter>Traverser</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FolderSizeWin32.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
