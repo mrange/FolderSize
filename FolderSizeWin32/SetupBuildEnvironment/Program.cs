@@ -1,6 +1,6 @@
-/* ****************************************************************************
+ï»¿/* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
  * This source code is subject to terms and conditions of the Microsoft Public License. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
@@ -13,6 +13,17 @@
  *
  * ***************************************************************************/
 
-// ----------------------------------------------------------------------------
-#include "stdafx.h"
-// ----------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace SetupBuildEnvironment
+{
+   class Program
+   {
+      static void Main(string[] args)
+      {
+      }
+   }
+}

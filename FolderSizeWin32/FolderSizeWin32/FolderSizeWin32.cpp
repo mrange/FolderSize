@@ -1,3 +1,18 @@
+/* ****************************************************************************
+ *
+ * Copyright (c) Mårten Rånge.
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ *
+ * ***************************************************************************/
+
 // ----------------------------------------------------------------------------
 #include "stdafx.h"
 // ----------------------------------------------------------------------------
@@ -5,25 +20,25 @@
 // ----------------------------------------------------------------------------
 namespace main_window
 {
-   int                  application_main_loop (
-                           HINSTANCE hInstance,
-                           HINSTANCE hPrevInstance,
-                           LPTSTR    lpCmdLine,
-                           int       nCmdShow);
+   int application_main_loop (
+         HINSTANCE hInstance
+      ,  HINSTANCE hPrevInstance
+      ,  LPTSTR    lpCmdLine
+      ,  int       nCmdShow);
 }
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 int APIENTRY _tWinMain (
-   HINSTANCE hInstance,
-   HINSTANCE hPrevInstance,
-   LPTSTR    lpCmdLine,
-   int       nCmdShow)
+      HINSTANCE hInstance
+   ,  HINSTANCE hPrevInstance
+   ,  LPTSTR    lpCmdLine
+   ,  int       nCmdShow)
 {
    main_window::application_main_loop (
-      hInstance,
-      hPrevInstance,
-      lpCmdLine,
-      nCmdShow);
+         hInstance
+      ,  hPrevInstance
+      ,  lpCmdLine
+      ,  nCmdShow);
 }
 // ----------------------------------------------------------------------------

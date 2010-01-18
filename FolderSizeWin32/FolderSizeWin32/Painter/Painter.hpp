@@ -1,3 +1,18 @@
+/* ****************************************************************************
+ *
+ * Copyright (c) Mårten Rånge.
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ *
+ * ***************************************************************************/
+
 // ----------------------------------------------------------------------------
 #pragma once
 // ----------------------------------------------------------------------------
@@ -9,10 +24,14 @@
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
 // ----------------------------------------------------------------------------
+#include "../Linear.hpp"
 #include "../folder.hpp"
 // ----------------------------------------------------------------------------
 namespace painter
 {
+   // -------------------------------------------------------------------------
+   typedef linear::matrix<double, 3, 3>   transform   ;
+   typedef linear::vector<double, 3>      coordinate  ;
    // -------------------------------------------------------------------------
    struct painter : boost::noncopyable
    {
@@ -20,11 +39,10 @@ namespace painter
 
       typedef std::tr1::function<folder::folder const * ()> folder_getter;
 
-      painter (folder_getter const getter);
+      painter (folder_getter const folder_getter);
 
-      void paint (HDC const hdc, int width, int height);
+      void paint (HDC const hdc, transform transform, int width, int height);
 
-      void set_size (int width, int height);
    private:
       std::auto_ptr<impl> m_impl;
    };

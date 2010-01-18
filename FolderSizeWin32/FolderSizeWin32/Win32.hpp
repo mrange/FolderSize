@@ -1,3 +1,18 @@
+/* ****************************************************************************
+ *
+ * Copyright (c) Mårten Rånge.
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ *
+ * ***************************************************************************/
+
 // ----------------------------------------------------------------------------
 #pragma once
 // ----------------------------------------------------------------------------
@@ -36,7 +51,7 @@ namespace win32
       proc const        procedure;
       handle const      value;
 
-      bool const join (DWORD const ms) const throw ();
+      bool const join (unsigned int const ms) const throw ();
       bool const is_terminated () const throw ();
 
    private:
@@ -62,6 +77,84 @@ namespace win32
       WIN32_FIND_DATA   find_data;
       HANDLE const      find_file_handle;
    };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   template<typename ValueType>
+   struct thread_safe_scoped_ptr
+   {
+      thread_safe_scoped_ptr () throw ()
+         :  m_ptr (NULL)
+      {
+      }
+
+      thread_safe_scoped_ptr (ValueType * const ptr) throw ()
+         :  m_ptr (ptr)
+      {
+      }
+
+      std::auto_ptr<ValueType> reset (ValueType * const ptr = NULL) throw ()
+      {
+         auto pointer = m_ptr;
+         while (
+            pointer != InterlockedCompareExchangePointer (
+                  &m_ptr
+               ,  ptr
+               ,  pointer))
+         {
+            pointer = m_ptr;
+         }
+
+         return std::auto_ptr<ValueType> (reinterpret_cast<ValueType*> (pointer));
+      }
+
+   private:
+      void * volatile m_ptr;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   struct event : boost::noncopyable
+   {
+      event (bool auto_reset = false);
+
+      void set () throw ();
+
+      handle const value;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   struct device_context : boost::noncopyable
+   {
+      device_context (HDC const dc) throw ();
+      ~device_context () throw ();
+
+      HDC const value;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   struct gdi_object
+   {
+      gdi_object (HGDIOBJ const obj) throw ();
+      ~gdi_object () throw ();
+
+      HGDIOBJ const value;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   struct select_object
+   {
+      select_object (HDC const dc_, HGDIOBJ obj_) throw ();
+      ~select_object () throw ();
+
+      HDC const      dc                         ;
+      HGDIOBJ const  previously_selected_object ;
+   };
+   // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------

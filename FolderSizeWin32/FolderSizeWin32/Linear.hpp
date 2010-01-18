@@ -1,3 +1,18 @@
+/* ****************************************************************************
+ *
+ * Copyright (c) Mårten Rånge.
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ *
+ * ***************************************************************************/
+
 // ----------------------------------------------------------------------------
 #pragma once
 // ----------------------------------------------------------------------------
@@ -92,8 +107,8 @@ namespace linear
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, rows_, columns_> const operator- (
-      matrix<value_type_, rows_, columns_> const & left,
-      matrix<value_type_, rows_, columns_> const & right)
+         matrix<value_type_, rows_, columns_> const & left
+      ,  matrix<value_type_, rows_, columns_> const & right)
    {
       left::type matrix = left;
 
@@ -105,8 +120,8 @@ namespace linear
 
    template<typename value_type_, std::size_t left_rows_, std::size_t shared_dimension_, std::size_t right_columns_>
    matrix<value_type_, left_rows_, right_columns_> const operator* (
-      matrix<value_type_, left_rows_, shared_dimension_> const & left,
-      matrix<value_type_, shared_dimension_, right_columns_> const & right)
+         matrix<value_type_, left_rows_, shared_dimension_> const & left
+      ,  matrix<value_type_, shared_dimension_, right_columns_> const & right)
    {
       no_initialize no_init;
       matrix<value_type_, left_rows_, right_columns_> result (no_init);
@@ -142,8 +157,8 @@ namespace linear
    // -------------------------------------------------------------------------
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    vector<value_type_, rows_> const operator* (
-      matrix<value_type_, rows_, columns_> const & left,
-      vector<value_type_, columns_> const & right)
+         matrix<value_type_, rows_, columns_> const & left
+      ,  vector<value_type_, columns_> const & right)
    {
       no_initialize no_init;
       vector<value_type_, rows_> result (no_init);
