@@ -1,3 +1,18 @@
+/* ****************************************************************************
+ *
+ * Copyright (c) Mårten Rånge.
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ *
+ * ***************************************************************************/
+
 // ----------------------------------------------------------------------------
 #include "StdAfx.h"
 #include "win32.hpp"
@@ -40,7 +55,7 @@ namespace win32
    {
    }
 
-   bool const thread::join (DWORD const ms) const throw ()
+   bool const thread::join (unsigned int const ms) const throw ()
    {
       if (value.is_valid ())
       {
@@ -130,6 +145,60 @@ namespace win32
    {
       BOOL const close_result = FindClose (find_file_handle);
    }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   event::event (bool auto_reset)
+      :  value (CreateEvent (NULL, auto_reset, FALSE, NULL))
+   {
+   }
+
+   void event::set () throw ()
+   {
+      if (value.is_valid ())
+      {
+         SetEvent (value.value);
+      }
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   device_context::device_context (HDC const dc) throw ()
+      :  value (dc)
+   {
+   }
+
+   device_context::~device_context () throw ()
+   {
+      auto deleted_result = DeleteDC (value);
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   gdi_object::gdi_object (HGDIOBJ const obj) throw ()
+      :  value (obj)
+   {
+   }
+
+   gdi_object::~gdi_object () throw ()
+   {
+      auto deleted_result = DeleteObject (value);
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   select_object::select_object (HDC const dc_, HGDIOBJ obj_) throw ()
+      :  dc                         (dc_)
+      ,  previously_selected_object (SelectObject (dc_, obj_))
+   {
+   }
+
+   select_object::~select_object () throw ()
+   {
+      SelectObject (dc, previously_selected_object);
+   }
+   // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------

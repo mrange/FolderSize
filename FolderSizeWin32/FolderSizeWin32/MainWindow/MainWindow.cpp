@@ -1,3 +1,18 @@
+/* ****************************************************************************
+ *
+ * Copyright (c) Mårten Rånge.
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ *
+ * ***************************************************************************/
+
 // ----------------------------------------------------------------------------
 #include "stdafx.h"
 #include "../resource.h"
@@ -108,10 +123,10 @@ namespace main_window
 
    // -------------------------------------------------------------------------
    int                  application_main_loop (
-                           HINSTANCE instance,
-                           HINSTANCE previous_instance,
-                           LPTSTR    command_line,
-                           int       command_show);
+                              HINSTANCE instance
+                           ,  HINSTANCE previous_instance
+                           ,  LPTSTR    command_line
+                           ,  int       command_show);
    ATOM                 register_window_class (HINSTANCE instance);
    bool                 init_instance (HINSTANCE, int);
    void                 update_child_window_positions (HWND);
@@ -119,11 +134,11 @@ namespace main_window
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   int                  application_main_loop (
-                           HINSTANCE instance,
-                           HINSTANCE previous_instance,
-                           LPTSTR    command_line,
-                           int       command_show)
+   int application_main_loop (
+         HINSTANCE instance
+      ,  HINSTANCE previous_instance
+      ,  LPTSTR    command_line
+      ,  int       command_show)
    {
       UNREFERENCED_PARAMETER (previous_instance);
       UNREFERENCED_PARAMETER (command_line);
@@ -159,7 +174,7 @@ namespace main_window
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   ATOM                 register_window_class (HINSTANCE instance)
+   ATOM register_window_class (HINSTANCE instance)
    {
       WNDCLASSEX wcex      = {0};
 
@@ -182,7 +197,7 @@ namespace main_window
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   bool                 init_instance (HINSTANCE instance, int command_show)
+   bool init_instance (HINSTANCE instance, int command_show)
    {
       HWND hwnd   = {0};
 
@@ -251,7 +266,7 @@ namespace main_window
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   void                 update_child_window_positions (HWND hwnd)
+   void update_child_window_positions (HWND hwnd)
    {
       auto calculate_coord = [] (int c, int rc) -> int
       {
@@ -293,7 +308,7 @@ namespace main_window
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   LRESULT CALLBACK     window_process (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+   LRESULT CALLBACK window_process (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
    {
       int wmId       = {0};
       int wmEvent    = {0};
