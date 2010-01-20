@@ -19,6 +19,7 @@
 #include <tchar.h>
 #include <windows.h>
 // ----------------------------------------------------------------------------
+#include <cstddef>
 #include <functional>
 #include <memory>
 // ----------------------------------------------------------------------------
@@ -41,7 +42,11 @@ namespace painter
 
       painter (folder_getter const folder_getter);
 
-      void paint (HDC const hdc, transform transform, int width, int height);
+      void paint (
+            HDC const hdc
+         ,  transform const & transform
+         ,  std::size_t const width
+         ,  std::size_t const height);
 
    private:
       std::auto_ptr<impl> m_impl;

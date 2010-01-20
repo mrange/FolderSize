@@ -40,91 +40,175 @@ namespace painter
       struct update_request
       {
          transform         transform         ;
-         int               width             ;
-         int               height            ;
+         std::size_t       width             ;
+         std::size_t       height            ;
          w::device_context compatible_dc     ;
       };
 
       struct update_response
       {
          transform         transform         ;
-         int               width             ;
-         int               height            ;
+         std::size_t       width             ;
+         std::size_t       height            ;
          w::gdi_object     bitmap            ;
       };
+
+      struct background_painter
+      {
+         background_painter (painter::folder_getter const folder_getter_)
+            :  folder_getter     (folder_getter_)
+            ,  thread            (create_proc ())
+            ,  new_frame_request (true)
+            ,  shutdown_request  (false)
+         {
+         }
+
+         w::thread_safe_scoped_ptr<update_request>    update_request    ;
+         w::thread_safe_scoped_ptr<update_response>   update_response   ;
+
+      private:
+         w::thread::proc create_proc () throw ()
+         {
+            return st::bind (&background_painter::proc, this);
+         }
+
+         unsigned int proc ()
+         {
+            
+            HANDLE wait_handles[] =
+               {
+                     new_frame_request.value.value
+                  ,  shutdown_request.value.value
+               };
+
+            auto continue_loop   = true   ;
+            DWORD wait_result    = 0      ;
+
+            do
+            {
+               wait_result = WaitForMultipleObjects (
+                     2
+                  ,  wait_handles
+                  ,  false
+                  ,  1000);
+
+               
+               switch (wait_result)
+               {
+               case WAIT_OBJECT_0 + 0:
+                  {
+                     auto request = update_request.reset ();
+                  }
+                  continue_loop = true;
+                  break;
+               case WAIT_TIMEOUT:
+                  continue_loop = true;
+                  break;
+               case WAIT_OBJECT_0 + 1:
+               case WAIT_ABANDONED:
+               default:
+                  continue_loop = false;
+                  break;
+               }
+            }
+            while (continue_loop);
+
+            return EXIT_SUCCESS;
+         }
+
+         painter::folder_getter                       folder_getter     ;
+         w::thread                                    thread            ;
+         w::event                                     new_frame_request ;
+         w::event                                     shutdown_request  ;
+
+      };
+
+      XFORM const make_xform (transform const & transform)
+      {
+         XFORM form = {0};
+
+         form.eM11   = transform(0,0);
+         form.eM12   = transform(0,1);
+         form.eDx    = transform(0,2);
+
+         form.eM21   = transform(1,0);
+         form.eM22   = transform(1,1);
+         form.eDy    = transform(1,2);
+
+         return form;
+      }
+
+      XFORM const make_xform (
+         std::auto_ptr<update_response> const update_response,
+         transform const & transform,
+         std::size_t const height,
+         std::size_t const width)
+      {
+         XFORM form = {0};
+
+         return form;
+      }
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
    struct painter::impl
    {
-      impl (painter::folder_getter const folder_getter_)
-         :  folder_getter     (folder_getter_)
-         ,  thread            (create_proc ())
-         ,  new_frame_request (true)
-         ,  shutdown_request  (false)
+
+      void paint (
+            HDC const hdc
+         ,  transform const & transform
+         ,  std::size_t const width
+         ,  std::size_t const height)
       {
-      }
+         auto response = background_painter.update_response.reset ();
 
-      w::thread::proc create_proc () throw ()
-      {
-         return st::bind (&impl::proc, this);
-      }
-
-      unsigned int proc ()
-      {
-         
-         HANDLE wait_handles[] =
-            {
-                  new_frame_request.value.value
-               ,  shutdown_request.value.value
-            };
-
-         auto continue_loop   = true   ;
-         DWORD wait_result    = 0      ;
-
-         do
+         if (response.get ())
          {
-            wait_result = WaitForMultipleObjects (
-                  2
-               ,  wait_handles
-               ,  false
-               ,  1000);
+            update_response = response;
+         }
 
-            
-            switch (wait_result)
+         if (update_response.get ())
+         {
+            w::device_context dc (CreateCompatibleDC (hdc));
+            w::select_object select_bitmap (dc.value, update_response->bitmap.value);
+
+            if (
+                  update_response->transform == transform
+               && update_response->height == height
+               && update_response->width == width)
             {
-            case WAIT_OBJECT_0 + 0:
-               {
-                  auto request = update_request.reset ();
-               }
-               continue_loop = true;
-               break;
-            case WAIT_TIMEOUT:
-               continue_loop = true;
-               break;
-            case WAIT_OBJECT_0 + 1:
-            case WAIT_ABANDONED:
-            default:
-               continue_loop = false;
-               break;
+            }
+            else
+            {
             }
 
+            XFORM const form = make_xform (
+               update_response,
+               transform,
+               height,
+               width);
 
+            w::set_world_transform world_transform (
+               hdc,
+               &form
+               );
+
+            BitBlt(
+               hdc,
+               0,
+               0,
+               width,
+               height,
+               dc.value,
+               0,
+               0,
+               SRCCOPY);
          }
-         while (continue_loop);
-
-
-         return EXIT_SUCCESS;
       }
 
-      painter::folder_getter                       folder_getter     ;
-      w::thread                                    thread            ;
-      w::event                                     new_frame_request ;
-      w::event                                     shutdown_request  ;
-
-      w::thread_safe_scoped_ptr<update_request>    update_request    ;
-      w::thread_safe_scoped_ptr<update_response>   update_response   ;
+      background_painter                              background_painter;
+      std::auto_ptr<update_response>                  update_response   ;
    };
    // -------------------------------------------------------------------------
 
@@ -133,8 +217,13 @@ namespace painter
    {
    }
 
-   void painter::paint (HDC const hdc, transform transform, int width, int height)
+   void painter::paint (
+            HDC const hdc
+         ,  transform const & transform
+         ,  std::size_t const width
+         ,  std::size_t const height)
    {
+      m_impl->paint (hdc, transform, width, height);
    }
    // -------------------------------------------------------------------------
 
