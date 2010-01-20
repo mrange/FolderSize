@@ -19,6 +19,7 @@
 #include <windows.h>
 // ----------------------------------------------------------------------------
 #include <functional>
+#include <memory>
 #include <string>
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
@@ -96,6 +97,7 @@ namespace win32
       std::auto_ptr<ValueType> reset (ValueType * const ptr = NULL) throw ()
       {
          auto pointer = m_ptr;
+
          while (
             pointer != InterlockedCompareExchangePointer (
                   &m_ptr
@@ -135,7 +137,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct gdi_object
+   struct gdi_object : boost::noncopyable
    {
       gdi_object (HGDIOBJ const obj) throw ();
       ~gdi_object () throw ();
@@ -145,13 +147,24 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct select_object
+   struct select_object : boost::noncopyable
    {
       select_object (HDC const dc_, HGDIOBJ obj_) throw ();
       ~select_object () throw ();
 
       HDC const      dc                         ;
       HGDIOBJ const  previously_selected_object ;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   struct set_world_transform : boost::noncopyable 
+   {
+      set_world_transform (HDC const dc_, XFORM const * const transform) throw ();
+      ~set_world_transform () throw ();
+
+      HDC const      dc                         ;
+      XFORM const    old_transform              ;
    };
    // -------------------------------------------------------------------------
 
