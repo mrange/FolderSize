@@ -19,6 +19,7 @@
 #include "Painter.hpp"
 // ----------------------------------------------------------------------------
 #include "../Linear.hpp"
+#include "../Messages.hpp"
 #include "../Win32.hpp"
 // ----------------------------------------------------------------------------
 namespace painter
@@ -37,34 +38,55 @@ namespace painter
    // -------------------------------------------------------------------------
    namespace
    {
-      struct update_request
+      typedef linear::matrix<double, 3, 3>      transform   ;
+
+      struct update_request : b::noncopyable
       {
-         transform         transform         ;
-         std::size_t       width             ;
-         std::size_t       height            ;
-         w::device_context compatible_dc     ;
+         typedef s::auto_ptr<update_request> ptr;
+
+         folder::folder const    root              ;
+
+         DWORD const             main_thread_id    ;
+         coordinate const        centre            ;
+         zoom_factor const       zoom              ;
+         dimension const         screen_size       ;
+         w::device_context const compatible_dc     ;
       };
 
-      struct update_response
+      struct update_response : b::noncopyable
       {
-         transform         transform         ;
-         std::size_t       width             ;
-         std::size_t       height            ;
-         w::gdi_object     bitmap            ;
+         typedef s::auto_ptr<update_response> ptr;
+
+         update_response (
+            update_request    const &  request
+            )
+            :  centre      (request.centre)
+            ,  zoom        (request.zoom)
+            ,  bitmap_size (request.screen_size)
+            ,  bitmap      (CreateCompatibleBitmap (
+                  request.compatible_dc.value
+                , request.screen_size.x ()
+                , request.screen_size.y ()))
+         {
+         }
+
+         coordinate const     centre            ;
+         zoom_factor const    zoom              ;
+         dimension const      bitmap_size       ;
+         w::gdi_object const  bitmap            ;
       };
 
       struct background_painter
       {
-         background_painter (painter::folder_getter const folder_getter_)
-            :  folder_getter     (folder_getter_)
-            ,  thread            (create_proc ())
+         background_painter ()
+            :  thread            (create_proc ())
             ,  new_frame_request (true)
             ,  shutdown_request  (false)
          {
          }
 
-         w::thread_safe_scoped_ptr<update_request>    update_request    ;
-         w::thread_safe_scoped_ptr<update_response>   update_response   ;
+         w::thread_safe_scoped_ptr<update_request>    update_request_value    ;
+         w::thread_safe_scoped_ptr<update_response>   update_response_value   ;
 
       private:
          w::thread::proc create_proc () throw ()
@@ -97,7 +119,22 @@ namespace painter
                {
                case WAIT_OBJECT_0 + 0:
                   {
-                     auto request = update_request.reset ();
+                     auto request_ptr = update_request_value.reset ();
+
+                     if (request_ptr.get ())
+                     {
+                        update_request const & request = *request_ptr;
+                        auto response = update_response::ptr (
+                           new update_response (request));
+
+                        update_response_value.reset (response.release ());
+
+                        PostThreadMessage (
+                              request.main_thread_id
+                           ,  messages::refresh_view
+                           ,  0
+                           ,  0);
+                     }
                   }
                   continue_loop = true;
                   break;
@@ -116,14 +153,14 @@ namespace painter
             return EXIT_SUCCESS;
          }
 
-         painter::folder_getter                       folder_getter     ;
          w::thread                                    thread            ;
          w::event                                     new_frame_request ;
          w::event                                     shutdown_request  ;
 
       };
 
-      XFORM const make_xform (transform const & transform)
+      XFORM const make_xform (
+         transform const & transform)
       {
          XFORM form = {0};
 
@@ -137,17 +174,6 @@ namespace painter
 
          return form;
       }
-
-      XFORM const make_xform (
-         std::auto_ptr<update_response> const update_response,
-         transform const & transform,
-         std::size_t const height,
-         std::size_t const width)
-      {
-         XFORM form = {0};
-
-         return form;
-      }
    }
    // -------------------------------------------------------------------------
 
@@ -157,11 +183,11 @@ namespace painter
 
       void paint (
             HDC const hdc
-         ,  transform const & transform
-         ,  std::size_t const width
-         ,  std::size_t const height)
+         ,  coordinate const & centre
+         ,  zoom_factor const & zoom
+         ,  dimension const & screen_size)
       {
-         auto response = background_painter.update_response.reset ();
+         auto response = background_painter.update_response_value.reset ();
 
          if (response.get ())
          {
@@ -174,36 +200,38 @@ namespace painter
             w::select_object select_bitmap (dc.value, update_response->bitmap.value);
 
             if (
-                  update_response->transform == transform
-               && update_response->height == height
-               && update_response->width == width)
+                  update_response->centre == centre
+               && update_response->zoom == zoom
+               && update_response->bitmap_size == screen_size)
             {
+               auto xform = make_xform (l::identity<double, 3> ());
+
+               w::set_world_transform world_transform (
+                     hdc
+                  ,  &xform
+                  );
             }
             else
             {
+               auto xform = make_xform (l::identity<double, 3> ());
+
+               w::set_world_transform world_transform (
+                     hdc
+                  ,  &xform
+                  );
             }
 
-            XFORM const form = make_xform (
-               update_response,
-               transform,
-               height,
-               width);
-
-            w::set_world_transform world_transform (
-               hdc,
-               &form
-               );
-
             BitBlt(
-               hdc,
-               0,
-               0,
-               width,
-               height,
-               dc.value,
-               0,
-               0,
-               SRCCOPY);
+                  hdc
+               ,  0
+               ,  0
+               ,  update_response->bitmap_size.x ()
+               ,  update_response->bitmap_size.y ()
+               ,  dc.value
+               ,  0
+               ,  0
+               ,  SRCCOPY
+               );
          }
       }
 
@@ -213,17 +241,13 @@ namespace painter
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   painter::painter (folder_getter const folder_getter)
-   {
-   }
-
    void painter::paint (
-            HDC const hdc
-         ,  transform const & transform
-         ,  std::size_t const width
-         ,  std::size_t const height)
+         HDC const hdc
+      ,  coordinate const & centre
+      ,  zoom_factor const & zoom
+      ,  dimension const & screen_size)
    {
-      m_impl->paint (hdc, transform, width, height);
+      m_impl->paint (hdc, centre, zoom, screen_size);
    }
    // -------------------------------------------------------------------------
 

@@ -24,7 +24,8 @@ namespace main_window
          HINSTANCE hInstance
       ,  HINSTANCE hPrevInstance
       ,  LPTSTR    lpCmdLine
-      ,  int       nCmdShow);
+      ,  int       nCmdShow
+      );
 }
 // ----------------------------------------------------------------------------
 

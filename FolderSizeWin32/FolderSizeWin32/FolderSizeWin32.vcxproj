@@ -88,6 +88,7 @@
   <ItemGroup>
     <ClInclude Include="folder.hpp" />
     <ClInclude Include="Linear.hpp" />
+    <ClInclude Include="Messages.hpp" />
     <ClInclude Include="Painter\Painter.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />

@@ -26,6 +26,7 @@
   <ItemGroup>
     <ClInclude Include="folder.hpp" />
     <ClInclude Include="Linear.hpp" />
+    <ClInclude Include="Messages.hpp" />
     <ClInclude Include="Painter\Painter.hpp">
       <Filter>Painter</Filter>
     </ClInclude>

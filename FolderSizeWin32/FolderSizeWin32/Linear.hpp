@@ -18,6 +18,9 @@
 // ----------------------------------------------------------------------------
 #include <cstddef>
 // ----------------------------------------------------------------------------
+#include <boost/assert.hpp>
+#include <boost/static_assert.hpp>
+// ----------------------------------------------------------------------------
 namespace linear
 {
    // -------------------------------------------------------------------------
@@ -56,6 +59,30 @@ namespace linear
       {
       }
 
+      value_type const operator() (std::size_t const row) const throw ()
+      {
+         BOOST_ASSERT (row < no_of_values);
+         return values[row];
+      }
+
+      value_type const x () const throw ()
+      {
+         BOOST_STATIC_ASSERT (0 < no_of_values);
+         return values[0];
+      }
+
+      value_type const y () const throw ()
+      {
+         BOOST_STATIC_ASSERT (1 < no_of_values);
+         return values[1];
+      }
+
+      value_type const z () const throw ()
+      {
+         BOOST_STATIC_ASSERT (2 < no_of_values);
+         return values[2];
+      }
+
       value_type  values[no_of_values];
    };
    // -------------------------------------------------------------------------
@@ -77,7 +104,7 @@ namespace linear
       {
          auto default_value = value_type ();
 
-         for(auto iter = 0; iter < no_of_values; ++iter, )
+         for(auto iter = 0; iter < no_of_values; ++iter)
          {
             values[iter] = default_value;
          }
@@ -89,6 +116,7 @@ namespace linear
 
       value_type const operator() (std::size_t const row, std::size_t const column) const throw ()
       {
+         BOOST_ASSERT (column + columns * row < no_of_values);
          return values[column + columns * row];
       }
 
@@ -109,8 +137,8 @@ namespace linear
    // -------------------------------------------------------------------------
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    bool const operator== (
-      matrix<value_type_, rows_, columns_> & left,
-      matrix<value_type_, rows_, columns_> const & right)
+         matrix<value_type_, rows_, columns_> const & left
+      ,  matrix<value_type_, rows_, columns_> const & right)
    {
       auto result = true;
       for(auto iter = 0; iter < matrix<value_type_, rows_, columns_>::no_of_values; ++iter)
@@ -122,8 +150,8 @@ namespace linear
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, rows_, columns_> const operator+= (
-      matrix<value_type_, rows_, columns_> & left,
-      matrix<value_type_, rows_, columns_> const & right)
+         matrix<value_type_, rows_, columns_> & left
+      ,  matrix<value_type_, rows_, columns_> const & right)
    {
       for(auto iter = 0; iter < left::no_of_values; ++iter)
       {
@@ -133,8 +161,8 @@ namespace linear
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, rows_, columns_> const operator+ (
-      matrix<value_type_, rows_, columns_> const & left,
-      matrix<value_type_, rows_, columns_> const & right)
+         matrix<value_type_, rows_, columns_> const & left
+      ,  matrix<value_type_, rows_, columns_> const & right)
    {
       left::type matrix = left;
       matrix += right;
@@ -143,8 +171,8 @@ namespace linear
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, rows_, columns_> const operator+ (
-      matrix<value_type_, rows_, columns_> && left,
-      matrix<value_type_, rows_, columns_> const && right)
+         matrix<value_type_, rows_, columns_> && left
+      ,  matrix<value_type_, rows_, columns_> const && right)
    {
       left += right;
       return left;
@@ -152,8 +180,8 @@ namespace linear
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, rows_, columns_> const operator-= (
-      matrix<value_type_, rows_, columns_> & left,
-      matrix<value_type_, rows_, columns_> const & right)
+         matrix<value_type_, rows_, columns_> & left
+      ,  matrix<value_type_, rows_, columns_> const & right)
    {
       for(auto iter = 0; iter < left::no_of_values; ++iter)
       {
@@ -173,8 +201,8 @@ namespace linear
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, rows_, columns_> const operator- (
-      matrix<value_type_, rows_, columns_> && left,
-      matrix<value_type_, rows_, columns_> const && right)
+         matrix<value_type_, rows_, columns_> && left
+      ,  matrix<value_type_, rows_, columns_> const && right)
    {
       left -= right;
       return left;
@@ -247,6 +275,21 @@ namespace linear
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   template<typename value_type_, std::size_t rows_>
+   bool const operator== (
+         vector<value_type_, rows_> const & left
+      ,  vector<value_type_, rows_> const & right)
+   {
+      auto result = true;
+      for(auto iter = 0; iter < vector<value_type_, rows_>::no_of_values; ++iter)
+      {
+         result &= left.values[iter] == right.values[iter];
+      }
+      return result;
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    template<typename value_type_, std::size_t dimension_>
    matrix<value_type_, dimension_, dimension_> const zero()
    {
@@ -270,31 +313,35 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t dimension_>
-   matrix<value_type_, dimension_, dimension_> const translate(
+   matrix<value_type_, dimension_ + 1, dimension_ + 1> const translate(
       vector<value_type_, dimension_> const & offset)
    {
-      matrix<value_type_, dimension_, dimension_> result;
-      auto result_values_ptr = result.values + (dimension_ - 1);
+      matrix<value_type_, dimension_ + 1, dimension_ + 1> result;
+      auto result_values_ptr = result.values + dimension_;
 
-      for (auto iter = 0; iter < dimension_; ++iter, result_values_ptr += dimension_)
+      for (auto iter = 0; iter < dimension_; ++iter, result_values_ptr += dimension_ + 1)
       {
          *result_values_ptr = offset.values[iter];
       }
+
+      *result_values_ptr = 1;
 
       return result;
    }
 
    template<typename value_type_, std::size_t dimension_>
-   matrix<value_type_, dimension_, dimension_> const scale(
+   matrix<value_type_, dimension_ + 1, dimension_ + 1> const scale(
       vector<value_type_, dimension_> const & scaling)
    {
-      matrix<value_type_, dimension_, dimension_> result;
+      matrix<value_type_, dimension_ + 1, dimension_ + 1> result;
       auto result_values_ptr = result.values;
 
-      for (auto iter = 0; iter < dimension_; ++iter, result_values_ptr += dimension_ + 1)
+      for (auto iter = 0; iter < dimension_; ++iter, result_values_ptr += dimension_ + 2)
       {
          *result_values_ptr = scaling.values[iter];
       }
+
+      *result_values_ptr = 1;
 
       return result;
    }
