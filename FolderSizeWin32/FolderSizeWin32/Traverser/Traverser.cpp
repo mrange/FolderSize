@@ -135,8 +135,8 @@ namespace traverser
       find_file (
          w::tstring const & path)
          :  find_file_handle (FindFirstFile (
-               path.c_str (),
-               &find_data))
+                  path.c_str ()
+               ,  &find_data))
       {
          
       }
@@ -190,9 +190,9 @@ namespace traverser
       struct job
       {
          job (
-            w::tstring const & p,
-            w::tstring const & n,
-            f::folder const ** fr)
+               w::tstring const & p
+            ,  w::tstring const & n
+            ,  f::folder const ** fr)
             :  path (p)
             ,  name (n)
             ,  folder_replacement (fr)
@@ -283,9 +283,9 @@ namespace traverser
 
                   job_queue.push_back (
                      job (
-                        current_job.path + _T("\\") + folder_name,
-                        folder_name,
-                        sub_folder_ref
+                           current_job.path + _T("\\") + folder_name
+                        ,  folder_name
+                        ,  sub_folder_ref
                         ));
                }
 

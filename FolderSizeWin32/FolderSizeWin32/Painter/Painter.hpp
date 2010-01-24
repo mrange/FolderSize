@@ -31,22 +31,19 @@
 namespace painter
 {
    // -------------------------------------------------------------------------
-   typedef linear::matrix<double, 3, 3>   transform   ;
-   typedef linear::vector<double, 3>      coordinate  ;
+   typedef linear::vector<double, 2>      coordinate  ;
+   typedef linear::vector<double, 2>      zoom_factor ;
+   typedef linear::vector<double, 2>      dimension   ;
    // -------------------------------------------------------------------------
    struct painter : boost::noncopyable
    {
       struct impl;
 
-      typedef std::tr1::function<folder::folder const * ()> folder_getter;
-
-      painter (folder_getter const folder_getter);
-
       void paint (
             HDC const hdc
-         ,  transform const & transform
-         ,  std::size_t const width
-         ,  std::size_t const height);
+         ,  coordinate const & centre
+         ,  zoom_factor const & zoom
+         ,  dimension const & screen_size);
 
    private:
       std::auto_ptr<impl> m_impl;

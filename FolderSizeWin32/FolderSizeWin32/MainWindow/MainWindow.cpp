@@ -73,15 +73,8 @@ namespace main_window
       t::traverser               traverser;
       p::painter                 painter  ;
 
-      static p::painter::folder_getter  get_folder_getter (
-         t::traverser const & t)
-      {
-         return [&t] () { return t.get_root (); };
-      }
-
       state (LPCTSTR const path)
          :  traverser   (path)
-         ,  painter     (get_folder_getter (traverser))
       {
       }
    };
@@ -126,7 +119,8 @@ namespace main_window
                               HINSTANCE instance
                            ,  HINSTANCE previous_instance
                            ,  LPTSTR    command_line
-                           ,  int       command_show);
+                           ,  int       command_show
+                           );
    ATOM                 register_window_class (HINSTANCE instance);
    bool                 init_instance (HINSTANCE, int);
    void                 update_child_window_positions (HWND);
@@ -204,17 +198,18 @@ namespace main_window
       s_instance = instance; // Store instance handle in our global variable
 
       hwnd = CreateWindow (
-         s_window_class, 
-         s_title, 
-         WS_OVERLAPPEDWINDOW,
-         CW_USEDEFAULT, 
-         0, 
-         CW_USEDEFAULT, 
-         0, 
-         NULL, 
-         NULL, 
-         instance, 
-         NULL);
+            s_window_class
+         ,  s_title
+         ,  WS_OVERLAPPEDWINDOW
+         ,  CW_USEDEFAULT
+         ,  0
+         ,  CW_USEDEFAULT
+         ,  0
+         ,  NULL
+         ,  NULL
+         ,  instance
+         ,  NULL
+         );
 
       if (!hwnd)
       {
@@ -244,13 +239,14 @@ namespace main_window
 
             CWindow window;
             wc.hwnd = window.Create (
-               window_class,
-               hwnd,
-               NULL,
-               NULL,
-               WS_CHILD,
-               0,
-               wc.id);
+                  window_class
+               ,  hwnd
+               ,  NULL
+               ,  NULL
+               ,  WS_CHILD
+               ,  0
+               ,  wc.id
+               );
             //window.MoveWindow (wc.left, wc.top, wc.right - wc.left, wc.bottom - wc.top);
             window.SetWindowText (wc.title);
             window.ShowWindow (SW_SHOW);
@@ -298,10 +294,11 @@ namespace main_window
 
                CWindow window(child_window);
                window.MoveWindow (
-                  real_left,
-                  real_top,
-                  real_right     - real_left,
-                  real_bottom    - real_top);
+                     real_left
+                  ,  real_top
+                  ,  real_right     - real_left
+                  ,  real_bottom    - real_top
+                  );
             });
       }
    }

@@ -103,8 +103,8 @@ namespace win32
    find_file::find_file (
       tstring const & path)
       :  find_file_handle (FindFirstFile (
-            path.c_str (),
-            &find_data))
+               path.c_str ()
+            ,  &find_data))
    {
       
    }
