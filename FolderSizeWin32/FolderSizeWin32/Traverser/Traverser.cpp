@@ -42,149 +42,6 @@ namespace traverser
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct handle : b::noncopyable
-   {
-      handle (HANDLE hnd) throw ()
-         :  value (hnd)
-      {
-      }
-
-      ~handle () throw ()
-      {
-         if (is_valid ())
-         {
-            BOOL const close_result = CloseHandle (value);
-         }
-      }
-
-      bool const is_valid () const throw ()
-      {
-         return value != INVALID_HANDLE_VALUE;
-      }
-
-      HANDLE const value;
-   };
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
-   struct thread : b::noncopyable
-   {
-      typedef st::function<unsigned int ()> proc;
-      thread (proc const del)
-         :  procedure (del)
-         ,  value (reinterpret_cast<HANDLE> (_beginthread (raw_proc, 0, this)))
-         ,  terminated (false)
-      {
-      }
-
-      proc const        procedure;
-      handle const      value;
-
-      bool const join (DWORD const ms) const throw ()
-      {
-         if (value.is_valid ())
-         {
-            auto res = WaitForSingleObject (value.value, ms);
-
-            return res == WAIT_OBJECT_0;
-         }
-         else
-         {
-            return false;
-         }
-      }
-   
-      bool is_terminated () const throw ()
-      {
-         return terminated;
-      }
-
-      static void raw_proc (void * ptr) throw ()
-      {
-         auto state = static_cast<thread *> (ptr);
-
-         if (state)
-         {
-            try
-            {
-               auto result = state->procedure ();
-               state->terminated = true;
-               _endthreadex (result);
-            }
-            catch(...)
-            {
-               state->terminated = true;
-               _endthreadex (EXIT_FAILURE);
-            }
-         }
-         else
-         {
-            _endthreadex (EXIT_FAILURE);
-         }
-
-
-      }
-
-      bool volatile        terminated;
-   };
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
-   struct find_file : b::noncopyable
-   {
-      find_file (
-         w::tstring const & path)
-         :  find_file_handle (FindFirstFile (
-                  path.c_str ()
-               ,  &find_data))
-      {
-         
-      }
-
-      bool const is_valid () const throw ()
-      {
-         return find_file_handle != INVALID_HANDLE_VALUE;
-      }
-
-      bool const find_next () throw ()
-      {
-         return FindNextFile (find_file_handle, &find_data);
-      }
-
-      bool const is_directory () const throw ()
-      {
-         return (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
-      }
-
-      __int64 const get_size () const throw ()
-      {
-         return find_data.nFileSizeHigh << 32 | find_data.nFileSizeLow;
-      }
-
-      LPCTSTR const get_name () const throw ()
-      {
-         if (is_valid ())
-         {
-            return find_data.cFileName ? find_data.cFileName : _T("");
-         }
-         else
-         {
-            return _T("");
-         }
-      }
-
-      ~find_file () throw ()
-      {
-         BOOL const close_result = FindClose (find_file_handle);
-      }
-
-   private:
-      WIN32_FIND_DATA   find_data;
-      HANDLE const      find_file_handle;
-   };
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
    struct traverser::impl : b::noncopyable
    {
       struct job
@@ -209,7 +66,7 @@ namespace traverser
       w::tstring const           root_path         ;
       f::folder const *          root              ;
       bool volatile              continue_running  ;
-      thread const               thread            ;     
+      w::thread const            thread            ;     
 
       s::deque<job> const     create_initial_queue (job const & initial_job)
       {
@@ -240,7 +97,7 @@ namespace traverser
          {
             auto current_job = job_queue.front ();
 
-            find_file ff (current_job.path + _T("\\*.*"));
+            w::find_file ff (current_job.path + _T("\\*.*"));
 
             if (continue_running && ff.is_valid ())
             {
@@ -302,7 +159,7 @@ namespace traverser
          return EXIT_SUCCESS;
       }
 
-      thread::proc create_proc () throw ()
+      w::thread::proc create_proc () throw ()
       {
          return st::bind (&impl::proc, this);
       }

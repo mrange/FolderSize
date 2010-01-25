@@ -18,6 +18,8 @@
 // ----------------------------------------------------------------------------
 #include "Painter.hpp"
 // ----------------------------------------------------------------------------
+#include <unordered_map>
+// ----------------------------------------------------------------------------
 #include "../Linear.hpp"
 #include "../Messages.hpp"
 #include "../Win32.hpp"
@@ -38,7 +40,42 @@ namespace painter
    // -------------------------------------------------------------------------
    namespace
    {
-      typedef linear::matrix<double, 3, 3>      transform   ;
+      typedef linear::matrix<double, 3, 3>                  transform         ;
+      struct size_and_count
+      {
+         size_and_count ()
+            :  size  (0)
+            ,  count (0)
+         {
+         }
+
+         size_and_count (
+               __int64 size_
+            ,  __int64 count_)
+            :  size  (size_)
+            ,  count (count_)
+         {
+         }
+
+         __int64 size   ;
+         __int64 count  ;
+
+      };
+      typedef st::unordered_map<f::folder const *, size_and_count> sizes_and_counts  ;
+
+      size_and_count const update_sizes_and_counts (
+            sizes_and_counts & sc
+         ,  f::folder const * const f)
+      {
+         if (f)
+         {
+            return size_and_count ();
+         }
+         else
+         {
+            return size_and_count ();
+         }
+      }
 
       struct update_request : b::noncopyable
       {
@@ -115,26 +152,24 @@ namespace painter
                   ,  1000);
 
                
+               std::auto_ptr<update_request> request_ptr;
+
                switch (wait_result)
                {
                case WAIT_OBJECT_0 + 0:
+                  while ((request_ptr = update_request_value.reset ()).get ())
                   {
-                     auto request_ptr = update_request_value.reset ();
+                     update_request const & request = *request_ptr;
+                     auto response = update_response::ptr (
+                        new update_response (request));
 
-                     if (request_ptr.get ())
-                     {
-                        update_request const & request = *request_ptr;
-                        auto response = update_response::ptr (
-                           new update_response (request));
+                     update_response_value.reset (response.release ());
 
-                        update_response_value.reset (response.release ());
-
-                        PostThreadMessage (
-                              request.main_thread_id
-                           ,  messages::refresh_view
-                           ,  0
-                           ,  0);
-                     }
+                     PostThreadMessage (
+                           request.main_thread_id
+                        ,  messages::refresh_view
+                        ,  0
+                        ,  0);
                   }
                   continue_loop = true;
                   break;

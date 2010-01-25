@@ -200,5 +200,29 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   namespace
+   {
+      XFORM const get_world_transform (HDC const dc_) throw ()
+      {
+         XFORM xform = {0};
+         // Intentionally ignores result
+         GetWorldTransform (dc_, &xform);
+         return xform;
+      }
+   }
+
+   set_world_transform::set_world_transform (HDC const dc_, XFORM const * const transform) throw ()
+      :  dc (dc_)
+      ,  old_transform (get_world_transform (dc_))
+   {
+      // Intentionally ignores result
+      SetWorldTransform (dc_, transform);
+   }
+
+   set_world_transform::~set_world_transform () throw ()
+   {
+      SetWorldTransform (dc, &old_transform);
+   }
+   // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------
