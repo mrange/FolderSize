@@ -16,8 +16,12 @@
 // ----------------------------------------------------------------------------
 #include "stdafx.h"
 // ----------------------------------------------------------------------------
+#undef max
+#undef min
+// ----------------------------------------------------------------------------
 #include "Painter.hpp"
 // ----------------------------------------------------------------------------
+#include <tuple>
 #include <unordered_map>
 // ----------------------------------------------------------------------------
 #include "../Linear.hpp"
@@ -40,40 +44,73 @@ namespace painter
    // -------------------------------------------------------------------------
    namespace
    {
+      const double cut_off_y = 10.0;
+
       typedef linear::matrix<double, 3, 3>                  transform         ;
-      struct size_and_count
+
+      struct folder_info
       {
-         size_and_count ()
-            :  size  (0)
+         folder_info ()
+            :  depth (1)
+            ,  size  (0)
             ,  count (0)
          {
          }
 
-         size_and_count (
-               __int64 size_
-            ,  __int64 count_)
-            :  size  (size_)
+         folder_info (
+               std::size_t depth_
+            ,  __int64     size_
+            ,  __int64     count_)
+            :  depth (depth_)
+            ,  size  (size_)
             ,  count (count_)
          {
          }
 
-         __int64 size   ;
-         __int64 count  ;
+         std::size_t    depth    ;
+         __int64        size   ;
+         __int64        count  ;
 
       };
-      typedef st::unordered_map<f::folder const *, size_and_count> sizes_and_counts  ;
 
-      size_and_count const update_sizes_and_counts (
-            sizes_and_counts & sc
+      static folder_info const operator+ (
+            folder_info const & left
+         ,  folder_info const & right)
+      {
+         return folder_info (
+               std::max (left.depth, right.depth)
+            ,   left.size + right.size
+            ,  left.count + right.count);
+      }
+
+      typedef st::unordered_map<f::folder const *, folder_info> folder_infos  ;
+
+      folder_info const update_folder_infos (
+            folder_infos & fis
          ,  f::folder const * const f)
       {
          if (f)
          {
-            return size_and_count ();
+            folder_info fi;
+
+            auto folder_count = f->folder_count;
+
+            for (std::size_t iter = 0; iter < folder_count; ++iter)
+            {
+               fi = fi + update_folder_infos (
+                     fis
+                  ,  f->sub_folders[iter]);
+            }
+
+            fi = fi + folder_info (fi.depth + 1, f->size, f->file_count);
+
+            fis[f] = fi;
+
+            return fi;
          }
          else
          {
-            return size_and_count ();
+            return folder_info ();
          }
       }
 
@@ -81,13 +118,13 @@ namespace painter
       {
          typedef s::auto_ptr<update_request> ptr;
 
-         folder::folder const    root              ;
+         folder::folder const * const  root              ;
 
-         DWORD const             main_thread_id    ;
-         coordinate const        centre            ;
-         zoom_factor const       zoom              ;
-         dimension const         screen_size       ;
-         w::device_context const compatible_dc     ;
+         DWORD const                   main_thread_id    ;
+         coordinate const              centre            ;
+         zoom_factor const             zoom              ;
+         dimension const               screen_size       ;
+         w::device_context const       compatible_dc     ;
       };
 
       struct update_response : b::noncopyable
@@ -131,6 +168,104 @@ namespace painter
             return st::bind (&background_painter::proc, this);
          }
 
+         template<
+               typename TPropertyPickerPredicate
+            ,  typename TPainterPredicate>
+         void folder_traverser_impl (
+               folder_infos const & fis
+            ,  double const x
+            ,  double const y
+            ,  double const x_step_ratio
+            ,  double const y_step_ratio
+            ,  f::folder const * const folder
+            ,  TPropertyPickerPredicate propertyPicker
+            ,  TPainterPredicate painter
+            )
+         {
+            if (folder)
+            {
+               auto fi = fis[folder];
+
+               auto property = propertyPicker (fi);
+
+               auto current_x = x;
+               auto current_y = y;
+               auto next_x = current_x + x_step_ratio;
+
+               painter (
+                     property
+                  ,  current_x
+                  ,  current_y
+                  ,  x_step_ratio
+                  ,  property * y_step_ratio
+                  ,  *folder
+                  );
+
+               auto folder_count = folder->folder_count;
+
+               for (std::size_t iter = 0; iter < folder_count; ++iter)
+               {
+                  auto sub_folder = folder->sub_folders[iter];
+
+                  if (sub_folder)
+                  {
+                     auto sfi = fis[sub_folder];
+                     auto sproperty = propertyPicker (sfi);
+                     auto y_step = y_step_ratio * sproperty;
+
+                     folder_traverser_impl (
+                           fis
+                        ,  next_x
+                        ,  current_y
+                        ,  x_step_ratio
+                        ,  y_step_ratio
+                        ,  sub_folder
+                        ,  propertyPicker 
+                        ,  painter
+                        );
+
+                     current_y += y_step;
+                  }
+               }
+            }
+         }
+
+         template<
+               typename TPropertyPickerPredicate
+            ,  typename TPainterPredicate>
+         void folder_traverser (
+               folder_infos const & fis
+            ,  dimension const & size
+            ,  f::folder const * const root
+            ,  TPropertyPickerPredicate propertyPicker
+            ,  TPainterPredicate painter
+            )
+         {
+            if (root && dimension.x > 0 && dimension.y > 0)
+            {
+               auto fi = fis[root];
+
+               auto property = propertyPicker (fi);
+
+               if (property > 0 && fi.depth > 0)
+               {
+                  auto x_step_ratio = dimension.x / fi.depth;
+                  auto y_step_ratio = dimension.y / property;
+
+                  folder_traverser_impl (
+                        fis
+                     ,  0.0
+                     ,  0.0
+                     ,  x_step_ratio
+                     ,  y_step_ratio
+                     ,  root
+                     ,  propertyPicker
+                     ,  painter
+                     );
+               }
+            }
+         }
+
          unsigned int proc ()
          {
             
@@ -160,16 +295,27 @@ namespace painter
                   while ((request_ptr = update_request_value.reset ()).get ())
                   {
                      update_request const & request = *request_ptr;
-                     auto response = update_response::ptr (
-                        new update_response (request));
 
-                     update_response_value.reset (response.release ());
+                     if (request.root)
+                     {
+                        auto response = update_response::ptr (
+                           new update_response (request));
 
-                     PostThreadMessage (
-                           request.main_thread_id
-                        ,  messages::refresh_view
-                        ,  0
-                        ,  0);
+                        update_response_value.reset (response.release ());
+
+                        folder_infos fis;
+
+                        auto total_folder_info = update_folder_infos (
+                              fis
+                           ,  request.root);
+
+
+                        PostThreadMessage (
+                              request.main_thread_id
+                           ,  messages::refresh_view
+                           ,  0
+                           ,  0);
+                     }
                   }
                   continue_loop = true;
                   break;
