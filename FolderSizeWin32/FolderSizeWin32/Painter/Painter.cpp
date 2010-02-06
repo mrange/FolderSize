@@ -159,8 +159,15 @@ namespace painter
          {
          }
 
+         ~background_painter () throw ()
+         {
+            shutdown_request.set ();
+            thread.join (1000);
+         }
+
          w::thread_safe_scoped_ptr<update_request>    update_request_value    ;
          w::thread_safe_scoped_ptr<update_response>   update_response_value   ;
+         w::event                                     new_frame_request       ;
 
       private:
          w::thread::proc create_proc () throw ()
@@ -336,15 +343,27 @@ namespace painter
                               folder_infos
                            ,  request_ptr->root);
                         
+                        int i = GetDeviceCaps (request_ptr->compatible_dc.value, BITSPIXEL);
+
                         w::select_object const select_bitmap (
                               request_ptr->compatible_dc.value
                            ,  response_ptr->bitmap.value);
 
-                        w::gdi_object<HBRUSH> const solid_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF)));
+                        w::gdi_object<HBRUSH> const black_brush (CreateSolidBrush (RGB(0x00, 0x00, 0xFF)));
+                        w::gdi_object<HBRUSH> const white_brush (CreateSolidBrush (RGB(0xFF, 0x00, 0x00)));
 
                         painter_context const painter_context (
                               request_ptr->compatible_dc.value
-                           ,  solid_brush.value);
+                           ,  black_brush.value
+                           );
+
+                        RECT rect = {0};
+                        rect.right = request_ptr->screen_size.x ();
+                        rect.bottom = request_ptr->screen_size.y ();
+                        FillRect (
+                              request_ptr->compatible_dc.value
+                           ,  &rect
+                           ,  white_brush.value);
 
                         auto painter_ = [&painter_context] (
                               __int64 total_size
@@ -365,16 +384,16 @@ namespace painter
                                  ,  folder);
                            };
 
-                        folder_traverser (
-                              folder_infos
-                           ,  request_ptr->screen_size
-                           ,  request_ptr->root
-                           ,  size_picker
-                           ,  painter_);
+                        //folder_traverser (
+                        //      folder_infos
+                        //   ,  request_ptr->screen_size
+                        //   ,  request_ptr->root
+                        //   ,  size_picker
+                        //   ,  painter_);
 
                         update_response_value.reset (response_ptr.release ());
 
-                        PostThreadMessage (
+                        auto result = PostThreadMessage (
                               request_ptr->main_thread_id
                            ,  messages::refresh_view
                            ,  0
@@ -399,7 +418,6 @@ namespace painter
          }
 
          w::thread                                    thread            ;
-         w::event                                     new_frame_request ;
          w::event                                     shutdown_request  ;
 
       };
@@ -499,6 +517,7 @@ namespace painter
             else
             {
                background_painter.update_request_value.reset (request.release ());   
+               background_painter.new_frame_request.set ();
             }
          }
 
@@ -552,6 +571,13 @@ namespace painter
    //{
    //   m_impl->paint (hdc, centre, zoom, screen_size);
    //}
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   painter::painter ()
+      :  m_impl (new impl())
+   {
+   }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------

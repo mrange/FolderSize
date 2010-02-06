@@ -181,6 +181,40 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      void setup_bitmap (HWND const hwnd)
+      {
+         HWND const hFolderTree = GetDlgItem (hwnd, IDM_FOLDERTREE);
+
+         RECT rect = {0};
+
+         if (hFolderTree && s_state.get () && GetClientRect (hFolderTree, &rect))
+         {
+            w::window_device_context wdc (hFolderTree);
+
+            auto response = s_state->painter.get_bitmap (
+                  s_state->traverser.get_root ()
+               ,  GetCurrentThreadId ()
+               ,  p::coordinate  (create_vector (0.0  , 0.0))
+               ,  p::zoom_factor (create_vector (1.0  , 1.0))
+               ,  p::dimension   (create_vector (rect.right - rect.left  ,  rect.bottom - rect.top))
+               ,  wdc.hdc);
+            
+            if (response.get ())
+            {
+               auto result = SendMessage (
+                     hFolderTree
+                  ,  STM_SETIMAGE
+                  ,  IMAGE_BITMAP
+                  ,  (LPARAM) (HANDLE) response->bitmap.value);
+
+               s_state->update_response   = response;
+            }
+         }
+
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       LRESULT CALLBACK window_process (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
       {
          int wmId       = {0};
@@ -191,35 +225,7 @@ namespace main_window
          switch (message)
          {
          case messages::refresh_view:
-            {
-               HWND const hFolderTree = GetDlgItem (hwnd, IDM_FOLDERTREE);
-
-               RECT rect = {0};
-
-               if (hFolderTree && s_state.get () && GetWindowRect (hFolderTree, &rect))
-               {
-                  w::window_device_context wdc (hFolderTree);
-
-                  auto response = s_state->painter.get_bitmap (
-                        s_state->traverser.get_root ()
-                     ,  GetCurrentThreadId ()
-                     ,  p::coordinate  (create_vector (0.0  , 0.0))
-                     ,  p::zoom_factor (create_vector (1.0  , 1.0))
-                     ,  p::dimension   (create_vector (rect.right - rect.left  ,  rect.bottom - rect.top))
-                     ,  wdc.hdc);
-                  
-                  if (response.get ())
-                  {
-                     SendMessage (
-                           hFolderTree
-                        ,  STM_SETIMAGE
-                        ,  IMAGE_BITMAP
-                        ,  reinterpret_cast<LPARAM> (response->bitmap.value));
-                     s_state->update_response   = response;
-                  }
-               }
-
-            }
+            setup_bitmap (hwnd);
             break;
          case WM_COMMAND:
             wmId    = LOWORD (wParam);
@@ -245,6 +251,7 @@ namespace main_window
                      if (str.GetLength () > 0)
                      {
                         s_state = state::ptr (new state (str));
+                        setup_bitmap (hwnd);
                      }
                   }
                }
@@ -267,6 +274,7 @@ namespace main_window
             break;
          case WM_SIZE:
             update_child_window_positions (hwnd);
+            setup_bitmap (hwnd);
             break;
          case WM_GETMINMAXINFO:
             {
@@ -312,6 +320,11 @@ namespace main_window
       bool init_instance (HINSTANCE instance, int command_show)
       {
          HWND hwnd   = {0};
+
+         INITCOMMONCONTROLSEX InitCtrls = {0};
+      	InitCtrls.dwSize = sizeof(InitCtrls);
+         InitCtrls.dwICC = ICC_WIN95_CLASSES;
+      	InitCommonControlsEx(&InitCtrls);
 
          s_instance = instance; // Store instance handle in our global variable
 
