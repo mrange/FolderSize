@@ -70,6 +70,7 @@ namespace folder
       ,  folder_count   (init.folder_count)
       ,  sub_folders    (new f::folder const * [init.folder_count])
    {
+      memset (sub_folders.get (), 0, init.folder_count * sizeof (void*));
    }
    // -------------------------------------------------------------------------
 

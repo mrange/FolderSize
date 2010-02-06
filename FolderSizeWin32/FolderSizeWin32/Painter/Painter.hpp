@@ -62,6 +62,8 @@ namespace painter
    {
       struct impl;
 
+      painter ();
+
       update_response::ptr get_bitmap (
             folder::folder const * const  root_
          ,  DWORD const                   main_thread_id_
