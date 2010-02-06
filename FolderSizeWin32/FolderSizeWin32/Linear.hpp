@@ -83,6 +83,24 @@ namespace linear
          return values[2];
       }
 
+      void x (value_type const x_) throw ()
+      {
+         BOOST_STATIC_ASSERT (0 < no_of_values);
+         values[0] = x_;
+      }
+
+      void y (value_type const y_) throw ()
+      {
+         BOOST_STATIC_ASSERT (1 < no_of_values);
+         values[1] = y_;
+      }
+
+      void z (value_type const z_) throw ()
+      {
+         BOOST_STATIC_ASSERT (2 < no_of_values);
+         values[2] = z_;
+      }
+
       value_type  values[no_of_values];
    };
    // -------------------------------------------------------------------------

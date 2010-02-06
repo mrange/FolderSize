@@ -3,7 +3,7 @@
  * Copyright (c) Mårten Rånge.
  *
  * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * copy of the license can be found in the License.html folder_infole at the root of this distribution. If 
  * you cannot locate the  Microsoft Public License, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
  * by the terms of the Microsoft Public License.
@@ -39,6 +39,30 @@ namespace painter
    namespace s    = std       ;
    namespace st   = std::tr1  ;
    namespace w    = win32     ;
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   struct update_request : boost::noncopyable
+   {
+      typedef std::auto_ptr<update_request> ptr;
+
+      update_request (
+            folder::folder const * const  root_
+         ,  DWORD const                   main_thread_id_
+         ,  coordinate const              centre_        
+         ,  zoom_factor const             zoom_          
+         ,  dimension const               screen_size_   
+         ,  HDC const                     hdc_
+         );
+
+      folder::folder const * const  root              ;
+
+      DWORD const                   main_thread_id    ;
+      coordinate const              centre            ;
+      zoom_factor const             zoom              ;
+      dimension const               screen_size       ;
+      win32::device_context const   compatible_dc     ;
+   };
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -86,25 +110,25 @@ namespace painter
       typedef st::unordered_map<f::folder const *, folder_info> folder_infos  ;
 
       folder_info const update_folder_infos (
-            folder_infos & fis
-         ,  f::folder const * const f)
+            folder_infos & folder_infos
+         ,  f::folder const * const folder)
       {
-         if (f)
+         if (folder)
          {
             folder_info fi;
 
-            auto folder_count = f->folder_count;
+            auto folder_count = folder->folder_count;
 
             for (std::size_t iter = 0; iter < folder_count; ++iter)
             {
                fi = fi + update_folder_infos (
-                     fis
-                  ,  f->sub_folders[iter]);
+                     folder_infos
+                  ,  folder->sub_folders[iter]);
             }
 
-            fi = fi + folder_info (fi.depth + 1, f->size, f->file_count);
+            fi = fi + folder_info (fi.depth + 1, folder->size, folder->file_count);
 
-            fis[f] = fi;
+            folder_infos[folder] = fi;
 
             return fi;
          }
@@ -114,40 +138,16 @@ namespace painter
          }
       }
 
-      struct update_request : b::noncopyable
+      struct painter_context
       {
-         typedef s::auto_ptr<update_request> ptr;
-
-         folder::folder const * const  root              ;
-
-         DWORD const                   main_thread_id    ;
-         coordinate const              centre            ;
-         zoom_factor const             zoom              ;
-         dimension const               screen_size       ;
-         w::device_context const       compatible_dc     ;
-      };
-
-      struct update_response : b::noncopyable
-      {
-         typedef s::auto_ptr<update_response> ptr;
-
-         update_response (
-            update_request    const &  request
-            )
-            :  centre      (request.centre)
-            ,  zoom        (request.zoom)
-            ,  bitmap_size (request.screen_size)
-            ,  bitmap      (CreateCompatibleBitmap (
-                  request.compatible_dc.value
-                , request.screen_size.x ()
-                , request.screen_size.y ()))
+         painter_context (HDC hdc_, HBRUSH fill_brush_)
+            :  hdc(hdc_)
+            ,  fill_brush(fill_brush_)
          {
          }
 
-         coordinate const     centre            ;
-         zoom_factor const    zoom              ;
-         dimension const      bitmap_size       ;
-         w::gdi_object const  bitmap            ;
+         HDC const            hdc               ;
+         HBRUSH const         fill_brush        ;
       };
 
       struct background_painter
@@ -171,22 +171,22 @@ namespace painter
          template<
                typename TPropertyPickerPredicate
             ,  typename TPainterPredicate>
-         void folder_traverser_impl (
-               folder_infos const & fis
+         static void folder_traverser_impl (
+               folder_infos const & folder_infos
             ,  double const x
             ,  double const y
             ,  double const x_step_ratio
             ,  double const y_step_ratio
             ,  f::folder const * const folder
-            ,  TPropertyPickerPredicate propertyPicker
+            ,  TPropertyPickerPredicate property_picker
             ,  TPainterPredicate painter
             )
          {
             if (folder)
             {
-               auto fi = fis[folder];
+               auto folder_info = folder_infos.at (folder);
 
-               auto property = propertyPicker (fi);
+               auto property = property_picker (folder_info);
 
                auto current_x = x;
                auto current_y = y;
@@ -200,7 +200,7 @@ namespace painter
                   ,  property * y_step_ratio
                   ,  *folder
                   );
-
+                  
                auto folder_count = folder->folder_count;
 
                for (std::size_t iter = 0; iter < folder_count; ++iter)
@@ -209,18 +209,18 @@ namespace painter
 
                   if (sub_folder)
                   {
-                     auto sfi = fis[sub_folder];
-                     auto sproperty = propertyPicker (sfi);
-                     auto y_step = y_step_ratio * sproperty;
+                     auto sub_folder_info = folder_infos.at (sub_folder);
+                     auto sub_property = property_picker (sub_folder_info);
+                     auto y_step = y_step_ratio * sub_property;
 
                      folder_traverser_impl (
-                           fis
+                           folder_infos
                         ,  next_x
                         ,  current_y
                         ,  x_step_ratio
                         ,  y_step_ratio
                         ,  sub_folder
-                        ,  propertyPicker 
+                        ,  property_picker 
                         ,  painter
                         );
 
@@ -233,38 +233,69 @@ namespace painter
          template<
                typename TPropertyPickerPredicate
             ,  typename TPainterPredicate>
-         void folder_traverser (
-               folder_infos const & fis
+         static void folder_traverser (
+               folder_infos const & folder_infos
             ,  dimension const & size
             ,  f::folder const * const root
-            ,  TPropertyPickerPredicate propertyPicker
+            ,  TPropertyPickerPredicate property_picker
             ,  TPainterPredicate painter
             )
          {
-            if (root && dimension.x > 0 && dimension.y > 0)
+            if (root && size.x ()> 0 && size.y () > 0)
             {
-               auto fi = fis[root];
+               auto folder_info = folder_infos.at(root);
 
-               auto property = propertyPicker (fi);
+               auto property = property_picker (folder_info);
 
-               if (property > 0 && fi.depth > 0)
+               if (property > 0 && folder_info.depth > 0)
                {
-                  auto x_step_ratio = dimension.x / fi.depth;
-                  auto y_step_ratio = dimension.y / property;
+                  auto x_step_ratio = size.x ()/ folder_info.depth;
+                  auto y_step_ratio = size.y ()/ property;
 
                   folder_traverser_impl (
-                        fis
+                        folder_infos
                      ,  0.0
                      ,  0.0
                      ,  x_step_ratio
                      ,  y_step_ratio
                      ,  root
-                     ,  propertyPicker
+                     ,  property_picker
                      ,  painter
                      );
                }
             }
          }
+
+         static __int64 size_picker(
+            folder_info const & folder_info
+            )
+         {
+            return folder_info.size;
+         }
+
+         static void painter(
+               painter_context const & painter_context
+            ,  __int64 total_size
+            ,  double x
+            ,  double y
+            ,  double width
+            ,  double height
+            ,  f::folder const & folder
+            )
+         {
+            RECT rect         = {0}          ;
+            rect.left         = x            ;
+            rect.top          = y            ;
+            rect.right        = x + width    ;
+            rect.bottom       = y + height   ;
+
+            FillRect (
+                  painter_context.hdc
+               ,  &rect
+               ,  painter_context.fill_brush
+               );
+         }
+
 
          unsigned int proc ()
          {
@@ -294,24 +325,57 @@ namespace painter
                case WAIT_OBJECT_0 + 0:
                   while ((request_ptr = update_request_value.reset ()).get ())
                   {
-                     update_request const & request = *request_ptr;
-
-                     if (request.root)
+                     if (request_ptr->root)
                      {
-                        auto response = update_response::ptr (
-                           new update_response (request));
+                        auto response_ptr = update_response::ptr (
+                           new update_response (*request_ptr));
 
-                        update_response_value.reset (response.release ());
-
-                        folder_infos fis;
+                        folder_infos folder_infos;
 
                         auto total_folder_info = update_folder_infos (
-                              fis
-                           ,  request.root);
+                              folder_infos
+                           ,  request_ptr->root);
+                        
+                        w::select_object const select_bitmap (
+                              request_ptr->compatible_dc.value
+                           ,  response_ptr->bitmap.value);
 
+                        w::gdi_object<HBRUSH> const solid_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF)));
+
+                        painter_context const painter_context (
+                              request_ptr->compatible_dc.value
+                           ,  solid_brush.value);
+
+                        auto painter_ = [&painter_context] (
+                              __int64 total_size
+                           ,  double x
+                           ,  double y
+                           ,  double width
+                           ,  double height
+                           ,  f::folder const & folder
+                           )
+                           {
+                              painter (
+                                    painter_context
+                                 ,  total_size
+                                 ,  x
+                                 ,  y
+                                 ,  width
+                                 ,  height
+                                 ,  folder);
+                           };
+
+                        folder_traverser (
+                              folder_infos
+                           ,  request_ptr->screen_size
+                           ,  request_ptr->root
+                           ,  size_picker
+                           ,  painter_);
+
+                        update_response_value.reset (response_ptr.release ());
 
                         PostThreadMessage (
-                              request.main_thread_id
+                              request_ptr->main_thread_id
                            ,  messages::refresh_view
                            ,  0
                            ,  0);
@@ -362,76 +426,154 @@ namespace painter
    struct painter::impl
    {
 
-      void paint (
-            HDC const hdc
-         ,  coordinate const & centre
-         ,  zoom_factor const & zoom
-         ,  dimension const & screen_size)
+      //void paint (
+      //      HDC const hdc
+      //   ,  coordinate const & centre
+      //   ,  zoom_factor const & zoom
+      //   ,  dimension const & screen_size)
+      //{
+      //   auto response = background_painter.update_response_value.reset ();
+
+      //   if (response.get ())
+      //   {
+      //      update_response = response;
+      //   }
+
+      //   if (update_response.get ())
+      //   {
+      //      w::device_context dc (CreateCompatibleDC (hdc));
+      //      w::select_object select_bitmap (dc.value, update_response->bitmap.value);
+
+      //      if (
+      //            update_response->centre == centre
+      //         && update_response->zoom == zoom
+      //         && update_response->bitmap_size == screen_size)
+      //      {
+      //         auto xform = make_xform (l::identity<double, 3> ());
+
+      //         w::set_world_transform world_transform (
+      //               hdc
+      //            ,  &xform
+      //            );
+      //      }
+      //      else
+      //      {
+      //         auto xform = make_xform (l::identity<double, 3> ());
+
+      //         w::set_world_transform world_transform (
+      //               hdc
+      //            ,  &xform
+      //            );
+      //      }
+
+      //      BitBlt(
+      //            hdc
+      //         ,  0
+      //         ,  0
+      //         ,  update_response->bitmap_size.x ()
+      //         ,  update_response->bitmap_size.y ()
+      //         ,  dc.value
+      //         ,  0
+      //         ,  0
+      //         ,  SRCCOPY
+      //         );
+      //   }
+      //}
+      //std::auto_ptr<update_response>                  update_response   ;
+
+      update_response::ptr get_bitmap (
+            update_request::ptr & request_)
       {
+         auto request = request_;
          auto response = background_painter.update_response_value.reset ();
 
-         if (response.get ())
+         if (request.get ())
          {
-            update_response = response;
-         }
-
-         if (update_response.get ())
-         {
-            w::device_context dc (CreateCompatibleDC (hdc));
-            w::select_object select_bitmap (dc.value, update_response->bitmap.value);
-
             if (
-                  update_response->centre == centre
-               && update_response->zoom == zoom
-               && update_response->bitmap_size == screen_size)
+                  response.get ()
+               && response->centre        == request->centre
+               && response->zoom          == request->zoom
+               && response->bitmap_size   == request->screen_size)
             {
-               auto xform = make_xform (l::identity<double, 3> ());
-
-               w::set_world_transform world_transform (
-                     hdc
-                  ,  &xform
-                  );
             }
             else
             {
-               auto xform = make_xform (l::identity<double, 3> ());
-
-               w::set_world_transform world_transform (
-                     hdc
-                  ,  &xform
-                  );
+               background_painter.update_request_value.reset (request.release ());   
             }
-
-            BitBlt(
-                  hdc
-               ,  0
-               ,  0
-               ,  update_response->bitmap_size.x ()
-               ,  update_response->bitmap_size.y ()
-               ,  dc.value
-               ,  0
-               ,  0
-               ,  SRCCOPY
-               );
          }
+
+         return response;
       }
 
       background_painter                              background_painter;
-      std::auto_ptr<update_response>                  update_response   ;
    };
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   void painter::paint (
-         HDC const hdc
-      ,  coordinate const & centre
-      ,  zoom_factor const & zoom
-      ,  dimension const & screen_size)
+   update_request::update_request (
+         folder::folder const * const  root_
+      ,  DWORD const                   main_thread_id_
+      ,  coordinate const              centre_        
+      ,  zoom_factor const             zoom_          
+      ,  dimension const               screen_size_   
+      ,  HDC const                     hdc_
+      )
+      :  root           (root_                     )
+      ,  main_thread_id (main_thread_id_           )
+      ,  centre         (centre_                   )
+      ,  zoom           (zoom_                     )
+      ,  screen_size    (screen_size_              )
+      ,  compatible_dc  (CreateCompatibleDC (hdc_) )
    {
-      m_impl->paint (hdc, centre, zoom, screen_size);
    }
    // -------------------------------------------------------------------------
 
+   // -------------------------------------------------------------------------
+   update_response::update_response (
+      update_request    const &  update_request_
+      )
+      :  centre      (update_request_.centre       )
+      ,  zoom        (update_request_.zoom         )
+      ,  bitmap_size (update_request_.screen_size  )
+      ,  bitmap      (CreateCompatibleBitmap (
+            update_request_.compatible_dc.value
+          , update_request_.screen_size.x ()
+          , update_request_.screen_size.y ()))
+   {
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   //void painter::paint (
+   //      HDC const hdc
+   //   ,  coordinate const & centre
+   //   ,  zoom_factor const & zoom
+   //   ,  dimension const & screen_size)
+   //{
+   //   m_impl->paint (hdc, centre, zoom, screen_size);
+   //}
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   update_response::ptr painter::get_bitmap (
+            folder::folder const * const  root_
+         ,  DWORD const                   main_thread_id_
+         ,  coordinate const              centre_        
+         ,  zoom_factor const             zoom_          
+         ,  dimension const               screen_size_   
+         ,  HDC const                     hdc_
+         )
+   {
+      update_request::ptr request (new update_request (
+            root_      
+         ,  main_thread_id_
+         ,  centre_        
+         ,  zoom_          
+         ,  screen_size_   
+         ,  hdc_));
+
+      return m_impl->get_bitmap (request);
+   }
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------

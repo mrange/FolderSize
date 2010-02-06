@@ -163,6 +163,18 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   window_device_context::window_device_context (HWND const hwnd_) throw ()
+      :  hwnd  (hwnd_)
+      ,  hdc   (GetWindowDC (hwnd_))
+   {
+   }
+
+   window_device_context::~window_device_context () throw ()
+   {
+      auto result = ReleaseDC(hwnd, hdc);
+   }
+   // -------------------------------------------------------------------------
+   // -------------------------------------------------------------------------
    device_context::device_context (HDC const dc) throw ()
       :  value (dc)
    {
@@ -171,18 +183,6 @@ namespace win32
    device_context::~device_context () throw ()
    {
       auto deleted_result = DeleteDC (value);
-   }
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
-   gdi_object::gdi_object (HGDIOBJ const obj) throw ()
-      :  value (obj)
-   {
-   }
-
-   gdi_object::~gdi_object () throw ()
-   {
-      auto deleted_result = DeleteObject (value);
    }
    // -------------------------------------------------------------------------
 
