@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 #include "../Painter/Painter.hpp"
 #include "../Traverser/Traverser.hpp"
+#include "../Messages.hpp"
+#include "../Win32.hpp"
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
@@ -38,6 +40,7 @@ namespace main_window
    namespace b    = boost        ;
    namespace t    = traverser    ;
    namespace p    = painter      ;
+   namespace w    = win32        ;
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -46,7 +49,17 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      namespace window_style
+      linear::vector<double, 2> const create_vector (double x, double y)
+      {
+         linear::vector<double, 2> vector;
+         vector.x (x);
+         vector.y (y);
+         return vector;
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      namespace window_type
       {
          enum type
          {
@@ -64,7 +77,9 @@ namespace main_window
          int                  top;
          int                  right;
          int                  bottom;
-         window_style::type   style;
+         window_type::type    window_type;
+         DWORD                style;
+         DWORD                extended_style;
          LPCTSTR              title;
 
          HWND                 hwnd;
@@ -74,9 +89,11 @@ namespace main_window
       // ----------------------------------------------------------------------
       struct state
       {
-         typedef s::auto_ptr<state> ptr      ;
-         t::traverser               traverser;
-         p::painter                 painter  ;
+         typedef s::auto_ptr<state> ptr               ;
+         t::traverser               traverser         ;
+         p::painter                 painter           ;
+
+         p::update_response::ptr    update_response   ;
 
          state (LPCTSTR const path)
             :  traverser   (path)
@@ -92,10 +109,10 @@ namespace main_window
       TCHAR                s_window_class    [s_max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_style::button  , _T("&Go")    },
-         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_style::button  , _T("&Stop")  },
-         {  IDM_PATH       , 200    , 8   , -8        , 8 + 32 , window_style::edit    , _T(".")      },
-         {  IDM_FOLDERTREE , 8      , 48  , -8        , -8     , window_style::static_ , _T("")       },
+         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button  , 0                               ,  0  , _T("&Go")          },
+         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button  , 0                               ,  0  , _T("&Stop")        },
+         {  IDM_PATH       , 200    , 8   , -8        , 8 + 32 , window_type::edit    , 0                               ,  0  , _T("C:\\Windows")  },
+         {  IDM_FOLDERTREE , 8      , 48  , -8        , -8     , window_type::static_ , SS_BITMAP | SS_REALSIZECONTROL  ,  0  , _T("")             },
          {0},
       };
       state::ptr           s_state;
@@ -109,7 +126,7 @@ namespace main_window
          {
             child_window & wc = s_child_window[iter];
 
-            if (wc.style == window_style::nowindow)
+            if (wc.window_type == window_type::nowindow)
             {
                return;
             }
@@ -150,13 +167,14 @@ namespace main_window
                   int real_right    = calculate_coord (wc.right   , width);
                   int real_bottom   = calculate_coord (wc.bottom  , height);
 
-                  CWindow window(child_window);
-                  window.MoveWindow (
-                        real_left
+                  SetWindowPos (
+                        child_window
+                     ,  NULL
+                     ,   real_left
                      ,  real_top
                      ,  real_right     - real_left
                      ,  real_bottom    - real_top
-                     );
+                     ,  SWP_NOACTIVATE | SWP_NOZORDER );
                });
          }
       }
@@ -172,6 +190,37 @@ namespace main_window
 
          switch (message)
          {
+         case messages::refresh_view:
+            {
+               HWND const hFolderTree = GetDlgItem (hwnd, IDM_FOLDERTREE);
+
+               RECT rect = {0};
+
+               if (hFolderTree && s_state.get () && GetWindowRect (hFolderTree, &rect))
+               {
+                  w::window_device_context wdc (hFolderTree);
+
+                  auto response = s_state->painter.get_bitmap (
+                        s_state->traverser.get_root ()
+                     ,  GetCurrentThreadId ()
+                     ,  p::coordinate  (create_vector (0.0  , 0.0))
+                     ,  p::zoom_factor (create_vector (1.0  , 1.0))
+                     ,  p::dimension   (create_vector (rect.right - rect.left  ,  rect.bottom - rect.top))
+                     ,  wdc.hdc);
+                  
+                  if (response.get ())
+                  {
+                     SendMessage (
+                           hFolderTree
+                        ,  STM_SETIMAGE
+                        ,  IMAGE_BITMAP
+                        ,  reinterpret_cast<LPARAM> (response->bitmap.value));
+                     s_state->update_response   = response;
+                  }
+               }
+
+            }
+            break;
          case WM_COMMAND:
             wmId    = LOWORD (wParam);
             wmEvent = HIWORD (wParam);
@@ -290,18 +339,18 @@ namespace main_window
             {
                LPCTSTR window_class = NULL;
 
-               switch (wc.style)
+               switch (wc.window_type)
                {
-               case window_style::button:
+               case window_type::button:
                   window_class = _T("BUTTON");
                   break;
-               case window_style::edit:
+               case window_type::edit:
                   window_class = _T("EDIT");
                   break;
-               case window_style::static_:
+               case window_type::static_:
                   window_class = _T("STATIC");
                   break;
-               case window_style::nowindow:
+               case window_type::nowindow:
                default:
                   break;
                }
@@ -312,8 +361,8 @@ namespace main_window
                   ,  hwnd
                   ,  NULL
                   ,  NULL
-                  ,  WS_CHILD
-                  ,  0
+                  ,  WS_CHILD | wc.style
+                  ,  0        | wc.extended_style
                   ,  wc.id
                   );
                //window.MoveWindow (wc.left, wc.top, wc.right - wc.left, wc.bottom - wc.top);

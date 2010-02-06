@@ -127,6 +127,17 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   struct window_device_context : boost::noncopyable
+   {
+      window_device_context (HWND const hwnd) throw ();
+      ~window_device_context () throw ();
+
+      HWND const  hwnd;
+      HDC const   hdc;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct device_context : boost::noncopyable
    {
       device_context (HDC const dc) throw ();
@@ -137,12 +148,23 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   template<typename TGdiObject>
    struct gdi_object : boost::noncopyable
    {
-      gdi_object (HGDIOBJ const obj) throw ();
-      ~gdi_object () throw ();
+      gdi_object (TGdiObject const obj) throw ()
+         :  value (obj)
+      {
+      }
 
-      HGDIOBJ const value;
+      ~gdi_object () throw ()
+      {
+         if (value)
+         {
+            auto deleted_result = DeleteObject (value);
+         }
+      }
+
+      TGdiObject const value;
    };
    // -------------------------------------------------------------------------
 
