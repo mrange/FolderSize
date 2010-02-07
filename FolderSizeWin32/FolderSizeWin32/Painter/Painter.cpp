@@ -175,41 +175,44 @@ namespace painter
             folder_infos & folder_infos
          ,  f::folder const * const folder)
       {
-         if (folder)
-         {
-            folder_info fi;
-
-            auto folder_count = folder->folder_count;
-
-            for (std::size_t iter = 0; iter < folder_count; ++iter)
-            {
-               fi = fi + update_folder_infos (
-                     folder_infos
-                  ,  folder->sub_folders[iter]);
-            }
-
-            fi = fi + folder_info (fi.depth + 1, folder->size, folder->file_count);
-
-            folder_infos[folder] = fi;
-
-            return fi;
-         }
-         else
+         if (!folder)
          {
             return folder_info ();
          }
+         
+         folder_info fi;
+
+         auto folder_count = folder->folder_count;
+
+         for (std::size_t iter = 0; iter < folder_count; ++iter)
+         {
+            fi = fi + update_folder_infos (
+                  folder_infos
+               ,  folder->sub_folders[iter]);
+         }
+
+         fi = fi + folder_info (fi.depth + 1, folder->size, folder->file_count);
+
+         folder_infos[folder] = fi;
+
+         return fi;
       }
 
       struct painter_context
       {
-         painter_context (HDC hdc_, HBRUSH fill_brush_)
+         painter_context (
+               HDC const hdc_
+            ,  HBRUSH const fill_brush_
+            ,  HBRUSH const frame_brush_)
             :  hdc(hdc_)
             ,  fill_brush(fill_brush_)
+            ,  frame_brush(frame_brush_)
          {
          }
 
          HDC const            hdc               ;
          HBRUSH const         fill_brush        ;
+         HBRUSH const         frame_brush       ;
       };
 
       struct background_painter
@@ -251,56 +254,76 @@ namespace painter
             ,  TPainterPredicate painter
             )
          {
-            if (folder)
+            if (!folder)
             {
-               auto folder_info = folder_infos.at (folder);
+               return;
+            }
 
-               auto property = property_picker (folder_info);
+            auto folder_info_iterator = folder_infos.find (folder);
 
-               auto current_x = x;
-               auto current_y = y;
-               auto next_x = current_x + x_step_ratio;
+            if (folder_info_iterator == folder_infos.end ())
+            {
+               return;
+            }
 
-               auto height = property * y_step_ratio;
+            auto folder_info = folder_info_iterator->second;
 
-               if (height > cut_off_y)
+            auto property = property_picker (folder_info);
+
+            auto current_x = x;
+            auto current_y = y;
+            auto next_x = current_x + x_step_ratio;
+
+            auto height = property * y_step_ratio;
+
+            if (height < cut_off_y)
+            {
+               return;
+            }
+
+            painter (
+                  property
+               ,  current_x
+               ,  current_y
+               ,  x_step_ratio
+               ,  property * y_step_ratio
+               ,  *folder
+               );
+               
+            auto folder_count = folder->folder_count;
+
+            for (std::size_t iter = 0; iter < folder_count; ++iter)
+            {
+               auto sub_folder = folder->sub_folders[iter];
+
+               if (!sub_folder)
                {
-                  painter (
-                        property
-                     ,  current_x
-                     ,  current_y
-                     ,  x_step_ratio
-                     ,  property * y_step_ratio
-                     ,  *folder
-                     );
-                     
-                  auto folder_count = folder->folder_count;
-
-                  for (std::size_t iter = 0; iter < folder_count; ++iter)
-                  {
-                     auto sub_folder = folder->sub_folders[iter];
-
-                     if (sub_folder)
-                     {
-                        auto sub_folder_info = folder_infos.at (sub_folder);
-                        auto sub_property = property_picker (sub_folder_info);
-                        auto y_step = y_step_ratio * sub_property;
-
-                        folder_traverser_impl (
-                              folder_infos
-                           ,  next_x
-                           ,  current_y
-                           ,  x_step_ratio
-                           ,  y_step_ratio
-                           ,  sub_folder
-                           ,  property_picker 
-                           ,  painter
-                           );
-
-                        current_y += y_step;
-                     }
+                  continue;
                }
+
+               auto sub_folder_info_iterator = folder_infos.find (sub_folder);
+
+               if (sub_folder_info_iterator == folder_infos.end ())
+               {
+                  continue;
                }
+
+               auto sub_folder_info = sub_folder_info_iterator->second;
+               auto sub_property = property_picker (sub_folder_info);
+               auto y_step = y_step_ratio * sub_property;
+
+               folder_traverser_impl (
+                     folder_infos
+                  ,  next_x
+                  ,  current_y
+                  ,  x_step_ratio
+                  ,  y_step_ratio
+                  ,  sub_folder
+                  ,  property_picker 
+                  ,  painter
+                  );
+
+               current_y += y_step;
             }
          }
 
@@ -315,28 +338,36 @@ namespace painter
             ,  TPainterPredicate painter
             )
          {
-            if (root && size.x ()> 0 && size.y () > 0)
+            if (! (root && size.x () > 0 && size.y () > 0) )
             {
-               auto folder_info = folder_infos.at(root);
+               return;
+            }
 
-               auto property = property_picker (folder_info);
+            auto folder_info_iterator = folder_infos.find (root);
 
-               if (property > 0 && folder_info.depth > 0)
-               {
-                  auto x_step_ratio = size.x ()/ folder_info.depth;
-                  auto y_step_ratio = size.y ()/ property;
+            if (folder_info_iterator == folder_infos.end ())
+            {
+               return;
+            }
 
-                  folder_traverser_impl (
-                        folder_infos
-                     ,  0.0
-                     ,  0.0
-                     ,  x_step_ratio
-                     ,  y_step_ratio
-                     ,  root
-                     ,  property_picker
-                     ,  painter
-                     );
-               }
+            auto folder_info = folder_info_iterator->second;
+            auto property = property_picker (folder_info);
+
+            if (property > 0 && folder_info.depth > 0)
+            {
+               auto x_step_ratio = size.x ()/ folder_info.depth;
+               auto y_step_ratio = size.y ()/ property;
+
+               folder_traverser_impl (
+                     folder_infos
+                  ,  0.0
+                  ,  0.0
+                  ,  x_step_ratio
+                  ,  y_step_ratio
+                  ,  root
+                  ,  property_picker
+                  ,  painter
+                  );
             }
          }
 
@@ -363,11 +394,38 @@ namespace painter
             rect.right        = x + width    ;
             rect.bottom       = y + height   ;
 
+            const std::size_t buffer_size = 128;
+
+            TCHAR value[buffer_size] = {0};
+
+            auto cch = _snwprintf (
+                  value
+               ,  buffer_size
+               ,  _T ("%s\r\n%I64d")
+               ,  folder.name.c_str ()
+               ,  total_size
+               );
+
             FillRect (
                   painter_context.hdc
                ,  &rect
                ,  painter_context.fill_brush
                );
+
+            DrawText (
+                  painter_context.hdc
+               ,  value
+               ,  cch
+               ,  &rect
+               ,  DT_WORD_ELLIPSIS
+               );
+
+            FrameRect (
+                  painter_context.hdc
+               ,  &rect
+               ,  painter_context.frame_brush
+               );
+
          }
 
 
@@ -416,12 +474,14 @@ namespace painter
                               bitmap_dc.value
                            ,  response_ptr->bitmap.value);
 
-                        w::gdi_object<HBRUSH> const black_brush (CreateSolidBrush (RGB(0xFF, 0x00, 0x00)));
-                        w::gdi_object<HBRUSH> const white_brush (CreateSolidBrush (RGB(0x00, 0x00, 0xFF)));
+                        w::gdi_object<HBRUSH> const frame_brush (CreateSolidBrush (RGB(0x00, 0x00, 0x00)));
+                        w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF)));
+                        w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB(0x00, 0x00, 0xFF)));
 
                         painter_context const painter_context (
                               bitmap_dc.value
-                           ,  black_brush.value
+                           ,  fill_brush.value
+                           ,  frame_brush.value
                            );
 
                         RECT rect = {0};
@@ -430,7 +490,7 @@ namespace painter
                         FillRect (
                               bitmap_dc.value
                            ,  &rect
-                           ,  white_brush.value);
+                           ,  background_brush.value);
 
                         auto painter_ = [&painter_context] (
                               __int64 total_size
@@ -598,12 +658,12 @@ namespace painter
          }
          else
          {
-            w::gdi_object<HBRUSH> const white_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0x00)));
+            w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0x00)));
 
             FillRect (
                   hdc
                ,  &rect
-               ,  white_brush.value);
+               ,  fill_brush.value);
 
          }
       }
