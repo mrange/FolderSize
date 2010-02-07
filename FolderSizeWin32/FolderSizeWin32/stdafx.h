@@ -44,6 +44,7 @@
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
+#include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/pool/object_pool.hpp>
 #include <boost/pool/pool.hpp>

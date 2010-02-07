@@ -55,7 +55,7 @@ namespace linear
          }
       }
 
-      vector (no_initialize const no_init)
+      explicit vector (no_initialize const no_init)
       {
       }
 
@@ -128,7 +128,7 @@ namespace linear
          }
       }
 
-      matrix (no_initialize const no_init)
+      explicit matrix (no_initialize const no_init)
       {
       }
 

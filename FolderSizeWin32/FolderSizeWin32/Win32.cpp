@@ -36,7 +36,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   handle::handle (HANDLE hnd) throw ()
+   handle::handle (HANDLE const hnd) throw ()
       :  value (hnd)
    {
    }
@@ -46,6 +46,7 @@ namespace win32
       if (is_valid ())
       {
          BOOL const close_result = CloseHandle (value);
+         UNUSED_VARIABLE (close_result);
       }
    }
 
@@ -95,7 +96,7 @@ namespace win32
       return terminated;
    }
 
-   void thread::raw_proc (void * ptr) throw ()
+   void thread::raw_proc (void * const ptr) throw ()
    {
       auto state = static_cast<thread *> (ptr);
 
@@ -151,7 +152,7 @@ namespace win32
 
    bool const find_file::find_next () throw ()
    {
-      return FindNextFile (find_file_handle, &find_data);
+      return IMPLICIT_CAST (FindNextFile (find_file_handle, &find_data));
    }
 
    bool const find_file::is_directory () const throw ()
@@ -161,7 +162,7 @@ namespace win32
 
    __int64 const find_file::get_size () const throw ()
    {
-      return find_data.nFileSizeHigh << 32 | find_data.nFileSizeLow;
+      return (static_cast<__int64>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
    }
 
    LPCTSTR const find_file::get_name () const throw ()
@@ -179,11 +180,12 @@ namespace win32
    find_file::~find_file () throw ()
    {
       BOOL const close_result = FindClose (find_file_handle);
+      UNUSED_VARIABLE (close_result);
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   event::event (bool auto_reset)
+   event::event (bool const auto_reset)
       :  value (CreateEvent (NULL, !auto_reset, FALSE, NULL))
    {
    }
@@ -207,6 +209,7 @@ namespace win32
    window_device_context::~window_device_context () throw ()
    {
       auto result = ReleaseDC(hwnd, hdc);
+      UNUSED_VARIABLE (result);
    }
    // -------------------------------------------------------------------------
    // -------------------------------------------------------------------------
@@ -218,11 +221,12 @@ namespace win32
    device_context::~device_context () throw ()
    {
       auto deleted_result = DeleteDC (value);
+      UNUSED_VARIABLE (deleted_result);
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   select_object::select_object (HDC const dc_, HGDIOBJ obj_) throw ()
+   select_object::select_object (HDC const dc_, HGDIOBJ const obj_) throw ()
       :  dc                         (dc_)
       ,  previously_selected_object (SelectObject (dc_, obj_))
    {

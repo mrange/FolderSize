@@ -24,9 +24,14 @@
 #include <tuple>
 #include <unordered_map>
 // ----------------------------------------------------------------------------
+#include <boost/pool/object_pool.hpp>
+#include <boost/pool/pool.hpp>
+#include <boost/pool/pool_alloc.hpp>
+// ----------------------------------------------------------------------------
 #include "../Linear.hpp"
 #include "../Messages.hpp"
 #include "../Win32.hpp"
+#include "../utility.hpp"
 // ----------------------------------------------------------------------------
 namespace painter
 {
@@ -96,8 +101,8 @@ namespace painter
 
          return 
             CreateBitmap (
-                  cx
-               ,  cy
+                  IMPLICIT_CAST (cx)
+               ,  IMPLICIT_CAST (cy)
                ,  bitmap_planes
                ,  bitmap_bits
                ,  NULL);
@@ -144,9 +149,9 @@ namespace painter
          }
 
          folder_info (
-               std::size_t depth_
-            ,  __int64     size_
-            ,  __int64     count_)
+               std::size_t const depth_
+            ,  __int64 const     size_
+            ,  __int64 const     count_)
             :  depth (depth_)
             ,  size  (size_)
             ,  count (count_)
@@ -169,7 +174,15 @@ namespace painter
             ,  left.count + right.count);
       }
 
-      typedef st::unordered_map<f::folder const *, folder_info> folder_infos  ;
+      typedef f::folder const * folder_key;
+
+      typedef st::unordered_map<
+               folder_key
+            ,  folder_info
+            ,  st::hash<folder_key>
+            ,  s::equal_to<folder_key> 
+            ,  b::fast_pool_allocator<folder_key>
+            > folder_infos  ;
 
       folder_info const update_folder_infos (
             folder_infos & folder_infos
@@ -378,21 +391,21 @@ namespace painter
             return folder_info.size;
          }
 
-         static void painter(
+         static void painter (
                painter_context const & painter_context
-            ,  __int64 total_size
-            ,  double x
-            ,  double y
-            ,  double width
-            ,  double height
-            ,  f::folder const & folder
+            ,  __int64 const           total_size
+            ,  double const            x
+            ,  double const            y
+            ,  double const            width
+            ,  double                  height
+            ,  f::folder const &       folder
             )
          {
-            RECT rect         = {0}          ;
-            rect.left         = x            ;
-            rect.top          = y            ;
-            rect.right        = x + width    ;
-            rect.bottom       = y + height   ;
+            RECT rect         = {0}                         ;
+            rect.left         = IMPLICIT_CAST (x         )  ;
+            rect.top          = IMPLICIT_CAST (y         )  ;
+            rect.right        = IMPLICIT_CAST (x + width )  ;
+            rect.bottom       = IMPLICIT_CAST (y + height)  ;
 
             const std::size_t buffer_size = 128;
 
@@ -449,7 +462,7 @@ namespace painter
                   ,  1000);
 
                
-               std::auto_ptr<update_request> request_ptr;
+               update_request::ptr request_ptr;
 
                switch (wait_result)
                {
@@ -484,20 +497,20 @@ namespace painter
                            ,  frame_brush.value
                            );
 
-                        RECT rect = {0};
-                        rect.right = request_ptr->bitmap_size.x ();
-                        rect.bottom = request_ptr->bitmap_size.y ();
+                        RECT rect   = {0};
+                        rect.right  = IMPLICIT_CAST (request_ptr->bitmap_size.x ());
+                        rect.bottom = IMPLICIT_CAST (request_ptr->bitmap_size.y ());
                         FillRect (
                               bitmap_dc.value
                            ,  &rect
                            ,  background_brush.value);
 
                         auto painter_ = [&painter_context] (
-                              __int64 total_size
-                           ,  double x
-                           ,  double y
-                           ,  double width
-                           ,  double height
+                              __int64 const     total_size
+                           ,  double const      x
+                           ,  double const      y
+                           ,  double const      width
+                           ,  double const      height
                            ,  f::folder const & folder
                            )
                            {
@@ -525,6 +538,7 @@ namespace painter
                            ,  messages::new_view_available
                            ,  0
                            ,  0);
+                        result;
                      }
                   }
                   continue_loop = true;
@@ -554,13 +568,13 @@ namespace painter
       {
          XFORM form = {0};
 
-         form.eM11   = transform(0,0);
-         form.eM12   = transform(0,1);
-         form.eDx    = transform(0,2);
+         form.eM11   = IMPLICIT_CAST (transform(0,0));
+         form.eM12   = IMPLICIT_CAST (transform(0,1));
+         form.eDx    = IMPLICIT_CAST (transform(0,2));
 
-         form.eM21   = transform(1,0);
-         form.eM22   = transform(1,1);
-         form.eDy    = transform(1,2);
+         form.eM21   = IMPLICIT_CAST (transform(1,0));
+         form.eM22   = IMPLICIT_CAST (transform(1,1));
+         form.eDy    = IMPLICIT_CAST (transform(1,2));
 
          return form;
       }
@@ -647,13 +661,13 @@ namespace painter
                   hdc
                ,  rect.left
                ,  rect.top
-               ,  screen_size.x ()
-               ,  screen_size.y ()
+               ,  IMPLICIT_CAST (screen_size.x ())
+               ,  IMPLICIT_CAST (screen_size.y ())
                ,  src_dc.value
                ,  0
                ,  0
-               ,  update_response->bitmap_size.x ()
-               ,  update_response->bitmap_size.y ()
+               ,  IMPLICIT_CAST (update_response->bitmap_size.x ())
+               ,  IMPLICIT_CAST (update_response->bitmap_size.y ())
                ,  SRCCOPY);
          }
          else

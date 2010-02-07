@@ -36,20 +36,20 @@ namespace folder
       {
          tstring const &         name           ;
          unsigned __int64 const  size           ;
-         std::size_t             file_count     ;
+         std::size_t const       file_count     ;
          std::size_t const       folder_count   ;
 
          initializer (
             tstring const &         name_          ,
             unsigned __int64 const  size_          ,
-            std::size_t             file_count_    ,
+            std::size_t const       file_count_    ,
             std::size_t const       folder_count_   
             );
       };
 
       folder ();
 
-      folder (
+      explicit folder (
          initializer const & init);
 
       tstring const           name;

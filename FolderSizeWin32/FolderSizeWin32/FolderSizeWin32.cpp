@@ -21,10 +21,10 @@
 namespace main_window
 {
    int application_main_loop (
-         HINSTANCE hInstance
-      ,  HINSTANCE hPrevInstance
-      ,  LPTSTR    lpCmdLine
-      ,  int       nCmdShow
+         HINSTANCE const   hInstance
+      ,  HINSTANCE const   hPrevInstance
+      ,  LPTSTR const      lpCmdLine
+      ,  int const         nCmdShow
       );
 }
 // ----------------------------------------------------------------------------

@@ -27,6 +27,7 @@
 #include "../Painter/Painter.hpp"
 #include "../Traverser/Traverser.hpp"
 #include "../Messages.hpp"
+#include "../utility.hpp"
 #include "../Win32.hpp"
 // ----------------------------------------------------------------------------
 
@@ -95,8 +96,8 @@ namespace main_window
          p::painter                 painter           ;
 
          state (
-               HWND main_hwnd
-            ,  LPCTSTR const path)
+               HWND const     main_hwnd
+            ,  LPCTSTR const  path)
             :  traverser      (main_hwnd, path )
          {
          }
@@ -124,7 +125,7 @@ namespace main_window
 
       // ----------------------------------------------------------------------
       typedef st::function<void (child_window&)>  child_window_predicate;
-      void for_all_child_windows (child_window_predicate predicate)
+      void for_all_child_windows (child_window_predicate const predicate)
       {
          for (int iter = 0; true; ++iter)
          {
@@ -141,10 +142,11 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      SIZE const get_client_size (HWND hwnd)
+      SIZE const get_client_size (HWND const hwnd)
       {
          RECT rect = {0};
          auto result = GetClientRect (hwnd, &rect);
+         result;
 
          BOOST_ASSERT (result);
          
@@ -200,7 +202,7 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      void update_child_window_positions (HWND hwnd)
+      void update_child_window_positions (HWND const hwnd)
       {
          SIZE sz = get_client_size (hwnd);
 
@@ -229,21 +231,27 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      void invalidate_folder_tree_area (HWND hwnd)
+      void invalidate_folder_tree_area (HWND const hwnd)
       {
          auto rect = calculate_window_coordinate (
                hwnd
             ,  s_folder_tree);
+         UNUSED_VARIABLE (rect);
 
          auto result = InvalidateRect (
                hwnd
             ,  &rect
             , FALSE);
+         UNUSED_VARIABLE (result);
       }
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      LRESULT CALLBACK window_process (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+      LRESULT CALLBACK window_process (
+            HWND const     hwnd
+         ,  UINT const     message
+         ,  WPARAM const   wParam
+         ,  LPARAM const   lParam)
       {
          int wmId       = {0};
          int wmEvent    = {0};
@@ -362,7 +370,7 @@ namespace main_window
       // ---------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      ATOM register_window_class (HINSTANCE instance)
+      ATOM register_window_class (HINSTANCE const instance)
       {
          WNDCLASSEX wcex      = {0};
 
@@ -385,7 +393,7 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      bool init_instance (HINSTANCE instance, int command_show)
+      bool init_instance (HINSTANCE const instance, int const command_show)
       {
          HWND hwnd   = {0};
 
@@ -469,10 +477,10 @@ namespace main_window
 
    // -------------------------------------------------------------------------
    int application_main_loop (
-         HINSTANCE instance
-      ,  HINSTANCE previous_instance
-      ,  LPTSTR    command_line
-      ,  int       command_show)
+         HINSTANCE const instance
+      ,  HINSTANCE const previous_instance
+      ,  LPTSTR const    command_line
+      ,  int const       command_show)
    {
       UNREFERENCED_PARAMETER (previous_instance);
       UNREFERENCED_PARAMETER (command_line);
