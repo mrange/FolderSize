@@ -33,6 +33,10 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   void output_debug_string (tstring const & value);
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct handle : boost::noncopyable
    {
       handle (HANDLE hnd) throw ();
@@ -47,7 +51,9 @@ namespace win32
    struct thread : boost::noncopyable
    {
       typedef std::tr1::function<unsigned int ()> proc;
-      thread (proc const del);
+      thread (
+         tstring const & thread_name,
+         proc const del);
 
       proc const        procedure;
       handle const      value;
@@ -58,6 +64,7 @@ namespace win32
    private:
       static void raw_proc (void * ptr) throw ();
 
+      tstring const        thread_name;
       bool volatile        terminated;
    };
    // -------------------------------------------------------------------------

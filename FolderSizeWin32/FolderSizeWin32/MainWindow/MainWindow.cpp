@@ -21,6 +21,7 @@
 // ----------------------------------------------------------------------------
 #include <functional>
 // ----------------------------------------------------------------------------
+#include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
 // ----------------------------------------------------------------------------
 #include "../Painter/Painter.hpp"
@@ -93,10 +94,10 @@ namespace main_window
          t::traverser               traverser         ;
          p::painter                 painter           ;
 
-         p::update_response::ptr    update_response   ;
-
-         state (LPCTSTR const path)
-            :  traverser   (path)
+         state (
+               HWND main_hwnd
+            ,  LPCTSTR const path)
+            :  traverser      (main_hwnd, path )
          {
          }
       };
@@ -109,12 +110,15 @@ namespace main_window
       TCHAR                s_window_class    [s_max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button  , 0                               ,  0  , _T("&Go")          },
-         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button  , 0                               ,  0  , _T("&Stop")        },
-         {  IDM_PATH       , 200    , 8   , -8        , 8 + 32 , window_type::edit    , 0                               ,  0  , _T("C:\\Windows")  },
-         {  IDM_FOLDERTREE , 8      , 48  , -8        , -8     , window_type::static_ , SS_BITMAP | SS_REALSIZECONTROL  ,  0  , _T("")             },
+         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button  , 0    ,  0  , _T("&Go")          },
+         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button  , 0    ,  0  , _T("&Stop")        },
+         {  IDM_PATH       , 200    , 8   , -8        , 8 + 32 , window_type::edit    , 0    ,  0  , _T("C:\\Windows")  },
+         {  IDM_FOLDERTREE , 8      , 48  , -8        , -8     , window_type::nowindow, 0    ,  0  , _T("")             },
          {0},
       };
+
+      child_window &       s_folder_tree                          = s_child_window[3];
+
       state::ptr           s_state;
       // ----------------------------------------------------------------------
 
@@ -137,7 +141,25 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      void update_child_window_positions (HWND hwnd)
+      SIZE const get_client_size (HWND hwnd)
+      {
+         RECT rect = {0};
+         auto result = GetClientRect (hwnd, &rect);
+
+         BOOST_ASSERT (result);
+         
+         SIZE sz = {0};
+         sz.cx = rect.right - rect.left;
+         sz.cy = rect.bottom - rect.top;
+
+         return sz;
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      RECT const calculate_window_coordinate (
+            SIZE const & main_window_size
+         ,  child_window const & child_window)
       {
          auto calculate_coord = [] (int c, int rc) -> int
          {
@@ -151,66 +173,72 @@ namespace main_window
             }
          };
 
-         RECT rect = {0};
-         if (GetClientRect (hwnd, &rect))
-         {
-            for_all_child_windows (
-               [&rect,calculate_coord] (child_window & wc)
-               {
-                  HWND child_window = wc.hwnd;
-                  
-                  int width         = rect.right                  - rect.left;
-                  int height        = rect.bottom                 - rect.top;
+         auto real_left    = calculate_coord (child_window.left    , main_window_size.cx);
+         auto real_top     = calculate_coord (child_window.top     , main_window_size.cy);
+         auto real_right   = calculate_coord (child_window.right   , main_window_size.cx);
+         auto real_bottom  = calculate_coord (child_window.bottom  , main_window_size.cy);
 
-                  int real_left     = calculate_coord (wc.left    , width);
-                  int real_top      = calculate_coord (wc.top     , height);
-                  int real_right    = calculate_coord (wc.right   , width);
-                  int real_bottom   = calculate_coord (wc.bottom  , height);
+         RECT result = {0};
+         result.left    = real_left    ;
+         result.top     = real_top     ;
+         result.right   = real_right   ;
+         result.bottom  = real_bottom  ;
 
-                  SetWindowPos (
-                        child_window
-                     ,  NULL
-                     ,   real_left
-                     ,  real_top
-                     ,  real_right     - real_left
-                     ,  real_bottom    - real_top
-                     ,  SWP_NOACTIVATE | SWP_NOZORDER );
-               });
-         }
+         return result;
       }
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      void setup_bitmap (HWND const hwnd)
+      RECT const calculate_window_coordinate (
+            HWND const hwnd
+         ,  child_window const & child_window)
       {
-         HWND const hFolderTree = GetDlgItem (hwnd, IDM_FOLDERTREE);
+         auto sz = get_client_size (hwnd);
 
-         RECT rect = {0};
+         return calculate_window_coordinate (sz, child_window);
+      }
+      // ----------------------------------------------------------------------
 
-         if (hFolderTree && s_state.get () && GetClientRect (hFolderTree, &rect))
-         {
-            w::window_device_context wdc (hFolderTree);
+      // ----------------------------------------------------------------------
+      void update_child_window_positions (HWND hwnd)
+      {
+         SIZE sz = get_client_size (hwnd);
 
-            auto response = s_state->painter.get_bitmap (
-                  s_state->traverser.get_root ()
-               ,  GetCurrentThreadId ()
-               ,  p::coordinate  (create_vector (0.0  , 0.0))
-               ,  p::zoom_factor (create_vector (1.0  , 1.0))
-               ,  p::dimension   (create_vector (rect.right - rect.left  ,  rect.bottom - rect.top))
-               ,  wdc.hdc);
-            
-            if (response.get ())
+         for_all_child_windows (
+            [&sz] (child_window & wc)
             {
-               auto result = SendMessage (
-                     hFolderTree
-                  ,  STM_SETIMAGE
-                  ,  IMAGE_BITMAP
-                  ,  (LPARAM) (HANDLE) response->bitmap.value);
+               HWND child_window = wc.hwnd;
+               
+               if (wc.hwnd && wc.window_type != window_type::nowindow)
+               {
+                  auto rect = calculate_window_coordinate (
+                        sz
+                     ,  wc);
 
-               s_state->update_response   = response;
-            }
-         }
+                  SetWindowPos (
+                        child_window
+                     ,  NULL
+                     ,  rect.left
+                     ,  rect.top
+                     ,  rect.right     - rect.left
+                     ,  rect.bottom    - rect.top
+                     ,  SWP_NOACTIVATE | SWP_NOZORDER );
+               }
+            });
+      }
+      // ----------------------------------------------------------------------
 
+      // ----------------------------------------------------------------------
+      void invalidate_folder_tree_area (HWND hwnd)
+      {
+         auto rect = calculate_window_coordinate (
+               hwnd
+            ,  s_folder_tree);
+
+         auto result = InvalidateRect (
+               hwnd
+            ,  &rect
+            , FALSE);
       }
       // ----------------------------------------------------------------------
 
@@ -224,8 +252,24 @@ namespace main_window
 
          switch (message)
          {
-         case messages::refresh_view:
-            setup_bitmap (hwnd);
+         case messages::new_view_available:
+            invalidate_folder_tree_area (hwnd);
+            break;
+         case messages::folder_structure_changed:
+            if (s_state.get ())
+            {
+               auto rect = calculate_window_coordinate (
+                     hwnd
+                  ,  s_folder_tree);
+
+               s_state->painter.do_request (
+                     s_state->traverser.get_root ()
+                  ,  hwnd
+                  ,  rect
+                  ,  create_vector (0.0, 0.0)
+                  ,  create_vector (1.0, 1.0)
+                  );
+            }
             break;
          case WM_COMMAND:
             wmId    = LOWORD (wParam);
@@ -250,15 +294,21 @@ namespace main_window
 
                      if (str.GetLength () > 0)
                      {
-                        s_state = state::ptr (new state (str));
-                        setup_bitmap (hwnd);
+                        OutputDebugString (_T ("FolderSize.Win32 : New job started\r\n"));
+                        s_state = state::ptr ();
+
+                        s_state = state::ptr (new state (hwnd, str));
+                        invalidate_folder_tree_area (hwnd);
                      }
                   }
                }
                break;
             case IDM_STOP:
-               s_state = state::ptr ();
-
+               OutputDebugString (_T ("FolderSize.Win32 : Job terminated\r\n"));
+               if (s_state.get ())
+               {
+                  s_state->traverser.stop_traversing ();
+               }
                break;
             default:
                return DefWindowProc (hwnd, message, wParam, lParam);
@@ -266,7 +316,25 @@ namespace main_window
             break;
          case WM_PAINT:
             hdc = BeginPaint (hwnd, &ps);
-            // TODO: Add any drawing code here...
+
+            {
+               if (s_state.get ())
+               {
+                  auto rect = calculate_window_coordinate (
+                        hwnd
+                     ,  s_folder_tree);
+
+                  s_state->painter.paint (
+                        s_state->traverser.get_root ()
+                     ,  hwnd
+                     ,  hdc
+                     ,  rect
+                     ,  create_vector (0.0   , 0.0)
+                     ,  create_vector (1.0   , 1.0)
+                     );
+
+               }
+            }
             EndPaint (hwnd, &ps);
             break;
          case WM_DESTROY:
@@ -274,7 +342,7 @@ namespace main_window
             break;
          case WM_SIZE:
             update_child_window_positions (hwnd);
-            setup_bitmap (hwnd);
+            invalidate_folder_tree_area (hwnd);
             break;
          case WM_GETMINMAXINFO:
             {
@@ -368,19 +436,22 @@ namespace main_window
                   break;
                }
 
-               CWindow window;
-               wc.hwnd = window.Create (
-                     window_class
-                  ,  hwnd
-                  ,  NULL
-                  ,  NULL
-                  ,  WS_CHILD | wc.style
-                  ,  0        | wc.extended_style
-                  ,  wc.id
-                  );
-               //window.MoveWindow (wc.left, wc.top, wc.right - wc.left, wc.bottom - wc.top);
-               window.SetWindowText (wc.title);
-               window.ShowWindow (SW_SHOW);
+
+               if (window_class)
+               {
+                  CWindow window;
+                  wc.hwnd = window.Create (
+                        window_class
+                     ,  hwnd
+                     ,  NULL
+                     ,  NULL
+                     ,  WS_CHILD | wc.style
+                     ,  0        | wc.extended_style
+                     ,  wc.id
+                     );
+                  window.SetWindowText (wc.title);
+                  window.ShowWindow (SW_SHOW);
+               }
             });
 
          update_child_window_positions (hwnd);
@@ -431,6 +502,8 @@ namespace main_window
             DispatchMessage (&msg);
          }
       }
+
+      s_state = state::ptr ();
 
       return msg.wParam;
    }

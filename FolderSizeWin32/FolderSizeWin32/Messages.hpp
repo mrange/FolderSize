@@ -5,6 +5,7 @@
 // ----------------------------------------------------------------------------
 namespace messages
 {
-   const int refresh_view        =  WM_USER + 0x1;
+   const int new_view_available        =  WM_USER + 0x1;
+   const int folder_structure_changed  =  WM_USER + 0x2;
 }
 // ----------------------------------------------------------------------------
