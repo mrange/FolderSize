@@ -38,47 +38,31 @@ namespace painter
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct update_request;
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
-   struct update_response : boost::noncopyable
-   {
-      typedef std::auto_ptr<update_response> ptr;
-
-      update_response (
-         update_request    const &  update_request_
-         );
-
-      coordinate const                 centre            ;
-      zoom_factor const                zoom              ;
-      dimension const                  bitmap_size       ;
-      win32::gdi_object<HBITMAP> const bitmap            ;
-   };
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
    struct painter : boost::noncopyable
    {
-      struct impl;
-
       painter ();
+      ~painter () throw ();
 
-      update_response::ptr get_bitmap (
-            folder::folder const * const  root_
-         ,  DWORD const                   main_thread_id_
-         ,  coordinate const              centre_        
-         ,  zoom_factor const             zoom_          
-         ,  dimension const               screen_size_   
-         ,  HDC const                     hdc_
+      void do_request (
+            folder::folder const * const  root
+         ,  HWND const                    main_hwnd
+         ,  RECT const &                  rect   
+         ,  coordinate const &            centre
+         ,  zoom_factor const &           zoom
          );
 
-      //void paint (
-      //      HDC const hdc
-      //   ,  coordinate const & centre
-      //   ,  zoom_factor const & zoom
-      //   ,  dimension const & screen_size);
+      void paint (
+            folder::folder const * const  root
+         ,  HWND const                    main_hwnd
+         ,  HDC const                     hdc
+         ,  RECT const &                  rect   
+         ,  coordinate const &            centre
+         ,  zoom_factor const &           zoom
+         );
+
    private:
+      struct impl;
+
       std::auto_ptr<impl> m_impl;
    };
    // -------------------------------------------------------------------------

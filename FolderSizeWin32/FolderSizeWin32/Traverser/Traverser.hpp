@@ -33,9 +33,14 @@ namespace traverser
    // -------------------------------------------------------------------------
    struct traverser : boost::noncopyable
    {
-      traverser (win32::tstring const & path);
+      traverser (
+            HWND main_hwnd
+         ,  win32::tstring const & path);
+      ~traverser () throw ();
 
       folder::folder const * get_root () const throw ();
+
+      void stop_traversing () throw ();
 
    private:
       struct impl;

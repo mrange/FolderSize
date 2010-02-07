@@ -27,6 +27,8 @@
 #include <boost/pool/pool.hpp>
 #include <boost/pool/pool_alloc.hpp>
 // ----------------------------------------------------------------------------
+#include "../Messages.hpp"
+// ----------------------------------------------------------------------------
 #include "Traverser.hpp"
 // ----------------------------------------------------------------------------
 namespace traverser
@@ -61,6 +63,7 @@ namespace traverser
          f::folder const **   folder_replacement   ;
       };
 
+      HWND                       main_hwnd         ;
       b::object_pool<f::folder>  folder_pool       ;
       s::deque<job>              job_queue         ;
       w::tstring const           root_path         ;
@@ -75,12 +78,15 @@ namespace traverser
          return queue;
       }
 
-      impl (w::tstring const & path)
-         :  job_queue         (create_initial_queue (job (path, _T("."), &root)))
+      impl (
+            HWND main_hwnd_
+         ,  w::tstring const & path)
+         :  main_hwnd         (main_hwnd_)
+         ,  job_queue         (create_initial_queue (job (path, _T("."), &root)))
          ,  root_path         (path)
          ,  root              (folder_pool.construct ())
          ,  continue_running  (true)
-         ,  thread            (create_proc ())
+         ,  thread            (_T("traverser"), create_proc ())
       {
       }
 
@@ -88,7 +94,16 @@ namespace traverser
       {
          continue_running = false;
 
-         thread.join (1000);
+         thread.join (10000);
+      }
+
+      void update_view () const
+      {
+         PostMessage (
+               main_hwnd
+            ,  messages::folder_structure_changed
+            ,  0
+            ,  0);
       }
 
       unsigned int proc()
@@ -133,7 +148,7 @@ namespace traverser
                      ,  file_count
                      ,  folder_count));
 
-               for (s::size_t iter = 0; iter < folder_count; ++iter)
+               for (s::size_t iter = 0; continue_running && iter < folder_count; ++iter)
                {
                   auto sub_folder_ref = new_folder->sub_folders.get () + iter;
                   auto folder_name = folder_names[iter];
@@ -150,11 +165,15 @@ namespace traverser
                {
                   *(current_job.folder_replacement) = new_folder;
                }
+
+               update_view ();
+
             }
 
             job_queue.pop_front ();
          }
 
+         update_view ();
 
          return EXIT_SUCCESS;
       }
@@ -167,9 +186,20 @@ namespace traverser
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   traverser::traverser (w::tstring const & path)
-      :  m_impl (new impl (path))
+   traverser::traverser (
+         HWND main_hwnd
+      ,  w::tstring const & path)
+      :  m_impl (new impl (main_hwnd, path))
    {
+   }
+
+   traverser::~traverser () throw ()
+   {
+   }
+
+   void traverser::stop_traversing () throw ()
+   {
+      m_impl->continue_running = false;
    }
 
    f::folder const * traverser::get_root () const throw ()

@@ -28,6 +28,14 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   void output_debug_string (tstring const & value)
+   {
+      OutputDebugString (value.c_str ());
+      OutputDebugString (_T("\r\n"));
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    handle::handle (HANDLE hnd) throw ()
       :  value (hnd)
    {
@@ -48,8 +56,11 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   thread::thread (proc const del)
-      :  procedure (del)
+   thread::thread (
+         tstring const & thread_name_
+      ,  proc const del)
+      :  thread_name (thread_name_)
+      ,  procedure (del)
       ,  value (reinterpret_cast<HANDLE> (_beginthread (raw_proc, 0, this)))
       ,  terminated (false)
    {
@@ -59,7 +70,17 @@ namespace win32
    {
       if (value.is_valid ())
       {
+         output_debug_string (_T("FolderSize.Win32 : Joining thread: ") + thread_name);
          auto res = WaitForSingleObject (value.value, ms);
+
+         if (res == WAIT_OBJECT_0)
+         {
+            output_debug_string (_T("FolderSize.Win32 : Thread join successful: ") + thread_name);
+         }
+         else
+         {
+            output_debug_string (_T("FolderSize.Win32 : Thread join failed: ") + thread_name);
+         }
 
          return res == WAIT_OBJECT_0;
       }
@@ -82,12 +103,26 @@ namespace win32
       {
          try
          {
+            output_debug_string (_T("FolderSize.Win32 : Starting thread: ") + state->thread_name);
+
             auto result = state->procedure ();
+
+
+            if (result == EXIT_SUCCESS)
+            {
+               output_debug_string (_T("FolderSize.Win32 : Thread exited successfully: ") + state->thread_name);
+            }
+            else
+            {
+               output_debug_string (_T("FolderSize.Win32 : Thread exited with failure code: ") + state->thread_name);
+            }
+
             state->terminated = true;
             _endthreadex (result);
          }
          catch(...)
          {
+            output_debug_string (_T("FolderSize.Win32 : Thread threw exception: ") + state->thread_name);
             state->terminated = true;
             _endthreadex (EXIT_FAILURE);
          }
@@ -149,7 +184,7 @@ namespace win32
 
    // -------------------------------------------------------------------------
    event::event (bool auto_reset)
-      :  value (CreateEvent (NULL, auto_reset, FALSE, NULL))
+      :  value (CreateEvent (NULL, !auto_reset, FALSE, NULL))
    {
    }
 
