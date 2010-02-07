@@ -38,6 +38,7 @@
     <ClInclude Include="Traverser\Traverser.hpp">
       <Filter>Traverser</Filter>
     </ClInclude>
+    <ClInclude Include="utility.hpp" />
     <ClInclude Include="Win32.hpp" />
   </ItemGroup>
   <ItemGroup>

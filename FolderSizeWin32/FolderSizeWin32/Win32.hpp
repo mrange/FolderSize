@@ -24,6 +24,8 @@
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
 // ----------------------------------------------------------------------------
+#include "utility.hpp"
+// ----------------------------------------------------------------------------
 namespace win32
 {
    // -------------------------------------------------------------------------
@@ -39,7 +41,7 @@ namespace win32
    // -------------------------------------------------------------------------
    struct handle : boost::noncopyable
    {
-      handle (HANDLE hnd) throw ();
+      explicit handle (HANDLE const hnd) throw ();
       ~handle () throw ();
       bool const is_valid () const throw ();
 
@@ -72,7 +74,7 @@ namespace win32
    // -------------------------------------------------------------------------
    struct find_file : boost::noncopyable
    {
-      find_file (tstring const & path);
+      explicit find_file (tstring const & path);
 
       bool const is_valid () const throw ();
       bool const find_next () throw ();
@@ -91,12 +93,7 @@ namespace win32
    template<typename ValueType>
    struct thread_safe_scoped_ptr
    {
-      thread_safe_scoped_ptr () throw ()
-         :  m_ptr (NULL)
-      {
-      }
-
-      thread_safe_scoped_ptr (ValueType * const ptr) throw ()
+      explicit thread_safe_scoped_ptr (ValueType * const ptr = NULL) throw ()
          :  m_ptr (ptr)
       {
       }
@@ -125,7 +122,7 @@ namespace win32
    // -------------------------------------------------------------------------
    struct event : boost::noncopyable
    {
-      event (bool auto_reset = false);
+      explicit event (bool const auto_reset = false);
 
       void set () throw ();
 
@@ -136,7 +133,7 @@ namespace win32
    // -------------------------------------------------------------------------
    struct window_device_context : boost::noncopyable
    {
-      window_device_context (HWND const hwnd) throw ();
+      explicit window_device_context (HWND const hwnd) throw ();
       ~window_device_context () throw ();
 
       HWND const  hwnd;
@@ -147,7 +144,7 @@ namespace win32
    // -------------------------------------------------------------------------
    struct device_context : boost::noncopyable
    {
-      device_context (HDC const dc) throw ();
+      explicit device_context (HDC const dc) throw ();
       ~device_context () throw ();
 
       HDC const value;
@@ -158,7 +155,7 @@ namespace win32
    template<typename TGdiObject>
    struct gdi_object : boost::noncopyable
    {
-      gdi_object (TGdiObject const obj) throw ()
+      explicit gdi_object (TGdiObject const obj) throw ()
          :  value (obj)
       {
       }
@@ -168,6 +165,7 @@ namespace win32
          if (value)
          {
             auto deleted_result = DeleteObject (value);
+            UNUSED_VARIABLE (deleted_result);
          }
       }
 
@@ -178,7 +176,7 @@ namespace win32
    // -------------------------------------------------------------------------
    struct select_object : boost::noncopyable
    {
-      select_object (HDC const dc_, HGDIOBJ obj_) throw ();
+      select_object (HDC const dc, HGDIOBJ obj) throw ();
       ~select_object () throw ();
 
       HDC const      dc                         ;
@@ -189,7 +187,7 @@ namespace win32
    // -------------------------------------------------------------------------
    struct set_world_transform : boost::noncopyable 
    {
-      set_world_transform (HDC const dc_, XFORM const * const transform) throw ();
+      set_world_transform (HDC const dc, XFORM const * const transform) throw ();
       ~set_world_transform () throw ();
 
       HDC const      dc                         ;

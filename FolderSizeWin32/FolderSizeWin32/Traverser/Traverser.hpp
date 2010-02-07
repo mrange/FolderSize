@@ -34,7 +34,7 @@ namespace traverser
    struct traverser : boost::noncopyable
    {
       traverser (
-            HWND main_hwnd
+            HWND const main_hwnd
          ,  win32::tstring const & path);
       ~traverser () throw ();
 

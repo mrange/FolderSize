@@ -49,12 +49,12 @@ namespace traverser
       struct job
       {
          job (
-               w::tstring const & p
-            ,  w::tstring const & n
-            ,  f::folder const ** fr)
-            :  path (p)
-            ,  name (n)
-            ,  folder_replacement (fr)
+               w::tstring const & path_
+            ,  w::tstring const & name_
+            ,  f::folder const ** folder_replacement_)
+            :  path                 (path_               )
+            ,  name                 (name_               )
+            ,  folder_replacement   (folder_replacement_ )
          {
          }
 
@@ -79,7 +79,7 @@ namespace traverser
       }
 
       impl (
-            HWND main_hwnd_
+            HWND const main_hwnd_
          ,  w::tstring const & path)
          :  main_hwnd         (main_hwnd_)
          ,  job_queue         (create_initial_queue (job (path, _T("."), &root)))
@@ -112,32 +112,37 @@ namespace traverser
          {
             auto current_job = job_queue.front ();
 
-            w::find_file ff (current_job.path + _T("\\*.*"));
+            w::find_file find_file (current_job.path + _T("\\*.*"));
 
-            if (continue_running && ff.is_valid ())
+            if (continue_running && find_file.is_valid ())
             {
-               s::vector <w::tstring>  folder_names      ;
+               s::vector <
+                     w::tstring
+                  ,  b::pool_allocator<w::tstring>>  
+                                       folder_names      ;
                __int64                 size           (0);
-               __int64                 file_count     (0);
+               std::size_t             file_count     (0);
+
+               folder_names.reserve (1024);
 
                do
                {
-                  w::tstring const name = ff.get_name ();
+                  w::tstring const name = find_file.get_name ();
 
-                  if (ff.is_directory ())
+                  if (find_file.is_directory ())
                   {
                      if (name != _T(".") && name != _T(".."))
                      {
-                        folder_names.push_back (ff.get_name ());
+                        folder_names.push_back (find_file.get_name ());
                      }
                   }
                   else
                   {
-                     size += ff.get_size ();
+                     size += find_file.get_size ();
                      ++file_count;
                   }
                }
-               while (continue_running && ff.find_next ());
+               while (continue_running && find_file.find_next ());
 
                auto folder_count = folder_names.size ();
 
@@ -187,7 +192,7 @@ namespace traverser
 
    // -------------------------------------------------------------------------
    traverser::traverser (
-         HWND main_hwnd
+         HWND const main_hwnd
       ,  w::tstring const & path)
       :  m_impl (new impl (main_hwnd, path))
    {
