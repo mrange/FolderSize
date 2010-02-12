@@ -149,18 +149,18 @@ namespace painter
          }
 
          folder_info (
-               std::size_t const depth_
-            ,  __int64 const     size_
-            ,  __int64 const     count_)
+               std::size_t const       depth_
+            ,  unsigned __int64 const  size_
+            ,  std::size_t const       count_)
             :  depth (depth_)
             ,  size  (size_)
             ,  count (count_)
          {
          }
 
-         std::size_t    depth    ;
-         __int64        size   ;
-         __int64        count  ;
+         std::size_t       depth    ;
+         unsigned __int64  size   ;
+         std::size_t       count  ;
 
       };
 
@@ -240,7 +240,7 @@ namespace painter
          ~background_painter () throw ()
          {
             shutdown_request.set ();
-            thread.join (10000);
+            thread.join (100000);
          }
 
          w::thread_safe_scoped_ptr<update_request>    update_request_value    ;
@@ -384,16 +384,22 @@ namespace painter
             }
          }
 
-         static __int64 size_picker(
+         static unsigned __int64 size_picker(
             folder_info const & folder_info
             )
          {
             return folder_info.size;
          }
 
+         //static double round1decimal (double d)
+         //{
+         //   auto result = floor(d * 10.0 + 0.5) / 10.0;
+         //   return result;
+         //}
+
          static void painter (
                painter_context const & painter_context
-            ,  __int64 const           total_size
+            ,  unsigned __int64 const  total_size
             ,  double const            x
             ,  double const            y
             ,  double const            width
@@ -411,13 +417,49 @@ namespace painter
 
             TCHAR value[buffer_size] = {0};
 
-            auto cch = _snwprintf (
-                  value
-               ,  buffer_size
-               ,  _T ("%s\r\n%I64d")
-               ,  folder.name.c_str ()
-               ,  total_size
-               );
+            int cch = 0;
+
+            if (total_size > 1E8)
+            {
+               cch = _snwprintf (
+                     value
+                  ,  buffer_size
+                  ,  _T ("%s\r\n%.1fG")
+                  ,  folder.name.c_str ()
+                  ,  total_size / 1E9
+                  );
+            }
+            else if (total_size > 1E5)
+            {
+               cch = _snwprintf (
+                     value
+                  ,  buffer_size
+                  ,  _T ("%s\r\n%.1fM")
+                  ,  folder.name.c_str ()
+                  ,  total_size / 1E6
+                  );
+            }
+            else if (total_size > 1E2)
+            {
+               cch = _snwprintf (
+                     value
+                  ,  buffer_size
+                  ,  _T ("%s\r\n%.1fk")
+                  ,  folder.name.c_str ()
+                  ,  total_size / 1E3
+                  );
+            }
+            else
+            {
+               cch = _snwprintf (
+                     value
+                  ,  buffer_size
+                  ,  _T ("%s\r\n%I64d")
+                  ,  folder.name.c_str ()
+                  ,  total_size
+                  );
+            }
+
 
             FillRect (
                   painter_context.hdc

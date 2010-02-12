@@ -17,7 +17,8 @@
 #include "stdafx.h"
 #include "../resource.h"
 // ----------------------------------------------------------------------------
-#include <atlwin.h>
+#include <windows.h>
+#include <commctrl.h>
 // ----------------------------------------------------------------------------
 #include <functional>
 // ----------------------------------------------------------------------------
@@ -52,6 +53,20 @@ namespace main_window
    // -------------------------------------------------------------------------
    namespace
    {
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      //struct MARGINS
+      //{
+      //   int cxLeftWidth      ;
+      //   int cxRightWidth     ;
+      //   int cyTopHeight      ;
+      //   int cyBottomHeight   ;
+      //};
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      //typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaPtr)(HWND, const MARGINS*);
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -100,9 +115,10 @@ namespace main_window
          p::painter                 painter           ;
 
          state (
-               HWND const     main_hwnd
-            ,  LPCTSTR const  path)
-            :  traverser      (main_hwnd, path )
+               HWND const           main_hwnd
+            ,  w::tstring const &   path
+            )
+            :  traverser      (main_hwnd, path)
          {
          }
       };
@@ -115,8 +131,8 @@ namespace main_window
       TCHAR                s_window_class    [s_max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button  , 0    ,  0  , _T("&Go")          },
-         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button  , 0    ,  0  , _T("&Stop")        },
+         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button  , 0    ,  0  , _T("Go")           },
+         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button  , 0    ,  0  , _T("Stop")         },
          {  IDM_PATH       , 200    , 8   , -8        , 8 + 32 , window_type::edit    , 0    ,  0  , _T("C:\\Windows")  },
          {  IDM_FOLDERTREE , 8      , 48  , -8        , -8     , window_type::nowindow, 0    ,  0  , _T("")             },
          {0},
@@ -125,6 +141,14 @@ namespace main_window
       child_window &       s_folder_tree                          = s_child_window[3];
 
       state::ptr           s_state;
+
+      //w::dll               s_dwm_dll (_T ("DwmApi"));
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      //w::function_pointer<DwmExtendFrameIntoClientAreaPtr> DwmExtendFrameIntoClientArea (
+      //      s_dwm_dll.value
+      //   ,  "DwmExtendFrameIntoClientArea");
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -297,26 +321,22 @@ namespace main_window
             //   break;
             case IDM_GO_PAUSE:
                {
-                  CWindow window (GetDlgItem (hwnd, IDM_PATH));
+                  HWND path_hwnd (GetDlgItem (hwnd, IDM_PATH));
 
-                  if (window)
+                  auto path = w::get_window_text (path_hwnd);
+
+                  if (!path.empty ())
                   {
-                     CString str;
-                     window.GetWindowText (str);
+                     w::output_debug_string (_T ("FolderSize.Win32 : New job started"));
+                     s_state = state::ptr ();
 
-                     if (str.GetLength () > 0)
-                     {
-                        OutputDebugString (_T ("FolderSize.Win32 : New job started\r\n"));
-                        s_state = state::ptr ();
-
-                        s_state = state::ptr (new state (hwnd, str));
-                        invalidate_folder_tree_area (hwnd);
-                     }
+                     s_state = state::ptr (new state (hwnd, path));
+                     invalidate_folder_tree_area (hwnd);
                   }
                }
                break;
             case IDM_STOP:
-               OutputDebugString (_T ("FolderSize.Win32 : Job terminated\r\n"));
+               w::output_debug_string  (_T ("FolderSize.Win32 : Job terminated"));
                if (s_state.get ())
                {
                   s_state->traverser.stop_traversing ();
@@ -388,7 +408,7 @@ namespace main_window
          wcex.hIcon           = LoadIcon (instance, MAKEINTRESOURCE (IDI_FOLDERSIZEWIN32));
          wcex.hCursor         = LoadCursor (NULL, IDC_ARROW);
          wcex.hbrBackground   = (HBRUSH)(COLOR_WINDOW + 0);
-         wcex.lpszMenuName    = MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32);
+         wcex.lpszMenuName    = NULL;
          wcex.lpszClassName   = s_window_class;
          wcex.hIconSm         = LoadIcon (wcex.hInstance, MAKEINTRESOURCE (IDI_SMALL));
 
@@ -408,8 +428,9 @@ namespace main_window
 
          s_instance = instance; // Store instance handle in our global variable
 
-         hwnd = CreateWindow (
-               s_window_class
+         hwnd = CreateWindowEx (
+               WS_EX_APPWINDOW | WS_EX_COMPOSITED /*| WS_EX_LAYERED*/
+            ,  s_window_class
             ,  s_title
             ,  WS_OVERLAPPEDWINDOW
             ,  CW_USEDEFAULT
@@ -427,8 +448,24 @@ namespace main_window
             return false;
          }
 
+         //MARGINS margins = {0};
+         //margins.cxLeftWidth     = -1  ;
+         //margins.cxRightWidth    = -1  ;
+         //margins.cyTopHeight     = -1  ;
+         //margins.cyBottomHeight  = -1  ;
+
+         //if (DwmExtendFrameIntoClientArea.is_valid ())
+         //{
+         //   auto extend_frame_result = DwmExtendFrameIntoClientArea.value (
+         //         hwnd
+         //      ,  &margins);
+         //   UNUSED_VARIABLE (extend_frame_result);
+         //}
+
+         auto sz = get_client_size (hwnd);
+
          for_all_child_windows (
-            [hwnd] (child_window & wc)
+            [hwnd,instance, sz] (child_window & wc)
             {
                LPCTSTR window_class = NULL;
 
@@ -448,28 +485,32 @@ namespace main_window
                   break;
                }
 
-
                if (window_class)
                {
-                  CWindow window;
-                  wc.hwnd = window.Create (
-                        window_class
-                     ,  hwnd
-                     ,  NULL
-                     ,  NULL
-                     ,  WS_CHILD | wc.style
-                     ,  0        | wc.extended_style
-                     ,  wc.id
-                     );
-                  window.SetWindowText (wc.title);
-                  window.ShowWindow (SW_SHOW);
+                  auto rect = calculate_window_coordinate (
+                        sz
+                     ,  wc);
+
+                  wc.hwnd = CreateWindowEx (
+                     0        | wc.extended_style
+                  ,  window_class
+                  ,  wc.title
+                  ,  WS_CHILD | wc.style
+                  ,  rect.left
+                  ,  rect.top
+                  ,  rect.right - rect.left
+                  ,  rect.bottom - rect.top
+                  ,  hwnd
+                  ,  reinterpret_cast<HMENU> (wc.id)
+                  ,  instance
+                  ,  NULL
+                  );
+
+                  ShowWindow (wc.hwnd, SW_SHOW);
                }
             });
 
-         update_child_window_positions (hwnd);
-
          ShowWindow (hwnd, command_show);
-         UpdateWindow (hwnd);
 
          return true;
       }
@@ -503,7 +544,7 @@ namespace main_window
          return FALSE;
       }
 
-      accelerator_table = LoadAccelerators (instance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
+      accelerator_table = LoadAccelerators (instance, MAKEINTRESOURCE (IDR_ACCELERATOR));
 
       // Main message loop:
       while (GetMessage (&msg, NULL, 0, 0))

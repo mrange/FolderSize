@@ -80,7 +80,8 @@ namespace traverser
 
       impl (
             HWND const main_hwnd_
-         ,  w::tstring const & path)
+         ,  w::tstring const & path
+         )
          :  main_hwnd         (main_hwnd_)
          ,  job_queue         (create_initial_queue (job (path, _T("."), &root)))
          ,  root_path         (path)
@@ -120,7 +121,7 @@ namespace traverser
                      w::tstring
                   ,  b::pool_allocator<w::tstring>>  
                                        folder_names      ;
-               __int64                 size           (0);
+               unsigned __int64        size           (0);
                std::size_t             file_count     (0);
 
                folder_names.reserve (1024);
@@ -193,7 +194,8 @@ namespace traverser
    // -------------------------------------------------------------------------
    traverser::traverser (
          HWND const main_hwnd
-      ,  w::tstring const & path)
+      ,  w::tstring const & path
+      )
       :  m_impl (new impl (main_hwnd, path))
    {
    }

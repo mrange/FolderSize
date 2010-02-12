@@ -36,6 +36,10 @@ namespace win32
 
    // -------------------------------------------------------------------------
    void output_debug_string (tstring const & value);
+
+   void output_debug_string (LPCTSTR const value);
+
+   tstring const get_window_text (HWND const hwnd);
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -50,15 +54,41 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   struct dll : boost::noncopyable
+   {
+      explicit dll (LPCTSTR const dll_name) throw ();
+      ~dll () throw ();
+      bool const is_valid () const throw ();
+
+      HMODULE const value;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   template<typename TFunctionPtr>
+   struct function_pointer : boost::noncopyable
+   {
+      function_pointer (HMODULE module, LPCSTR const function_name)
+         :  value (reinterpret_cast<TFunctionPtr> (GetProcAddress (module, function_name)))
+      {
+      }
+
+      bool const is_valid () const throw ()
+      {
+         return value != NULL;
+      }
+
+      TFunctionPtr const value;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct thread : boost::noncopyable
    {
       typedef std::tr1::function<unsigned int ()> proc;
       thread (
             tstring const & thread_name
          ,  proc const del);
-
-      proc const        procedure;
-      handle const      value;
 
       bool const join (unsigned int const ms) const throw ();
       bool const is_terminated () const throw ();
@@ -68,6 +98,9 @@ namespace win32
 
       tstring const        thread_name;
       bool volatile        terminated;
+   public:
+      proc const        procedure;
+      handle const      value;
    };
    // -------------------------------------------------------------------------
 
@@ -79,7 +112,7 @@ namespace win32
       bool const is_valid () const throw ();
       bool const find_next () throw ();
       bool const is_directory () const throw ();
-      __int64 const get_size () const throw ();
+      unsigned __int64 const get_size () const throw ();
       LPCTSTR const get_name () const throw ();
       ~find_file () throw ();
 
