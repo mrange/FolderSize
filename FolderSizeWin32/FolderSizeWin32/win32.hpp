@@ -139,7 +139,8 @@ namespace win32
             pointer != InterlockedCompareExchangePointer (
                   &m_ptr
                ,  ptr
-               ,  pointer))
+               ,  pointer
+               ))
          {
             pointer = m_ptr;
          }

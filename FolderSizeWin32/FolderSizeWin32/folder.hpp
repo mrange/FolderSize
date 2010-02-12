@@ -50,7 +50,8 @@ namespace folder
       folder ();
 
       explicit folder (
-         initializer const & init);
+         initializer const & init
+         );
 
       tstring const           name;
 

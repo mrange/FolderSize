@@ -166,12 +166,14 @@ namespace painter
 
       folder_info const operator+ (
             folder_info const & left
-         ,  folder_info const & right)
+         ,  folder_info const & right
+         )
       {
          return folder_info (
                std::max (left.depth, right.depth)
             ,   left.size + right.size
-            ,  left.count + right.count);
+            ,  left.count + right.count
+            );
       }
 
       typedef f::folder const * folder_key;
@@ -216,7 +218,8 @@ namespace painter
          painter_context (
                HDC const hdc_
             ,  HBRUSH const fill_brush_
-            ,  HBRUSH const frame_brush_)
+            ,  HBRUSH const frame_brush_
+            )
             :  hdc(hdc_)
             ,  fill_brush(fill_brush_)
             ,  frame_brush(frame_brush_)
@@ -391,12 +394,6 @@ namespace painter
             return folder_info.size;
          }
 
-         //static double round1decimal (double d)
-         //{
-         //   auto result = floor(d * 10.0 + 0.5) / 10.0;
-         //   return result;
-         //}
-
          static void painter (
                painter_context const & painter_context
             ,  unsigned __int64 const  total_size
@@ -520,14 +517,16 @@ namespace painter
 
                         auto total_folder_info = update_folder_infos (
                               folder_infos
-                           ,  request_ptr->root);
+                           ,  request_ptr->root
+                           );
                         
 
-                        // TODO:
+                        // TODO: Should be created from a DC compatible with the window
                         w::device_context bitmap_dc (CreateCompatibleDC (NULL));
                         w::select_object const select_bitmap (
                               bitmap_dc.value
-                           ,  response_ptr->bitmap.value);
+                           ,  response_ptr->bitmap.value
+                           );
 
                         w::gdi_object<HBRUSH> const frame_brush (CreateSolidBrush (RGB(0x00, 0x00, 0x00)));
                         w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF)));
@@ -545,7 +544,8 @@ namespace painter
                         FillRect (
                               bitmap_dc.value
                            ,  &rect
-                           ,  background_brush.value);
+                           ,  background_brush.value
+                           );
 
                         auto painter_ = [&painter_context] (
                               __int64 const     total_size
@@ -563,7 +563,8 @@ namespace painter
                                  ,  y
                                  ,  width
                                  ,  height
-                                 ,  folder);
+                                 ,  folder
+                                 );
                            };
 
                         folder_traverser (
@@ -571,7 +572,8 @@ namespace painter
                            ,  request_ptr->bitmap_size
                            ,  request_ptr->root
                            ,  size_picker
-                           ,  painter_);
+                           ,  painter_
+                           );
 
                         update_response_value.reset (response_ptr.release ());
 
@@ -606,7 +608,8 @@ namespace painter
       };
 
       XFORM const make_xform (
-         transform const & transform)
+         transform const & transform
+         )
       {
          XFORM form = {0};
 
@@ -710,7 +713,8 @@ namespace painter
                ,  0
                ,  IMPLICIT_CAST (update_response->bitmap_size.x ())
                ,  IMPLICIT_CAST (update_response->bitmap_size.y ())
-               ,  SRCCOPY);
+               ,  SRCCOPY
+               );
          }
          else
          {
@@ -719,7 +723,8 @@ namespace painter
             FillRect (
                   hdc
                ,  &rect
-               ,  fill_brush.value);
+               ,  fill_brush.value
+               );
 
          }
       }

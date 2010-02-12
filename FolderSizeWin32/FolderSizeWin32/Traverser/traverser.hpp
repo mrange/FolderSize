@@ -34,7 +34,8 @@ namespace traverser
    {
       traverser (
             HWND const main_hwnd
-         ,  win32::tstring const & path);
+         ,  win32::tstring const & path
+         );
       ~traverser () throw ();
 
       folder::folder const * get_root () const throw ();

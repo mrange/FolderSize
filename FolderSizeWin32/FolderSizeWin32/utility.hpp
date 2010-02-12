@@ -91,7 +91,8 @@ namespace utility
    // -------------------------------------------------------------------------
    template<typename TValueType>
    inline implicit_cast_helper<TValueType> const implicit_cast (
-      TValueType const & value)
+         TValueType const & value
+      )
    {
       return implicit_cast_helper<TValueType> (value);
    }
