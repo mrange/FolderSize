@@ -27,9 +27,9 @@
 #include <boost/pool/pool.hpp>
 #include <boost/pool/pool_alloc.hpp>
 // ----------------------------------------------------------------------------
-#include "../Messages.hpp"
+#include "../messages.hpp"
 // ----------------------------------------------------------------------------
-#include "Traverser.hpp"
+#include "traverser.hpp"
 // ----------------------------------------------------------------------------
 namespace traverser
 {

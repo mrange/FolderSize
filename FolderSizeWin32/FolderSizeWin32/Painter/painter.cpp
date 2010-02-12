@@ -19,8 +19,6 @@
 #undef max
 #undef min
 // ----------------------------------------------------------------------------
-#include "Painter.hpp"
-// ----------------------------------------------------------------------------
 #include <tuple>
 #include <unordered_map>
 // ----------------------------------------------------------------------------
@@ -28,10 +26,12 @@
 #include <boost/pool/pool.hpp>
 #include <boost/pool/pool_alloc.hpp>
 // ----------------------------------------------------------------------------
-#include "../Linear.hpp"
-#include "../Messages.hpp"
-#include "../Win32.hpp"
+#include "../linear.hpp"
+#include "../messages.hpp"
+#include "../win32.hpp"
 #include "../utility.hpp"
+// ----------------------------------------------------------------------------
+#include "painter.hpp"
 // ----------------------------------------------------------------------------
 namespace painter
 {

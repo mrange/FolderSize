@@ -24,11 +24,11 @@
 #include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
 // ----------------------------------------------------------------------------
-#include "../Painter/Painter.hpp"
-#include "../Traverser/Traverser.hpp"
-#include "../Messages.hpp"
+#include "../Painter/painter.hpp"
+#include "../Traverser/traverser.hpp"
+#include "../messages.hpp"
 #include "../utility.hpp"
-#include "../Win32.hpp"
+#include "../win32.hpp"
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------

@@ -88,27 +88,27 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="folder.hpp" />
-    <ClInclude Include="Linear.hpp" />
-    <ClInclude Include="Messages.hpp" />
-    <ClInclude Include="Painter\Painter.hpp" />
+    <ClInclude Include="linear.hpp" />
+    <ClInclude Include="messages.hpp" />
+    <ClInclude Include="Painter\painter.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="utility.hpp" />
-    <ClInclude Include="Win32.hpp" />
-    <ClInclude Include="Traverser\Traverser.hpp" />
+    <ClInclude Include="win32.hpp" />
+    <ClInclude Include="Traverser\traverser.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="folder.cpp" />
     <ClCompile Include="FolderSizeWin32.cpp" />
-    <ClCompile Include="MainWindow\MainWindow.cpp" />
-    <ClCompile Include="Painter\Painter.cpp" />
+    <ClCompile Include="MainWindow\main_window.cpp" />
+    <ClCompile Include="Painter\painter.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Win32.cpp" />
-    <ClCompile Include="Traverser\Traverser.cpp" />
+    <ClCompile Include="win32.cpp" />
+    <ClCompile Include="Traverser\traverser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FolderSizeWin32.rc" />

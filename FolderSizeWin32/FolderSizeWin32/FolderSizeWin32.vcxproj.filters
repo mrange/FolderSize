@@ -44,7 +44,7 @@
   <ItemGroup>
     <ClCompile Include="folder.cpp" />
     <ClCompile Include="FolderSizeWin32.cpp" />
-    <ClCompile Include="MainWindow\MainWindow.cpp">
+    <ClCompile Include="MainWindow\main_window.cpp">
       <Filter>MainWindow</Filter>
     </ClCompile>
     <ClCompile Include="Painter\Painter.cpp">
