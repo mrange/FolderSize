@@ -84,7 +84,8 @@ namespace main_window
       {
          enum type
          {
-            nowindow = 0   ,
+            terminator = 0 ,
+            nowindow       ,
             static_        ,
             button         ,
             edit           ,
@@ -131,16 +132,19 @@ namespace main_window
       TCHAR                s_window_class    [s_max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button  , 0    ,  0  , _T("Go")           },
-         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button  , 0    ,  0  , _T("Stop")         },
-         {  IDM_PATH       , 200    , 8   , -8        , 8 + 32 , window_type::edit    , 0    ,  0  , _T("C:\\Windows")  },
-         {  IDM_FOLDERTREE , 8      , 48  , -8        , -8     , window_type::nowindow, 0    ,  0  , _T("")             },
+         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T("&Go")                                  },
+         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T("&Stop")                                },
+         {  IDM_PATH       , 200    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T("C:\\Windows")                          },
+         {  IDM_FOLDERTREE , 8      , 48  , -8        , -22    , window_type::nowindow , 0                  ,  0  , _T("")                                     },
+         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T("FolderSize.Win32 © Mårten Rånge 2010") },
          {0},
       };
 
       child_window &       s_folder_tree                          = s_child_window[3];
 
       state::ptr           s_state;
+
+      w::gdi_object<HFONT> s_default_message_font                 = w::get_standard_message_font ();
 
       //w::dll               s_dwm_dll (_T ("DwmApi"));
       // ----------------------------------------------------------------------
@@ -155,11 +159,11 @@ namespace main_window
       typedef st::function<void (child_window&)>  child_window_predicate;
       void for_all_child_windows (child_window_predicate const predicate)
       {
-         for (int iter = 0; true; ++iter)
+         for (int iter = 0; ; ++iter)
          {
             child_window & wc = s_child_window[iter];
 
-            if (wc.window_type == window_type::nowindow)
+            if (wc.window_type == window_type::terminator)
             {
                return;
             }
@@ -439,7 +443,9 @@ namespace main_window
                WS_EX_APPWINDOW | WS_EX_COMPOSITED /*| WS_EX_LAYERED*/
             ,  s_window_class
             ,  s_title
-            ,  WS_OVERLAPPEDWINDOW
+            ,     WS_OVERLAPPEDWINDOW
+               |  WS_VISIBLE
+               |  WS_TABSTOP
             ,  CW_USEDEFAULT
             ,  0
             ,  CW_USEDEFAULT
@@ -454,6 +460,12 @@ namespace main_window
          {
             return false;
          }
+
+         SendMessage (
+               hwnd
+            ,  WM_SETFONT
+            ,  reinterpret_cast<WPARAM> (s_default_message_font.value)
+            ,  FALSE);
 
          //MARGINS margins = {0};
          //margins.cxLeftWidth     = -1  ;
@@ -500,10 +512,13 @@ namespace main_window
                      ,  wc);
 
                   wc.hwnd = CreateWindowEx (
-                     0        | wc.extended_style
+                     wc.extended_style
                   ,  window_class
                   ,  wc.title
-                  ,  WS_CHILD | wc.style
+                  ,     wc.style 
+                     |  WS_CHILD 
+                     |  WS_VISIBLE
+                     |  WS_TABSTOP
                   ,  rect.left
                   ,  rect.top
                   ,  rect.right - rect.left
@@ -514,7 +529,11 @@ namespace main_window
                   ,  NULL
                   );
 
-                  ShowWindow (wc.hwnd, SW_SHOW);
+               SendMessage (
+                     wc.hwnd
+                  ,  WM_SETFONT
+                  ,  reinterpret_cast<WPARAM> (s_default_message_font.value)
+                  ,  FALSE);
                }
             });
 
@@ -537,6 +556,9 @@ namespace main_window
    {
       UNREFERENCED_PARAMETER (previous_instance);
       UNREFERENCED_PARAMETER (command_line);
+
+      auto set_priority_class_result = SetPriorityClass (GetCurrentProcess (), IDLE_PRIORITY_CLASS);
+      UNUSED_VARIABLE (set_priority_class_result);
 
       MSG msg                    = { 0 };
       HACCEL accelerator_table   = { 0 };
@@ -568,6 +590,8 @@ namespace main_window
 
       return msg.wParam;
    }
+   // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------
