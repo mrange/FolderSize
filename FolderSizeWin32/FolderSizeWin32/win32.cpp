@@ -15,6 +15,11 @@
 
 // ----------------------------------------------------------------------------
 #include "StdAfx.h"
+// ----------------------------------------------------------------------------
+#include <process.h>
+// ----------------------------------------------------------------------------
+#include <vector>
+// ----------------------------------------------------------------------------
 #include "win32.hpp"
 // ----------------------------------------------------------------------------
 namespace win32
@@ -30,8 +35,40 @@ namespace win32
    // -------------------------------------------------------------------------
    void output_debug_string (tstring const & value)
    {
-      OutputDebugString (value.c_str ());
+      output_debug_string (value.c_str ());
+   }
+
+   void output_debug_string (LPCTSTR const value)
+   {
+      if (value)
+      {
+         OutputDebugString (value);
+      }
       OutputDebugString (_T("\r\n"));
+   }
+
+   tstring const get_window_text (HWND const hwnd)
+   {
+      if (!hwnd)
+      {
+         return tstring ();
+      }
+
+      auto length = GetWindowTextLength (hwnd);
+
+      if (length > 0)
+      {
+         std::vector<TCHAR> buffer;
+         buffer.resize (length + 1);
+
+         auto real_length = GetWindowText (hwnd, &buffer.front (), length + 1);
+
+         return tstring (&buffer.front (), real_length);
+      }
+      else
+      {
+         return tstring ();
+      }
    }
    // -------------------------------------------------------------------------
 
@@ -57,13 +94,34 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   dll::dll (LPCTSTR const dll_name) throw ()
+      :  value (LoadLibrary (dll_name))
+   {
+   }
+
+   dll::~dll () throw ()
+   {
+      if (is_valid ())
+      {
+         BOOL const free_result = FreeLibrary (value);
+         UNUSED_VARIABLE (free_result);
+      }
+   }
+
+   bool const dll::is_valid () const throw ()
+   {
+      return value != NULL;
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    thread::thread (
          tstring const & thread_name_
       ,  proc const del)
       :  thread_name (thread_name_)
+      ,  terminated (false)
       ,  procedure (del)
       ,  value (reinterpret_cast<HANDLE> (_beginthread (raw_proc, 0, this)))
-      ,  terminated (false)
    {
    }
 
@@ -160,9 +218,9 @@ namespace win32
       return (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
    }
 
-   __int64 const find_file::get_size () const throw ()
+   unsigned __int64 const find_file::get_size () const throw ()
    {
-      return (static_cast<__int64>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
+      return (static_cast<unsigned __int64>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
    }
 
    LPCTSTR const find_file::get_name () const throw ()

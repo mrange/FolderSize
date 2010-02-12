@@ -16,18 +16,19 @@
 // ----------------------------------------------------------------------------
 #pragma once
 // ----------------------------------------------------------------------------
+#pragma warning(disable: 4512)   // assignment operator could not be generated
+// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 #define WIN32_LEAN_AND_MEAN
 
 #include "targetver.h"
 #include <windows.h>
+#include <commctrl.h>
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-//#include <stdlib.h>
-//#include <malloc.h>
-//#include <memory.h>
+#include <process.h>
 #include <tchar.h>
 // ----------------------------------------------------------------------------
 
@@ -44,28 +45,17 @@
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-#include <boost/assert.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/pool/object_pool.hpp>
-#include <boost/pool/pool.hpp>
-#include <boost/pool/pool_alloc.hpp>
-#include <boost/scoped_array.hpp>
+#pragma warning(push)
+#  pragma warning(disable: 4127) // conditional expression is constant
+#  include <boost/assert.hpp>
+#  include <boost/noncopyable.hpp>
+#  include <boost/pool/object_pool.hpp>
+#  include <boost/pool/pool.hpp>
+#  include <boost/pool/pool_alloc.hpp>
+#  include <boost/scoped_array.hpp>
+#pragma warning(pop)
 // ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
-#include <atlbase.h>
-#include <atlstr.h>
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-#if defined _M_IX86
-#pragma comment(linker,"/manifestdependency:\"type='win32'  name='Microsoft.Windows.Common-Controls'  version='6.0.0.0'  processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#elif defined _M_X64
-#pragma comment(linker,"/manifestdependency:\"type='win32' 
-    name='Microsoft.Windows.Common-Controls'  version='6.0.0.0' 
-    processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' 
-    language='*'\"")
-#endif
 // ----------------------------------------------------------------------------
 #ifdef UNICODE
 #  if defined _M_IX86

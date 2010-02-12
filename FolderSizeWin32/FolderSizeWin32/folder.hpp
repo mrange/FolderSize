@@ -40,10 +40,10 @@ namespace folder
          std::size_t const       folder_count   ;
 
          initializer (
-               tstring const &         name_          
-            ,  unsigned __int64 const  size_          
-            ,  std::size_t const       file_count_    
-            ,  std::size_t const       folder_count_   
+               tstring const &         name          
+            ,  unsigned __int64 const  size          
+            ,  std::size_t const       file_count
+            ,  std::size_t const       folder_count
             );
       };
 
