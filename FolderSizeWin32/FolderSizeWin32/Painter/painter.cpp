@@ -235,8 +235,8 @@ namespace painter
       {
          background_painter ()
             :  thread            (_T("painter"), create_proc ())
-            ,  new_frame_request (true)
-            ,  shutdown_request  (false)
+            ,  new_frame_request (w::event_type::auto_reset    )
+            ,  shutdown_request  (w::event_type::manual_reset  )
          {
          }
 
@@ -528,9 +528,23 @@ namespace painter
                            ,  response_ptr->bitmap.value
                            );
 
-                        w::gdi_object<HBRUSH> const frame_brush (CreateSolidBrush (RGB(0x00, 0x00, 0x00)));
-                        w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0xFF)));
-                        w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB(0x00, 0x00, 0xFF)));
+                        w::gdi_object<HFONT> const standard_font (w::get_standard_message_font ());
+                        w::select_object const select_font (
+                              bitmap_dc.value
+                           ,  standard_font.value
+                           );
+
+                        SetBkColor (
+                              bitmap_dc.value
+                           ,  RGB(0xBC, 0xC7, 0xD8));
+
+                        SetTextColor (
+                              bitmap_dc.value
+                           ,  RGB(0x42, 0x48, 0x51));
+
+                        w::gdi_object<HBRUSH> const frame_brush (CreateSolidBrush (RGB(0x85, 0x91, 0xA2)));
+                        w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB(0xBC, 0xC7, 0xD8)));
+                        w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB(0x29, 0x39, 0x55)));
 
                         painter_context const painter_context (
                               bitmap_dc.value

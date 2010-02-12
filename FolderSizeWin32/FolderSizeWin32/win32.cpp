@@ -244,8 +244,8 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   event::event (bool const auto_reset)
-      :  value (CreateEvent (NULL, !auto_reset, FALSE, NULL))
+   event::event (event_type::type const event_type)
+      :  value (CreateEvent (NULL, event_type == event_type::manual_reset ? TRUE : FALSE, FALSE, NULL))
    {
    }
 
@@ -271,6 +271,7 @@ namespace win32
       UNUSED_VARIABLE (result);
    }
    // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
    device_context::device_context (HDC const dc) throw ()
       :  value (dc)
@@ -321,6 +322,34 @@ namespace win32
    {
       SetWorldTransform (dc, &old_transform);
    }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   gdi_object<HFONT> get_standard_message_font ()
+   {
+      NONCLIENTMETRICS non_client_metrics = {0};
+      non_client_metrics.cbSize = sizeof (NONCLIENTMETRICS);
+
+      auto system_parameters_info_result = SystemParametersInfo (
+            SPI_GETNONCLIENTMETRICS
+         ,  sizeof(NONCLIENTMETRICS)
+         ,  &non_client_metrics
+         ,  0);
+      
+      if (system_parameters_info_result)
+      {
+         return gdi_object<HFONT> (
+            CreateFontIndirect (
+               &non_client_metrics.lfMessageFont));
+      }
+      else
+      {
+         return gdi_object<HFONT> (NULL);
+      }
+
+   }
+   // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------

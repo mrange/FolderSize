@@ -41,11 +41,10 @@ namespace win32
 
    tstring const get_window_text (HWND const hwnd);
    // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
    struct handle : boost::noncopyable
    {
       explicit handle (HANDLE const hnd) throw ();
+      handle (const handle &&);
       ~handle () throw ();
       bool const is_valid () const throw ();
 
@@ -57,6 +56,7 @@ namespace win32
    struct dll : boost::noncopyable
    {
       explicit dll (LPCTSTR const dll_name) throw ();
+      dll (const dll &&);
       ~dll () throw ();
       bool const is_valid () const throw ();
 
@@ -72,6 +72,7 @@ namespace win32
          :  value (reinterpret_cast<TFunctionPtr> (GetProcAddress (module, function_name)))
       {
       }
+      function_pointer (const function_pointer &&);
 
       bool const is_valid () const throw ()
       {
@@ -89,6 +90,7 @@ namespace win32
       thread (
             tstring const & thread_name
          ,  proc const del);
+      thread (const thread &&);
 
       bool const join (unsigned int const ms) const throw ();
       bool const is_terminated () const throw ();
@@ -108,6 +110,7 @@ namespace win32
    struct find_file : boost::noncopyable
    {
       explicit find_file (tstring const & path);
+      find_file (const find_file &&);
 
       bool const is_valid () const throw ();
       bool const find_next () throw ();
@@ -154,9 +157,21 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   namespace event_type
+   {
+      enum type
+      {
+         auto_reset     ,
+         manual_reset   ,
+      };
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct event : boost::noncopyable
    {
-      explicit event (bool const auto_reset = false);
+      explicit event (event_type::type const event_type);
+      event (const event &&);
 
       void set () throw ();
 
@@ -168,6 +183,7 @@ namespace win32
    struct window_device_context : boost::noncopyable
    {
       explicit window_device_context (HWND const hwnd) throw ();
+      window_device_context (const window_device_context &&);
       ~window_device_context () throw ();
 
       HWND const  hwnd;
@@ -179,6 +195,7 @@ namespace win32
    struct device_context : boost::noncopyable
    {
       explicit device_context (HDC const dc) throw ();
+      device_context (const device_context &&);
       ~device_context () throw ();
 
       HDC const value;
@@ -193,6 +210,7 @@ namespace win32
          :  value (obj)
       {
       }
+      gdi_object (gdi_object const &&);
 
       ~gdi_object () throw ()
       {
@@ -211,6 +229,7 @@ namespace win32
    struct select_object : boost::noncopyable
    {
       select_object (HDC const dc, HGDIOBJ obj) throw ();
+      select_object (const select_object &&);
       ~select_object () throw ();
 
       HDC const      dc                         ;
@@ -222,11 +241,16 @@ namespace win32
    struct set_world_transform : boost::noncopyable 
    {
       set_world_transform (HDC const dc, XFORM const * const transform) throw ();
+      set_world_transform (const set_world_transform &&);
       ~set_world_transform () throw ();
 
       HDC const      dc                         ;
       XFORM const    old_transform              ;
    };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   gdi_object<HFONT> get_standard_message_font ();
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
