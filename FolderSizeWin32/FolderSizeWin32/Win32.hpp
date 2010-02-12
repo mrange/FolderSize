@@ -54,8 +54,8 @@ namespace win32
    {
       typedef std::tr1::function<unsigned int ()> proc;
       thread (
-         tstring const & thread_name,
-         proc const del);
+            tstring const & thread_name
+         ,  proc const del);
 
       proc const        procedure;
       handle const      value;
