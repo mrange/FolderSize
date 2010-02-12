@@ -34,12 +34,14 @@ int APIENTRY _tWinMain (
       HINSTANCE hInstance
    ,  HINSTANCE hPrevInstance
    ,  LPTSTR    lpCmdLine
-   ,  int       nCmdShow)
+   ,  int       nCmdShow
+   )
 {
    main_window::application_main_loop (
          hInstance
       ,  hPrevInstance
       ,  lpCmdLine
-      ,  nCmdShow);
+      ,  nCmdShow
+      );
 }
 // ----------------------------------------------------------------------------

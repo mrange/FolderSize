@@ -221,7 +221,8 @@ namespace main_window
       // ----------------------------------------------------------------------
       RECT const calculate_window_coordinate (
             HWND const hwnd
-         ,  child_window const & child_window)
+         ,  child_window const & child_window
+         )
       {
          auto sz = get_client_size (hwnd);
 
@@ -243,7 +244,8 @@ namespace main_window
                {
                   auto rect = calculate_window_coordinate (
                         sz
-                     ,  wc);
+                     ,  wc
+                     );
 
                   SetWindowPos (
                         child_window
@@ -263,13 +265,15 @@ namespace main_window
       {
          auto rect = calculate_window_coordinate (
                hwnd
-            ,  s_folder_tree);
+            ,  s_folder_tree
+            );
          UNUSED_VARIABLE (rect);
 
          auto result = InvalidateRect (
                hwnd
             ,  &rect
-            , FALSE);
+            , FALSE
+            );
          UNUSED_VARIABLE (result);
       }
       // ----------------------------------------------------------------------
@@ -279,7 +283,8 @@ namespace main_window
             HWND const     hwnd
          ,  UINT const     message
          ,  WPARAM const   wParam
-         ,  LPARAM const   lParam)
+         ,  LPARAM const   lParam
+         )
       {
          int wmId       = {0};
          int wmEvent    = {0};
@@ -296,7 +301,8 @@ namespace main_window
             {
                auto rect = calculate_window_coordinate (
                      hwnd
-                  ,  s_folder_tree);
+                  ,  s_folder_tree
+                  );
 
                s_state->painter.do_request (
                      s_state->traverser.get_root ()
@@ -354,7 +360,8 @@ namespace main_window
                {
                   auto rect = calculate_window_coordinate (
                         hwnd
-                     ,  s_folder_tree);
+                     ,  s_folder_tree
+                     );
 
                   s_state->painter.paint (
                         s_state->traverser.get_root ()
@@ -458,7 +465,8 @@ namespace main_window
          //{
          //   auto extend_frame_result = DwmExtendFrameIntoClientArea.value (
          //         hwnd
-         //      ,  &margins);
+         //      ,  &margins
+         //      );
          //   UNUSED_VARIABLE (extend_frame_result);
          //}
 

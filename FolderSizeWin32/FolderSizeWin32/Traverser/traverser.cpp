@@ -51,7 +51,8 @@ namespace traverser
          job (
                w::tstring const & path_
             ,  w::tstring const & name_
-            ,  f::folder const ** folder_replacement_)
+            ,  f::folder const ** folder_replacement_
+            )
             :  path                 (path_               )
             ,  name                 (name_               )
             ,  folder_replacement   (folder_replacement_ )
