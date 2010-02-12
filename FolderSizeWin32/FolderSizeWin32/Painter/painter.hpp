@@ -19,15 +19,12 @@
 #include <tchar.h>
 #include <windows.h>
 // ----------------------------------------------------------------------------
-#include <cstddef>
-#include <functional>
 #include <memory>
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
 // ----------------------------------------------------------------------------
 #include "../folder.hpp"
-#include "../Linear.hpp"
-#include "../win32.hpp"
+#include "../linear.hpp"
 // ----------------------------------------------------------------------------
 namespace painter
 {
