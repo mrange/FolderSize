@@ -180,6 +180,19 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   struct paint_device_context : boost::noncopyable
+   {
+      explicit paint_device_context (HWND const hwnd) throw ();
+      paint_device_context (const paint_device_context &&);
+      ~paint_device_context () throw ();
+
+      PAINTSTRUCT const paint_struct   ;
+      HWND const        hwnd           ;
+      HDC const         hdc            ;
+   };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct window_device_context : boost::noncopyable
    {
       explicit window_device_context (HWND const hwnd) throw ();

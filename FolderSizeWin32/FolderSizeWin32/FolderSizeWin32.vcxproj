@@ -101,6 +101,7 @@
   <ItemGroup>
     <ClCompile Include="folder.cpp" />
     <ClCompile Include="FolderSizeWin32.cpp" />
+    <ClCompile Include="linear.cpp" />
     <ClCompile Include="MainWindow\main_window.cpp" />
     <ClCompile Include="Painter\painter.cpp" />
     <ClCompile Include="stdafx.cpp">

@@ -48,6 +48,7 @@ namespace main_window
    namespace t    = traverser    ;
    namespace p    = painter      ;
    namespace w    = win32        ;
+   namespace l    = linear       ;
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -69,13 +70,15 @@ namespace main_window
       //typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaPtr)(HWND, const MARGINS*);
       // ----------------------------------------------------------------------
 
+      typedef  l::vector<double, 2> vector;
+
       // ----------------------------------------------------------------------
-      linear::vector<double, 2> const create_vector (double x, double y)
+      vector const create_vector (double x, double y)
       {
-         linear::vector<double, 2> vector;
-         vector.x (x);
-         vector.y (y);
-         return vector;
+         vector v (l::no_initialize::value);
+         v.x (x);
+         v.y (y);
+         return v;
       }
       // ----------------------------------------------------------------------
 
@@ -112,6 +115,10 @@ namespace main_window
       struct state
       {
          typedef s::auto_ptr<state> ptr               ;
+
+         vector                     centre            ;
+         vector                     zoom              ;
+
          t::traverser               traverser         ;
          p::painter                 painter           ;
 
@@ -119,7 +126,9 @@ namespace main_window
                HWND const           main_hwnd
             ,  w::tstring const &   path
             )
-            :  traverser      (main_hwnd, path)
+            :  centre         (create_vector (0.0, 0.0)  )
+            ,  zoom           (create_vector (1.0, 1.0)  )
+            ,  traverser      (main_hwnd, path           )
          {
          }
       };
@@ -290,11 +299,6 @@ namespace main_window
          ,  LPARAM const   lParam
          )
       {
-         int wmId       = {0};
-         int wmEvent    = {0};
-         PAINTSTRUCT ps = {0};
-         HDC hdc        = {0};
-
          switch (message)
          {
          case messages::new_view_available:
@@ -312,54 +316,56 @@ namespace main_window
                      s_state->traverser.get_root ()
                   ,  hwnd
                   ,  rect
-                  ,  create_vector (0.0, 0.0)
-                  ,  create_vector (1.0, 1.0)
+                  ,  s_state->centre
+                  ,  s_state->zoom
                   );
             }
             break;
          case WM_COMMAND:
-            wmId    = LOWORD (wParam);
-            wmEvent = HIWORD (wParam);
-            // Parse the menu selections:
-            switch (wmId)
             {
-            //case IDM_ABOUT:
-            //   DialogBox (hInst, MAKEINTRESOURCE (IDD_ABOUTBOX), hwnd, About);
-            //   break;
-            //case IDM_EXIT:
-            //   DestroyWindow (hwnd);
-            //   break;
-            case IDM_GO_PAUSE:
+               int wmId    = LOWORD (wParam);
+               int wmEvent = HIWORD (wParam);
+               // Parse the menu selections:
+               switch (wmId)
                {
-                  HWND path_hwnd (GetDlgItem (hwnd, IDM_PATH));
-
-                  auto path = w::get_window_text (path_hwnd);
-
-                  if (!path.empty ())
+               //case IDM_ABOUT:
+               //   DialogBox (hInst, MAKEINTRESOURCE (IDD_ABOUTBOX), hwnd, About);
+               //   break;
+               //case IDM_EXIT:
+               //   DestroyWindow (hwnd);
+               //   break;
+               case IDM_GO_PAUSE:
                   {
-                     w::output_debug_string (_T ("FolderSize.Win32 : New job started"));
-                     s_state = state::ptr ();
+                     HWND path_hwnd (GetDlgItem (hwnd, IDM_PATH));
 
-                     s_state = state::ptr (new state (hwnd, path));
-                     invalidate_folder_tree_area (hwnd);
+                     auto path = w::get_window_text (path_hwnd);
+
+                     if (!path.empty ())
+                     {
+                        w::output_debug_string (_T ("FolderSize.Win32 : New job started"));
+                        s_state = state::ptr ();
+
+                        s_state = state::ptr (new state (hwnd, path));
+                        invalidate_folder_tree_area (hwnd);
+                     }
                   }
+                  break;
+               case IDM_STOP:
+                  w::output_debug_string  (_T ("FolderSize.Win32 : Job terminated"));
+                  if (s_state.get ())
+                  {
+                     s_state->traverser.stop_traversing ();
+                  }
+                  break;
+               default:
+                  return DefWindowProc (hwnd, message, wParam, lParam);
                }
-               break;
-            case IDM_STOP:
-               w::output_debug_string  (_T ("FolderSize.Win32 : Job terminated"));
-               if (s_state.get ())
-               {
-                  s_state->traverser.stop_traversing ();
-               }
-               break;
-            default:
-               return DefWindowProc (hwnd, message, wParam, lParam);
             }
             break;
          case WM_PAINT:
-            hdc = BeginPaint (hwnd, &ps);
-
             {
+               w::paint_device_context pdc (hwnd);
+
                if (s_state.get ())
                {
                   auto rect = calculate_window_coordinate (
@@ -370,15 +376,19 @@ namespace main_window
                   s_state->painter.paint (
                         s_state->traverser.get_root ()
                      ,  hwnd
-                     ,  hdc
+                     ,  pdc.hdc
                      ,  rect
-                     ,  create_vector (0.0   , 0.0)
-                     ,  create_vector (1.0   , 1.0)
+                     ,  s_state->centre
+                     ,  s_state->zoom
                      );
 
                }
             }
-            EndPaint (hwnd, &ps);
+            break;
+         case WM_MOUSEWHEEL:
+            {
+
+            }
             break;
          case WM_DESTROY:
             PostQuitMessage (0);

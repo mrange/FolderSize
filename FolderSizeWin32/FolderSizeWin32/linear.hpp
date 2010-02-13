@@ -101,8 +101,44 @@ namespace linear
          values[2] = z_;
       }
 
+
+      vector const operator- () const throw ()
+      {
+         vector result (no_initialize::value);
+         for(auto iter = 0; iter < no_of_values; ++iter)
+         {
+            result.values[iter] = -values[iter];
+         }
+         return result;
+      }
+
       value_type  values[no_of_values];
    };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_ + 1> const extend_vector (vector<value_type_, rows_> const & vector)
+   {
+      vector<value_type_, rows_ + 1> v (no_initialize::value);
+
+      memcpy (v.values, vector.values, sizeof (vector.values));
+      v.values [v::no_of_values - 1] = 1;
+
+      return v;
+   }
+
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_ - 1> const shrink_vector (vector<value_type_, rows_> const & vector)
+   {
+      vector<value_type_, rows_ - 1> v (no_initialize::value);
+
+      BOOST_ASSERT (vector.values [vector::no_of_values - 1] == 1);
+
+      memcpy (v.values, vector.values, sizeof (vector.values) - sizeof (value_type_));
+
+      return v;
+   }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -330,7 +366,7 @@ namespace linear
       matrix<value_type_, dimension_, dimension_> result;
 
       auto result_values_ptr = result.values;
-      auto default_value = value_type_ ();
+      auto default_value = 1;
 
       for (auto iter = 0; iter < dimension_; ++iter, result_values_ptr += dimension_ + 1)
       {
@@ -345,15 +381,13 @@ namespace linear
       vector<value_type_, dimension_> const & offset
       )
    {
-      matrix<value_type_, dimension_ + 1, dimension_ + 1> result;
+      auto result = identity<value_type_, dimension_ + 1> ();
       auto result_values_ptr = result.values + dimension_;
 
       for (auto iter = 0; iter < dimension_; ++iter, result_values_ptr += dimension_ + 1)
       {
          *result_values_ptr = offset.values[iter];
       }
-
-      *result_values_ptr = 1;
 
       return result;
    }
@@ -363,15 +397,13 @@ namespace linear
       vector<value_type_, dimension_> const & scaling
       )
    {
-      matrix<value_type_, dimension_ + 1, dimension_ + 1> result;
+      auto result = identity<value_type_, dimension_ + 1> ();
       auto result_values_ptr = result.values;
 
       for (auto iter = 0; iter < dimension_; ++iter, result_values_ptr += dimension_ + 2)
       {
          *result_values_ptr = scaling.values[iter];
       }
-
-      *result_values_ptr = 1;
 
       return result;
    }
