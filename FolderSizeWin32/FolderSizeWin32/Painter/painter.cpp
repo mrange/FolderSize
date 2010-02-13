@@ -28,8 +28,9 @@
 // ----------------------------------------------------------------------------
 #include "../linear.hpp"
 #include "../messages.hpp"
-#include "../win32.hpp"
 #include "../utility.hpp"
+#include "../view_transform.hpp"
+#include "../win32.hpp"
 // ----------------------------------------------------------------------------
 #include "painter.hpp"
 // ----------------------------------------------------------------------------
@@ -38,39 +39,19 @@ namespace painter
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   namespace b    = boost     ;
-   namespace f    = folder    ;
-   namespace l    = linear    ;
-   namespace s    = std       ;
-   namespace st   = std::tr1  ;
-   namespace w    = win32     ;
+   namespace b    = boost           ;
+   namespace f    = folder          ;
+   namespace s    = std             ;
+   namespace st   = std::tr1        ;
+   namespace w    = win32           ;
+   namespace l    = linear          ;
+   namespace vt   = view_transform  ;
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
    namespace
    {
       const double cut_off_y = 10.0;
-
-      typedef l::matrix<double, 3, 3>                    transform         ;
-      typedef l::vector<double, 3>                       extended_vector   ;
-      typedef l::vector<double, 2>                       vector            ;
-
-      extended_vector const create_extended_vector (double const x, double const y)
-      {
-         extended_vector v (l::no_initialize::value);
-         v.values [0] = x;
-         v.values [1] = y;
-         v.values [2] = 1.0;
-         return v;
-      }
-
-      vector const create_vector (double const x, double const y)
-      {
-         vector v (l::no_initialize::value);
-         v.values [0] = x;
-         v.values [1] = y;
-         return v;
-      }
 
       struct update_request : boost::noncopyable
       {
@@ -279,15 +260,16 @@ namespace painter
                typename TPropertyPickerPredicate
             ,  typename TPainterPredicate>
          static void folder_traverser_impl (
-               folder_infos const & folder_infos
-            ,  transform const &          transform
-            ,  double const x
-            ,  double const y
-            ,  double const x_step_ratio
-            ,  double const y_step_ratio
-            ,  f::folder const * const folder
-            ,  TPropertyPickerPredicate property_picker
-            ,  TPainterPredicate painter
+               folder_infos const &       folder_infos
+            ,  dimension const &          size
+            ,  vt::transform const &      transform
+            ,  double const               x
+            ,  double const               y
+            ,  double const               x_step_ratio
+            ,  double const               y_step_ratio
+            ,  f::folder const * const    folder
+            ,  TPropertyPickerPredicate   property_picker
+            ,  TPainterPredicate          painter
             )
          {
             if (!folder)
@@ -309,31 +291,40 @@ namespace painter
             auto current_x = x;
             auto current_y = y;
             auto next_x = current_x + x_step_ratio;
-
             auto height = property * y_step_ratio;
 
-            if (height < cut_off_y)
-            {
-               return;
-            }
-
-            auto current_left_top = transform * create_extended_vector (
+            auto current_left_top = transform * vt::create_extended_vector (
                   current_x
                ,  current_y
                );
-            auto current_right_bottom = transform * create_extended_vector (
+            auto current_right_bottom = transform * vt::create_extended_vector (
                   current_x + x_step_ratio
                 , current_y + height
                 );
 
-            painter (
-                  property
-               ,  current_left_top.x ()
-               ,  current_left_top.y ()
-               ,  current_right_bottom.x ()
-               ,  current_right_bottom.y ()
-               ,  *folder
-               );
+            auto adjusted_height = current_right_bottom.y () - current_left_top.y ();
+
+            if (adjusted_height < cut_off_y)
+            {
+               return;
+            }
+
+            if (
+                  current_right_bottom.x () >= 0.0
+               && current_right_bottom.y () >= 0.0
+               && current_left_top.x () < size.x ()
+               && current_left_top.y () < size.y ()
+               )
+            {
+               painter (
+                     property
+                  ,  current_left_top.x ()
+                  ,  current_left_top.y ()
+                  ,  current_right_bottom.x ()
+                  ,  current_right_bottom.y ()
+                  ,  *folder
+                  );
+            }
                
             auto folder_count = folder->folder_count;
 
@@ -359,6 +350,7 @@ namespace painter
 
                folder_traverser_impl (
                      folder_infos
+                  ,  size
                   ,  transform
                   ,  next_x
                   ,  current_y
@@ -379,7 +371,7 @@ namespace painter
          static void folder_traverser (
                folder_infos const &       folder_infos
             ,  dimension const &          size
-            ,  transform const &          transform
+            ,  vt::transform const &      transform
             ,  f::folder const * const    root
             ,  TPropertyPickerPredicate   property_picker
             ,  TPainterPredicate          painter
@@ -407,6 +399,7 @@ namespace painter
 
                folder_traverser_impl (
                      folder_infos
+                  ,  size
                   ,  transform
                   ,  0.0
                   ,  0.0
@@ -613,20 +606,30 @@ namespace painter
                                  );
                            };
 
-                        auto current_transform =
-                              // restore to bitmap size
-                              l::scale (create_vector (request_ptr->bitmap_size.y (), request_ptr->bitmap_size.y ())) 
-                              // translate to new centre
-                           *  l::translate (create_vector (0.5 * request_ptr->zoom.x (), 0.5 * request_ptr->zoom.y ()))
-                              // scale according to zoom
-                           *  l::scale (request_ptr->zoom)
-                              // Translate according to centre indicator
-                           *  l::translate (-(request_ptr->centre))
-                              // Translate square to center
-                           *  l::translate (create_vector (-0.5, -0.5))
-                              // Scale to square with side 1
-                           *  l::scale (create_vector (1 / request_ptr->bitmap_size.y (), 1 / request_ptr->bitmap_size.y ())) 
-                           ;
+                        auto bitmap_size  = request_ptr->bitmap_size;
+                        auto centre       = request_ptr->centre;
+                        auto zoom         = request_ptr->zoom;
+
+                        //auto current_transform =
+                        //      // restore to bitmap size
+                        //      l::scaling_matrix          (bitmap_size                     ) 
+                        //      // translate to centre
+                        //   *  l::translating_matrix   (vt::create_vector (0.5, 0.5)    )
+                        //      // scale according to zoom
+                        //   *  l::scaling_matrix          (zoom                            )
+                        //      // Translate according to centre indicator
+                        //   *  l::translating_matrix      (-centre                         )
+                        //      // Translate square to center
+                        //   *  l::translating_matrix      (vt::create_vector (-0.5, -0.5)  )
+                        //      // Scale to square with side 1
+                        //   *  l::scaling_matrix          (l::invert_vector (bitmap_size)  ) 
+                        //   ;
+
+                        auto current_transform = vt::complete_transform (
+                              vt::transform_direction::forward
+                           ,  bitmap_size
+                           ,  centre
+                           ,  zoom);
 
                         folder_traverser (
                               folder_infos
@@ -668,23 +671,6 @@ namespace painter
          w::event                                     shutdown_request  ;
 
       };
-
-      XFORM const make_xform (
-         transform const & transform
-         )
-      {
-         XFORM form = {0};
-
-         form.eM11   = IMPLICIT_CAST (transform(0,0));
-         form.eM12   = IMPLICIT_CAST (transform(0,1));
-         form.eDx    = IMPLICIT_CAST (transform(0,2));
-
-         form.eM21   = IMPLICIT_CAST (transform(1,0));
-         form.eM22   = IMPLICIT_CAST (transform(1,1));
-         form.eDy    = IMPLICIT_CAST (transform(1,2));
-
-         return form;
-      }
    }
    // -------------------------------------------------------------------------
 
