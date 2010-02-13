@@ -14,13 +14,27 @@
  * ***************************************************************************/
 
 // ----------------------------------------------------------------------------
-#include <windows.h>
+#include "StdAfx.h"
 // ----------------------------------------------------------------------------
-
+#include "theme.hpp"
 // ----------------------------------------------------------------------------
-namespace messages
+namespace theme
 {
-   int const new_view_available        =  WM_USER + 0x1;
-   int const folder_structure_changed  =  WM_USER + 0x2;
+   namespace w = win32;
+
+   win32::gdi_object<HFONT> const default_font                 =  w::get_standard_message_font (   );
+   win32::gdi_object<HFONT> const default_big_font             =  w::get_standard_message_font (48 );
+
+
+   namespace folder_tree
+   {
+      COLORREF const background_color                          = RGB (0x29, 0x39, 0x55);
+      COLORREF const folder_background_color                   = RGB (0xBC, 0xC7, 0xD8);
+      COLORREF const folder_foreground_color                   = RGB (0x42, 0x48, 0x51);
+
+      win32::gdi_object<HBRUSH> const background_brush         (CreateSolidBrush (background_color          ));
+      win32::gdi_object<HBRUSH> const folder_background_brush  (CreateSolidBrush (folder_background_color   ));
+      win32::gdi_object<HBRUSH> const folder_foreground_brush  (CreateSolidBrush (folder_foreground_color   ));
+   }
 }
 // ----------------------------------------------------------------------------

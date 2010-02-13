@@ -14,13 +14,26 @@
  * ***************************************************************************/
 
 // ----------------------------------------------------------------------------
+#pragma once
+// ----------------------------------------------------------------------------
 #include <windows.h>
 // ----------------------------------------------------------------------------
-
+#include "win32.hpp"
 // ----------------------------------------------------------------------------
-namespace messages
+namespace theme
 {
-   int const new_view_available        =  WM_USER + 0x1;
-   int const folder_structure_changed  =  WM_USER + 0x2;
+   extern win32::gdi_object<HFONT> const default_font                ;
+   extern win32::gdi_object<HFONT> const default_big_font            ;
+
+   namespace folder_tree
+   {
+      extern COLORREF const background_color                         ;
+      extern COLORREF const folder_background_color                  ;
+      extern COLORREF const folder_foreground_color                  ;
+
+      extern win32::gdi_object<HBRUSH> const background_brush        ;
+      extern win32::gdi_object<HBRUSH> const folder_background_brush ;
+      extern win32::gdi_object<HBRUSH> const folder_foreground_brush ;
+   }
 }
 // ----------------------------------------------------------------------------

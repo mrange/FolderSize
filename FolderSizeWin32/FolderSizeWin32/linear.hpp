@@ -191,6 +191,79 @@ namespace linear
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_> const operator+= (
+         vector<value_type_, rows_> & left
+      ,  vector<value_type_, rows_> const & right
+      )
+   {
+      for (auto iter = 0; iter < vector<value_type_, rows_>::no_of_values; ++iter)
+      {
+         left.values[iter] += right.values[iter];
+      }
+
+      return left;
+   }
+
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_> const operator+ (
+         vector<value_type_, rows_> const & left
+      ,  vector<value_type_, rows_> const & right
+      )
+   {
+      auto v = left;
+      v += right;
+      return v;
+   }
+
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_> const operator+ (
+         vector<value_type_, rows_> && left
+      ,  vector<value_type_, rows_> const && right
+      )
+   {
+      left += right;
+      return left;
+   }
+
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_> const operator-= (
+         vector<value_type_, rows_> & left
+      ,  vector<value_type_, rows_> const & right
+      )
+   {
+      for (auto iter = 0; iter < vector<value_type_, rows_>::no_of_values; ++iter)
+      {
+         left.values[iter] -= right.values[iter];
+      }
+
+      return left;
+   }
+
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_> const operator- (
+         vector<value_type_, rows_> const & left
+      ,  vector<value_type_, rows_> const & right
+      )
+   {
+      auto v = left;
+      v -= right;
+      return v;
+   }
+
+   template<typename value_type_, std::size_t rows_>
+   vector<value_type_, rows_> const operator- (
+         vector<value_type_, rows_> && left
+      ,  vector<value_type_, rows_> const && right
+      )
+   {
+      left -= right;
+      return left;
+   }
+   // -------------------------------------------------------------------------
+
+
+   // -------------------------------------------------------------------------
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    struct matrix
    {
@@ -265,10 +338,12 @@ namespace linear
       ,  matrix<value_type_, rows_, columns_> const & right
       )
    {
-      for (auto iter = 0; iter < left::no_of_values; ++iter)
+      for (auto iter = 0; iter < matrix<value_type_, rows_, columns_>::no_of_values; ++iter)
       {
          left.values[iter] += right.values[iter];
       }
+
+      return left;
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
@@ -277,9 +352,9 @@ namespace linear
       ,  matrix<value_type_, rows_, columns_> const & right
       )
    {
-      left::type matrix = left;
-      matrix += right;
-      return matrix;
+      auto m = left;
+      m += right;
+      return m;
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
@@ -298,10 +373,12 @@ namespace linear
       ,  matrix<value_type_, rows_, columns_> const & right
       )
    {
-      for (auto iter = 0; iter < left::no_of_values; ++iter)
+      for (auto iter = 0; iter < matrix<value_type_, rows_, columns_>::no_of_values; ++iter)
       {
          left.values[iter] -= right.values[iter];
       }
+
+      return left;
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
@@ -310,9 +387,9 @@ namespace linear
       ,  matrix<value_type_, rows_, columns_> const & right
       )
    {
-      left::type matrix = left;
-      matrix -= right;
-      return matrix;
+      auto m = left;
+      m -= right;
+      return m;
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>

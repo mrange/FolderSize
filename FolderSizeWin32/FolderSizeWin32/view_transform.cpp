@@ -146,7 +146,7 @@ namespace view_transform
                {
                case transform_direction::forward:
                   {
-                     for(auto iter = 0; iter < count; ++iter)
+                     for(auto iter = 0u; iter < count; ++iter)
                      {
                         result = configuration[iter] (state) * result;
                      }
@@ -154,7 +154,7 @@ namespace view_transform
                   }
                case transform_direction::reverse:
                   {
-                     for(auto iter = count; iter > 0; --iter)
+                     for(auto iter = count; iter > 0u; --iter)
                      {
                         result = configuration[iter - 1] (state) * result;
                      }

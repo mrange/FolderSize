@@ -26,12 +26,13 @@
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
 // ----------------------------------------------------------------------------
-#include "../Painter/painter.hpp"
-#include "../Traverser/traverser.hpp"
 #include "../messages.hpp"
+#include "../Painter/painter.hpp"
+#include "../theme.hpp"
+#include "../Traverser/traverser.hpp"
 #include "../utility.hpp"
-#include "../win32.hpp"
 #include "../view_transform.hpp"
+#include "../win32.hpp"
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
@@ -103,6 +104,12 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      int const            s_max_load_string                      = 100;
+      vt::vector const     s_start_centre                         = vt::create_vector (0.00,0.00);
+      vt::vector const     s_start_zoom                           = vt::create_vector (0.99,0.99);
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       struct state
       {
          typedef s::auto_ptr<state> ptr               ;
@@ -117,34 +124,31 @@ namespace main_window
                HWND const           main_hwnd
             ,  w::tstring const &   path
             )
-            :  centre         (vt::create_vector (0.0, 0.0) )
-            ,  zoom           (vt::create_vector (1.0, 1.0) )
-            ,  traverser      (main_hwnd, path              )
+            :  centre         (s_start_centre      )
+            ,  zoom           (s_start_zoom        )
+            ,  traverser      (main_hwnd  , path   )
          {
          }
       };
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      const int            s_max_load_string                      = 100;
       HINSTANCE            s_instance                             = NULL;
       TCHAR                s_title           [s_max_load_string]  = {0};
       TCHAR                s_window_class    [s_max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T("&Go")                                  },
-         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T("&Stop")                                },
-         {  IDM_PATH       , 200    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T("C:\\Windows")                          },
-         {  IDM_FOLDERTREE , 8      , 48  , -8        , -22    , window_type::nowindow , 0                  ,  0  , _T("")                                     },
-         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T("FolderSize.Win32 © Mårten Rånge 2010") },
+         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T("&Go")                                                             },
+         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T("&Stop")                                                           },
+         {  IDM_PATH       , 200    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T("C:\\Windows")                                                     },
+         {  IDM_FOLDERTREE , 0      , 48  , -1        , -22    , window_type::nowindow , 0                  ,  0  , _T("")                                                                },
+         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T("FolderSize.Win32 © Mårten Rånge 2010 - foldersize.codeplex.com")  },
          {0},
       };
 
       child_window &       s_folder_tree                          = s_child_window[3];
 
       state::ptr           s_state;
-
-      w::gdi_object<HFONT> s_default_message_font                 = w::get_standard_message_font ();
 
       //w::dll               s_dwm_dll (_T ("DwmApi"));
       // ----------------------------------------------------------------------
@@ -314,8 +318,8 @@ namespace main_window
             break;
          case WM_COMMAND:
             {
-               int wmId    = LOWORD (wParam);
-               int wmEvent = HIWORD (wParam);
+               auto wmId    = LOWORD (wParam);
+               auto wmEvent = HIWORD (wParam);
                // Parse the menu selections:
                switch (wmId)
                {
@@ -357,13 +361,13 @@ namespace main_window
             {
                w::paint_device_context pdc (hwnd);
 
+               auto rect = calculate_window_coordinate (
+                     hwnd
+                  ,  s_folder_tree
+                  );
+
                if (s_state.get ())
                {
-                  auto rect = calculate_window_coordinate (
-                        hwnd
-                     ,  s_folder_tree
-                     );
-
                   s_state->painter.paint (
                         s_state->traverser.get_root ()
                      ,  hwnd
@@ -374,8 +378,79 @@ namespace main_window
                      );
 
                }
+               else
+               {
+                  FillRect (
+                        pdc.hdc
+                     ,  &rect
+                     ,  theme::folder_tree::background_brush.value
+                     );
+
+                  w::select_object select_font (pdc.hdc, theme::default_big_font.value);
+
+                  TCHAR tip []  = _T("Click Go to start");
+
+                  SetBkColor (
+                        pdc.hdc
+                     ,  theme::folder_tree::background_color
+                     );
+
+                  SetTextColor (
+                        pdc.hdc
+                     ,  theme::folder_tree::folder_background_color
+                     );
+
+                  DrawText (
+                        pdc.hdc
+                     ,  tip
+                     ,  sizeof(tip) / sizeof(tip[0])
+                     ,  &rect
+                     ,  DT_VCENTER | DT_CENTER | DT_SINGLELINE
+                     );
+
+               }
             }
             break;
+         //case WM_MOUSEMOVE:
+         //   {
+         //      auto mouse_coord = w::get_mouse_coordinate(lParam);
+
+         //      auto rect = calculate_window_coordinate (
+         //            hwnd
+         //         ,  s_folder_tree
+         //         );
+
+         //      if (s_state.get () && w::is_inside (rect, mouse_coord))
+         //      {
+         //         auto tt = vt::original_view_to_screen (
+         //               vt::transform_direction::reverse
+         //            ,  vt::create_vector (rect.right - rect.left, rect.bottom - rect.top)
+         //            ,  s_state->centre
+         //            ,  s_state->zoom
+         //            );
+
+         //         int x = mouse_coord.x - rect.left;
+         //         int y = mouse_coord.y - rect.top;
+
+         //         auto new_centre   = l::shrink_vector (tt * vt::create_extended_vector (x, y));
+
+         //         TCHAR buffer[256] = {0};
+
+         //         _snwprintf (
+         //               buffer
+         //            ,  256
+         //            ,  _T ("%d,%d - %f,%f")
+         //            ,  x
+         //            ,  y
+         //            ,  new_centre.x ()
+         //            ,  new_centre.y ()
+         //            );
+
+         //         w::output_debug_string (buffer);
+
+         //      }
+         //   }
+         //   break;
          case WM_RBUTTONUP:
             {
                auto mouse_coord = w::get_mouse_coordinate(lParam);
@@ -387,8 +462,8 @@ namespace main_window
 
                if (s_state.get () && w::is_inside (rect, mouse_coord))
                {
-                  s_state->centre = vt::create_vector (0.0, 0.0);
-                  s_state->zoom = vt::create_vector   (1.0, 1.0);
+                  s_state->centre   = s_start_centre  ;
+                  s_state->zoom     = s_start_zoom    ;
 
                   PostMessage (hwnd, messages::folder_structure_changed, 0, 0);
                }
@@ -408,23 +483,37 @@ namespace main_window
                {
                   auto scale = s::pow (1.2, scroll);
 
-                  auto tt = vt::original_view_to_screen (
+                  auto reverse_transform = vt::original_view_to_screen (
                         vt::transform_direction::reverse
                      ,  vt::create_vector (rect.right - rect.left, rect.bottom - rect.top)
                      ,  s_state->centre
                      ,  s_state->zoom
                      );
 
-                  short x = mouse_coord.x - rect.left;
-                  short y = mouse_coord.y - rect.top;
+                  auto x = mouse_coord.x - rect.left;
+                  auto y = mouse_coord.y - rect.top;
 
-                  auto new_centre   = l::shrink_vector (tt * vt::create_extended_vector (x, y));
+                  auto centre_of_screen_x = (rect.right - rect.left) / 2;
+                  auto centre_of_screen_y = (rect.bottom - rect.top) / 2;
+
+                  auto coord              = l::shrink_vector (
+                        reverse_transform * vt::create_extended_vector (x, y)
+                     );
+
+                  auto centre_of_screen   = l::shrink_vector (
+                        reverse_transform * vt::create_extended_vector (centre_of_screen_x, centre_of_screen_y)
+                     );
+
+                  auto diff                  = centre_of_screen - coord;
+                  auto new_centre_of_screen  = coord + l::scale_vector (1 / scale, diff);
+
                   auto new_zoom     = l::scale_vector (
                         scale
                         ,  s_state->zoom
                      );
-                  s_state->centre   = new_centre   ;
-                  s_state->zoom     = new_zoom     ;
+
+                  s_state->centre   = new_centre_of_screen  ;
+                  s_state->zoom     = new_zoom              ;
 
                   PostMessage (hwnd, messages::folder_structure_changed, 0, 0);
                }
@@ -514,7 +603,7 @@ namespace main_window
          SendMessage (
                hwnd
             ,  WM_SETFONT
-            ,  reinterpret_cast<WPARAM> (s_default_message_font.value)
+            ,  reinterpret_cast<WPARAM> (theme::default_font.value)
             ,  FALSE);
 
          //MARGINS margins = {0};
@@ -582,7 +671,7 @@ namespace main_window
                SendMessage (
                      wc.hwnd
                   ,  WM_SETFONT
-                  ,  reinterpret_cast<WPARAM> (s_default_message_font.value)
+                  ,  reinterpret_cast<WPARAM> (theme::default_font.value)
                   ,  FALSE);
                }
             });
