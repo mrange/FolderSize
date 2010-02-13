@@ -259,6 +259,20 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   paint_device_context::paint_device_context (HWND const hwnd_) throw ()
+      :  hwnd  (hwnd_)
+      ,  hdc   (BeginPaint (hwnd_, const_cast<LPPAINTSTRUCT> (&paint_struct)))
+   {
+   }
+
+   paint_device_context::~paint_device_context () throw ()
+   {
+      auto result = EndPaint (hwnd, &paint_struct);
+      UNUSED_VARIABLE (result);
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    window_device_context::window_device_context (HWND const hwnd_) throw ()
       :  hwnd  (hwnd_)
       ,  hdc   (GetWindowDC (hwnd_))

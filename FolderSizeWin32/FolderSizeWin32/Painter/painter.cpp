@@ -51,7 +51,26 @@ namespace painter
    {
       const double cut_off_y = 10.0;
 
-      typedef linear::matrix<double, 3, 3>                  transform         ;
+      typedef l::matrix<double, 3, 3>                    transform         ;
+      typedef l::vector<double, 3>                       extended_vector   ;
+      typedef l::vector<double, 2>                       vector            ;
+
+      extended_vector const create_extended_vector (double const x, double const y)
+      {
+         extended_vector v (l::no_initialize::value);
+         v.values [0] = x;
+         v.values [1] = y;
+         v.values [2] = 1.0;
+         return v;
+      }
+
+      vector const create_vector (double const x, double const y)
+      {
+         vector v (l::no_initialize::value);
+         v.values [0] = x;
+         v.values [1] = y;
+         return v;
+      }
 
       struct update_request : boost::noncopyable
       {
@@ -261,6 +280,7 @@ namespace painter
             ,  typename TPainterPredicate>
          static void folder_traverser_impl (
                folder_infos const & folder_infos
+            ,  transform const &          transform
             ,  double const x
             ,  double const y
             ,  double const x_step_ratio
@@ -297,12 +317,21 @@ namespace painter
                return;
             }
 
+            auto current_left_top = transform * create_extended_vector (
+                  current_x
+               ,  current_y
+               );
+            auto current_right_bottom = transform * create_extended_vector (
+                  current_x + x_step_ratio
+                , current_y + height
+                );
+
             painter (
                   property
-               ,  current_x
-               ,  current_y
-               ,  x_step_ratio
-               ,  property * y_step_ratio
+               ,  current_left_top.x ()
+               ,  current_left_top.y ()
+               ,  current_right_bottom.x ()
+               ,  current_right_bottom.y ()
                ,  *folder
                );
                
@@ -330,6 +359,7 @@ namespace painter
 
                folder_traverser_impl (
                      folder_infos
+                  ,  transform
                   ,  next_x
                   ,  current_y
                   ,  x_step_ratio
@@ -347,11 +377,12 @@ namespace painter
                typename TPropertyPickerPredicate
             ,  typename TPainterPredicate>
          static void folder_traverser (
-               folder_infos const & folder_infos
-            ,  dimension const & size
-            ,  f::folder const * const root
-            ,  TPropertyPickerPredicate property_picker
-            ,  TPainterPredicate painter
+               folder_infos const &       folder_infos
+            ,  dimension const &          size
+            ,  transform const &          transform
+            ,  f::folder const * const    root
+            ,  TPropertyPickerPredicate   property_picker
+            ,  TPainterPredicate          painter
             )
          {
             if (! (root && size.x () > 0 && size.y () > 0) )
@@ -376,6 +407,7 @@ namespace painter
 
                folder_traverser_impl (
                      folder_infos
+                  ,  transform
                   ,  0.0
                   ,  0.0
                   ,  x_step_ratio
@@ -397,18 +429,18 @@ namespace painter
          static void painter (
                painter_context const & painter_context
             ,  unsigned __int64 const  total_size
-            ,  double const            x
-            ,  double const            y
-            ,  double const            width
-            ,  double                  height
+            ,  double const            left
+            ,  double const            top
+            ,  double const            right
+            ,  double                  bottom
             ,  f::folder const &       folder
             )
          {
-            RECT rect         = {0}                         ;
-            rect.left         = IMPLICIT_CAST (x         )  ;
-            rect.top          = IMPLICIT_CAST (y         )  ;
-            rect.right        = IMPLICIT_CAST (x + width )  ;
-            rect.bottom       = IMPLICIT_CAST (y + height)  ;
+            RECT rect         = {0}                      ;
+            rect.left         = IMPLICIT_CAST (left   )  ;
+            rect.top          = IMPLICIT_CAST (top    )  ;
+            rect.right        = IMPLICIT_CAST (right  )  ;
+            rect.bottom       = IMPLICIT_CAST (bottom )  ;
 
             const std::size_t buffer_size = 128;
 
@@ -581,9 +613,25 @@ namespace painter
                                  );
                            };
 
+                        auto current_transform =
+                              // restore to bitmap size
+                              l::scale (create_vector (request_ptr->bitmap_size.y (), request_ptr->bitmap_size.y ())) 
+                              // translate to new centre
+                           *  l::translate (create_vector (0.5 * request_ptr->zoom.x (), 0.5 * request_ptr->zoom.y ()))
+                              // scale according to zoom
+                           *  l::scale (request_ptr->zoom)
+                              // Translate according to centre indicator
+                           *  l::translate (-(request_ptr->centre))
+                              // Translate square to center
+                           *  l::translate (create_vector (-0.5, -0.5))
+                              // Scale to square with side 1
+                           *  l::scale (create_vector (1 / request_ptr->bitmap_size.y (), 1 / request_ptr->bitmap_size.y ())) 
+                           ;
+
                         folder_traverser (
                               folder_infos
                            ,  request_ptr->bitmap_size
+                           ,  current_transform
                            ,  request_ptr->root
                            ,  size_picker
                            ,  painter_
