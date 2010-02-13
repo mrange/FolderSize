@@ -561,15 +561,15 @@ namespace painter
 
                         SetBkColor (
                               bitmap_dc.value
-                           ,  RGB(0xBC, 0xC7, 0xD8));
+                           ,  RGB (0xBC, 0xC7, 0xD8));
 
                         SetTextColor (
                               bitmap_dc.value
-                           ,  RGB(0x42, 0x48, 0x51));
+                           ,  RGB (0x42, 0x48, 0x51));
 
-                        w::gdi_object<HBRUSH> const frame_brush (CreateSolidBrush (RGB(0x85, 0x91, 0xA2)));
-                        w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB(0xBC, 0xC7, 0xD8)));
-                        w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB(0x29, 0x39, 0x55)));
+                        w::gdi_object<HBRUSH> const frame_brush (CreateSolidBrush (RGB (0x85, 0x91, 0xA2)));
+                        w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB (0xBC, 0xC7, 0xD8)));
+                        w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB (0x29, 0x39, 0x55)));
 
                         painter_context const painter_context (
                               bitmap_dc.value
@@ -766,12 +766,12 @@ namespace painter
          }
          else
          {
-            w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB(0xFF, 0xFF, 0x00)));
+            w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB (0x29, 0x39, 0x55)));
 
             FillRect (
                   hdc
                ,  &rect
-               ,  fill_brush.value
+               ,  background_brush.value
                );
 
          }
