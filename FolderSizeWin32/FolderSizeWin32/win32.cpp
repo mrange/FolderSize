@@ -339,7 +339,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   gdi_object<HFONT> get_standard_message_font ()
+   gdi_object<HFONT> get_standard_message_font (int height)
    {
       NONCLIENTMETRICS non_client_metrics = {0};
       non_client_metrics.cbSize = sizeof (NONCLIENTMETRICS);
@@ -352,6 +352,7 @@ namespace win32
       
       if (system_parameters_info_result)
       {
+         non_client_metrics.lfMessageFont.lfHeight = height;
          return gdi_object<HFONT> (
             CreateFontIndirect (
                &non_client_metrics.lfMessageFont));
@@ -361,6 +362,11 @@ namespace win32
          return gdi_object<HFONT> (NULL);
       }
 
+   }
+
+   gdi_object<HFONT> get_standard_message_font ()
+   {
+      return get_standard_message_font (0);
    }
    // -------------------------------------------------------------------------
 
@@ -377,10 +383,7 @@ namespace win32
    // -------------------------------------------------------------------------
    POINT const get_client_mouse_coordinate (HWND const hwnd, LPARAM const lParam)
    {
-      POINT p = {0};
-
-      p.x = LOWORD (lParam);
-      p.y = HIWORD (lParam);
+      auto p = get_mouse_coordinate (lParam);
 
       ScreenToClient (hwnd, &p);
 
@@ -393,8 +396,8 @@ namespace win32
    {
       POINT p = {0};
 
-      p.x = LOWORD (lParam);
-      p.y = HIWORD (lParam);
+      p.x = static_cast<short> (LOWORD (lParam));
+      p.y = static_cast<short> (HIWORD (lParam));
 
       return p;
    }

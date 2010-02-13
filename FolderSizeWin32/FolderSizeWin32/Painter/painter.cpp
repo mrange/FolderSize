@@ -29,6 +29,7 @@
 #include "../linear.hpp"
 #include "../messages.hpp"
 #include "../utility.hpp"
+#include "../theme.hpp"
 #include "../view_transform.hpp"
 #include "../win32.hpp"
 // ----------------------------------------------------------------------------
@@ -553,28 +554,23 @@ namespace painter
                            ,  response_ptr->bitmap.value
                            );
 
-                        w::gdi_object<HFONT> const standard_font (w::get_standard_message_font ());
                         w::select_object const select_font (
                               bitmap_dc.value
-                           ,  standard_font.value
+                           ,  theme::default_font.value
                            );
 
                         SetBkColor (
                               bitmap_dc.value
-                           ,  RGB (0xBC, 0xC7, 0xD8));
+                           ,  theme::folder_tree::folder_background_color);
 
                         SetTextColor (
                               bitmap_dc.value
-                           ,  RGB (0x42, 0x48, 0x51));
-
-                        w::gdi_object<HBRUSH> const frame_brush (CreateSolidBrush (RGB (0x85, 0x91, 0xA2)));
-                        w::gdi_object<HBRUSH> const fill_brush (CreateSolidBrush (RGB (0xBC, 0xC7, 0xD8)));
-                        w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB (0x29, 0x39, 0x55)));
+                           ,  theme::folder_tree::folder_foreground_color);
 
                         painter_context const painter_context (
                               bitmap_dc.value
-                           ,  fill_brush.value
-                           ,  frame_brush.value
+                           ,  theme::folder_tree::folder_background_brush.value
+                           ,  theme::folder_tree::folder_foreground_brush.value
                            );
 
                         RECT rect   = {0};
@@ -583,7 +579,7 @@ namespace painter
                         FillRect (
                               bitmap_dc.value
                            ,  &rect
-                           ,  background_brush.value
+                           ,  theme::folder_tree::background_brush.value
                            );
 
                         auto painter_ = [&painter_context] (
@@ -766,12 +762,10 @@ namespace painter
          }
          else
          {
-            w::gdi_object<HBRUSH> const background_brush (CreateSolidBrush (RGB (0x29, 0x39, 0x55)));
-
             FillRect (
                   hdc
                ,  &rect
-               ,  background_brush.value
+               ,  theme::folder_tree::background_brush.value
                );
 
          }
