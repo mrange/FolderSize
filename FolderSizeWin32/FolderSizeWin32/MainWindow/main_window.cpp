@@ -24,12 +24,14 @@
 // ----------------------------------------------------------------------------
 #include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 // ----------------------------------------------------------------------------
 #include "../Painter/painter.hpp"
 #include "../Traverser/traverser.hpp"
 #include "../messages.hpp"
 #include "../utility.hpp"
 #include "../win32.hpp"
+#include "../view_transform.hpp"
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
@@ -42,13 +44,14 @@ namespace main_window
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   namespace s    = std          ;
-   namespace st   = s::tr1       ;
-   namespace b    = boost        ;
-   namespace t    = traverser    ;
-   namespace p    = painter      ;
-   namespace w    = win32        ;
-   namespace l    = linear       ;
+   namespace b    = boost           ;
+   namespace l    = linear          ;
+   namespace p    = painter         ;
+   namespace s    = std             ;
+   namespace st   = s::tr1          ;
+   namespace t    = traverser       ;
+   namespace vt   = view_transform  ;
+   namespace w    = win32           ;
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -68,18 +71,6 @@ namespace main_window
 
       // ----------------------------------------------------------------------
       //typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaPtr)(HWND, const MARGINS*);
-      // ----------------------------------------------------------------------
-
-      typedef  l::vector<double, 2> vector;
-
-      // ----------------------------------------------------------------------
-      vector const create_vector (double x, double y)
-      {
-         vector v (l::no_initialize::value);
-         v.x (x);
-         v.y (y);
-         return v;
-      }
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -116,8 +107,8 @@ namespace main_window
       {
          typedef s::auto_ptr<state> ptr               ;
 
-         vector                     centre            ;
-         vector                     zoom              ;
+         vt::vector                 centre            ;
+         vt::vector                 zoom              ;
 
          t::traverser               traverser         ;
          p::painter                 painter           ;
@@ -126,9 +117,9 @@ namespace main_window
                HWND const           main_hwnd
             ,  w::tstring const &   path
             )
-            :  centre         (create_vector (0.0, 0.0)  )
-            ,  zoom           (create_vector (1.0, 1.0)  )
-            ,  traverser      (main_hwnd, path           )
+            :  centre         (vt::create_vector (0.0, 0.0) )
+            ,  zoom           (vt::create_vector (1.0, 1.0) )
+            ,  traverser      (main_hwnd, path              )
          {
          }
       };
@@ -385,9 +376,58 @@ namespace main_window
                }
             }
             break;
+         case WM_RBUTTONUP:
+            {
+               auto mouse_coord = w::get_mouse_coordinate(lParam);
+
+               auto rect = calculate_window_coordinate (
+                     hwnd
+                  ,  s_folder_tree
+                  );
+
+               if (s_state.get () && w::is_inside (rect, mouse_coord))
+               {
+                  s_state->centre = vt::create_vector (0.0, 0.0);
+                  s_state->zoom = vt::create_vector   (1.0, 1.0);
+
+                  PostMessage (hwnd, messages::folder_structure_changed, 0, 0);
+               }
+            }
+            break;
          case WM_MOUSEWHEEL:
             {
+               auto scroll = static_cast<short> (HIWORD (wParam)) / WHEEL_DELTA;
+               auto mouse_coord = w::get_client_mouse_coordinate(hwnd, lParam);
 
+               auto rect = calculate_window_coordinate (
+                     hwnd
+                  ,  s_folder_tree
+                  );
+
+               if (s_state.get () && w::is_inside (rect, mouse_coord))
+               {
+                  auto scale = s::pow (1.2, scroll);
+
+                  auto tt = vt::original_view_to_screen (
+                        vt::transform_direction::reverse
+                     ,  vt::create_vector (rect.right - rect.left, rect.bottom - rect.top)
+                     ,  s_state->centre
+                     ,  s_state->zoom
+                     );
+
+                  short x = mouse_coord.x - rect.left;
+                  short y = mouse_coord.y - rect.top;
+
+                  auto new_centre   = l::shrink_vector (tt * vt::create_extended_vector (x, y));
+                  auto new_zoom     = l::scale_vector (
+                        scale
+                        ,  s_state->zoom
+                     );
+                  s_state->centre   = new_centre   ;
+                  s_state->zoom     = new_zoom     ;
+
+                  PostMessage (hwnd, messages::folder_structure_changed, 0, 0);
+               }
             }
             break;
          case WM_DESTROY:

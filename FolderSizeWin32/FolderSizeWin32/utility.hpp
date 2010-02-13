@@ -18,6 +18,8 @@
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
+#define UTILITY_INLINE __forceinline
+// ----------------------------------------------------------------------------
 #define UNUSED_VARIABLE(expr) expr
 #define IMPLICIT_CAST(expr) (utility::implicit_cast (expr))
 // ----------------------------------------------------------------------------
@@ -34,7 +36,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<int ,double>
    {
-      inline static int const cast (double const &value) throw ()
+      UTILITY_INLINE static int const cast (double const &value) throw ()
       {
          return static_cast<int> (value + 0.5);
       }
@@ -43,7 +45,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<LONG, double>
    {
-      inline static LONG const cast (double const &value) throw ()
+      UTILITY_INLINE static LONG const cast (double const &value) throw ()
       {
          return static_cast<LONG> (value + 0.5);
       }
@@ -52,7 +54,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<FLOAT, double>
    {
-      inline static FLOAT const cast (double const &value) throw ()
+      UTILITY_INLINE static FLOAT const cast (double const &value) throw ()
       {
          return static_cast<FLOAT> (value);
       }
@@ -61,7 +63,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<bool, BOOL>
    {
-      inline static bool const cast (BOOL const value) throw ()
+      UTILITY_INLINE static bool const cast (BOOL const value) throw ()
       {
          return value != FALSE;
       }
@@ -72,13 +74,13 @@ namespace utility
    template<typename TValueType>
    struct implicit_cast_helper
    {
-      inline explicit implicit_cast_helper (TValueType const & value_)
+      UTILITY_INLINE explicit implicit_cast_helper (TValueType const & value_)
          :  value (value_)
       {
       }
 
       template<typename TCastToType>
-      inline operator TCastToType () const
+      UTILITY_INLINE operator TCastToType () const
       {
          return explicit_cast_helper<TCastToType, TValueType>::cast (value);
       }
@@ -90,7 +92,7 @@ namespace utility
    
    // -------------------------------------------------------------------------
    template<typename TValueType>
-   inline implicit_cast_helper<TValueType> const implicit_cast (
+   UTILITY_INLINE implicit_cast_helper<TValueType> const implicit_cast (
          TValueType const & value
       )
    {

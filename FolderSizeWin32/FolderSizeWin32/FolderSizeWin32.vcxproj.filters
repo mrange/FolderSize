@@ -39,6 +39,7 @@
       <Filter>Traverser</Filter>
     </ClInclude>
     <ClInclude Include="utility.hpp" />
+    <ClInclude Include="view_transform.hpp" />
     <ClInclude Include="Win32.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -55,6 +56,7 @@
     <ClCompile Include="Traverser\Traverser.cpp">
       <Filter>Traverser</Filter>
     </ClCompile>
+    <ClCompile Include="view_transform.cpp" />
     <ClCompile Include="Win32.cpp" />
   </ItemGroup>
   <ItemGroup>
