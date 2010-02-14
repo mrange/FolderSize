@@ -35,14 +35,14 @@ namespace view_transform
       };
    }
 
-   transform const original_view_to_screen (
+   transform const view_to_screen (
          transform_direction::type const direction
       ,  dimension const & size
       ,  vector const & centre
       ,  vector const & zoom
       );
 
-   transform const complete_transform (
+   transform const bitmap_to_screen_transform (
          transform_direction::type const direction
       ,  dimension const & size
       ,  vector const & centre

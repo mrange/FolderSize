@@ -151,7 +151,7 @@ namespace painter
 
          folder_info (
                std::size_t const       depth_
-            ,  unsigned __int64 const  size_
+            ,  big_size const  size_
             ,  std::size_t const       count_)
             :  depth (depth_)
             ,  size  (size_)
@@ -160,7 +160,7 @@ namespace painter
          }
 
          std::size_t       depth    ;
-         unsigned __int64  size   ;
+         big_size  size   ;
          std::size_t       count  ;
 
       };
@@ -413,7 +413,7 @@ namespace painter
             }
          }
 
-         static unsigned __int64 size_picker(
+         static big_size size_picker(
             folder_info const & folder_info
             )
          {
@@ -422,7 +422,7 @@ namespace painter
 
          static void painter (
                painter_context const & painter_context
-            ,  unsigned __int64 const  total_size
+            ,  big_size const  total_size
             ,  double const            left
             ,  double const            top
             ,  double const            right
@@ -482,7 +482,6 @@ namespace painter
                   ,  total_size
                   );
             }
-
 
             FillRect (
                   painter_context.hdc
@@ -606,22 +605,7 @@ namespace painter
                         auto centre       = request_ptr->centre;
                         auto zoom         = request_ptr->zoom;
 
-                        //auto current_transform =
-                        //      // restore to bitmap size
-                        //      l::scaling_matrix          (bitmap_size                     ) 
-                        //      // translate to centre
-                        //   *  l::translating_matrix   (vt::create_vector (0.5, 0.5)    )
-                        //      // scale according to zoom
-                        //   *  l::scaling_matrix          (zoom                            )
-                        //      // Translate according to centre indicator
-                        //   *  l::translating_matrix      (-centre                         )
-                        //      // Translate square to center
-                        //   *  l::translating_matrix      (vt::create_vector (-0.5, -0.5)  )
-                        //      // Scale to square with side 1
-                        //   *  l::scaling_matrix          (l::invert_vector (bitmap_size)  ) 
-                        //   ;
-
-                        auto current_transform = vt::complete_transform (
+                        auto current_transform = vt::bitmap_to_screen_transform (
                               vt::transform_direction::forward
                            ,  bitmap_size
                            ,  centre

@@ -30,18 +30,20 @@ namespace folder
    // -------------------------------------------------------------------------
    struct folder : boost::noncopyable
    {
-      typedef boost::scoped_array<folder const *> folder_array;
+      typedef boost::scoped_array<folder *> folder_array;
 
       struct initializer
       {
+         folder * const          parent         ;
          tstring const &         name           ;
-         unsigned __int64 const  size           ;
-         std::size_t const       file_count     ;
-         std::size_t const       folder_count   ;
+         big_size const          size           ;
+         big_size const          file_count     ;
+         big_size const          folder_count   ;
 
          initializer (
-               tstring const &         name          
-            ,  unsigned __int64 const  size          
+               folder * const          parent
+            ,  tstring const &         name          
+            ,  big_size const          size          
             ,  std::size_t const       file_count
             ,  std::size_t const       folder_count
             );
@@ -53,14 +55,32 @@ namespace folder
          initializer const & init
          );
 
+      folder * const          parent;
+
       tstring const           name;
 
-      unsigned __int64 const  size;
-      std::size_t const       file_count;
-      std::size_t const       folder_count;
       folder_array const      sub_folders;
 
+      big_size const          size;
+      big_size const          file_count;
+      big_size const          folder_count;
+
+      big_size const          get_total_size () const throw ();
+      big_size const          get_total_file_count () const throw ();
+      big_size const          get_total_folder_count () const throw ();
+
       static folder const  empty;
+
+
+   private:
+      void                    recursive_update  (
+                                    big_size const size         
+                                 ,  big_size const file_count   
+                                 ,  big_size const folder_count 
+                                 );
+      big_size volatile       total_size           ;
+      big_size volatile       total_file_count     ;
+      big_size volatile       total_folder_count   ;
    };
    // -------------------------------------------------------------------------
 

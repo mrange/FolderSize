@@ -219,9 +219,9 @@ namespace win32
       return (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
    }
 
-   unsigned __int64 const find_file::get_size () const throw ()
+   big_size const find_file::get_size () const throw ()
    {
-      return (static_cast<unsigned __int64>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
+      return (static_cast<big_size>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
    }
 
    LPCTSTR const find_file::get_name () const throw ()

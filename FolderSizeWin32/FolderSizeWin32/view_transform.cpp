@@ -168,92 +168,93 @@ namespace view_transform
             };
       }
 
-      transform_functor const screen_to_view_transform_configuration [] =
+      transform_functor const terminator;
+
+      transform_functor const bitmap_to_view_transform_configuration [] =
       {
             // Scale to square with side 1
             scale       ([] (transform_state const & state) { return invert_vector (state.size)                   ;})
             // Translate square to center
          ,  translate   ([] (transform_state const & state) { return view_transform::create_vector (-0.5 , -0.5)  ;})
-         ,  transform_functor ()
+         ,  terminator
       };
 
-      transform_functor const alter_view_transform_configuration [] =
+      transform_functor const modify_view_transform_configuration [] =
       {
             // Translate according to centre indicator
             translate   ([] (transform_state const & state) { return -state.centre                                ;})
             // scale according to zoom
          ,  scale       ([] (transform_state const & state) { return state.zoom                                   ;})
-            // translate to centre
-         ,  transform_functor ()
+         ,  terminator
       };
 
-      transform_functor const alter_view_to_screen_transform_configuration [] =
+      transform_functor const modified_view_to_screen_transform_configuration [] =
       {
             // translate to centre
             translate   ([] (transform_state const & state) { return view_transform::create_vector (0.5  , 0.5)   ;})
             // restore size
          ,  scale       ([] (transform_state const & state) { return state.size                                   ;})
-         ,  transform_functor ()
+         ,  terminator
       };
 
-      transform_functor const screen_to_view_functor = create_from_configuration (
-            screen_to_view_transform_configuration
+      transform_functor const bitmap_to_view_functor = create_from_configuration (
+            bitmap_to_view_transform_configuration
          );
 
-      transform_functor const alter_view_functor = create_from_configuration (
-            alter_view_transform_configuration
+      transform_functor const modify_view_functor = create_from_configuration (
+            modify_view_transform_configuration
          );
 
-      transform_functor const alter_view_to_screen_functor = create_from_configuration (
-            alter_view_to_screen_transform_configuration
+      transform_functor const modified_view_to_screen_functor = create_from_configuration (
+            modified_view_to_screen_transform_configuration
          );
 
-      transform_functor const complete_transform_configuration [] =
+      transform_functor const bitmap_to_screen_transform_configuration [] =
       {
-            screen_to_view_functor
-         ,  alter_view_functor
-         ,  alter_view_to_screen_functor
+            bitmap_to_view_functor
+         ,  modify_view_functor
+         ,  modified_view_to_screen_functor
          ,  transform_functor ()
       };
 
-      transform_functor const original_view_to_screen_transform_configuration [] =
+      transform_functor const view_to_screen_transform_configuration [] =
       {
-            alter_view_functor
-         ,  alter_view_to_screen_functor
+            modify_view_functor
+         ,  modified_view_to_screen_functor
          ,  transform_functor ()
       };
 
-      transform_functor const original_view_to_screen_functor = create_from_configuration (
-            original_view_to_screen_transform_configuration
+      transform_functor const view_to_screen_functor = create_from_configuration (
+            view_to_screen_transform_configuration
          );
 
-      transform_functor const complete_transform_functor = create_from_configuration (
-            complete_transform_configuration
+      transform_functor const bitmap_to_screen_transform_functor = create_from_configuration (
+            bitmap_to_screen_transform_configuration
          );
    }
 
-   transform const original_view_to_screen (
+   transform const view_to_screen (
          transform_direction::type const direction
       ,  dimension const & size
       ,  vector const & centre
       ,  vector const & zoom
       )
    {
-      return original_view_to_screen_functor (transform_state (
+      return view_to_screen_functor (transform_state (
             direction
          ,  size
          ,  centre
          ,  zoom));
    }
 
-   transform const complete_transform (
+   transform const bitmap_to_screen_transform (
          transform_direction::type const direction
       ,  dimension const & size
       ,  vector const & centre
       ,  vector const & zoom
       )
    {
-      return complete_transform_functor (transform_state (
+      return bitmap_to_screen_transform_functor (transform_state (
             direction
          ,  size
          ,  centre
