@@ -61,6 +61,10 @@ namespace painter
          ,  zoom_factor const &           zoom
          );
 
+      folder::folder const * const hit_test (
+            POINT const & offset
+         );
+
    private:
       struct impl;
 

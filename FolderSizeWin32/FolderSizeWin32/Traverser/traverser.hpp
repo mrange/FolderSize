@@ -38,6 +38,8 @@ namespace traverser
          );
       ~traverser () throw ();
 
+      win32::tstring const &  get_root_path () const throw ();
+
       folder::folder const *  get_root () const throw ();
 
       std::size_t const       get_processed_folder_count () const throw ();
