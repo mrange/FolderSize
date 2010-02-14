@@ -20,6 +20,9 @@
 // ----------------------------------------------------------------------------
 #include <winnt.h>
 // ----------------------------------------------------------------------------
+#undef max
+#undef min
+// ----------------------------------------------------------------------------
 namespace folder
 {
    // -------------------------------------------------------------------------
@@ -62,6 +65,7 @@ namespace folder
       ,  file_count           (0                         )
       ,  folder_count         (0                         )
       ,  sub_folders          (new f::folder * [0]       )
+      ,  depth                (0                         )
       ,  total_size           (0                         )
       ,  total_file_count     (0                         )
       ,  total_folder_count   (0                         )
@@ -72,20 +76,28 @@ namespace folder
    // -------------------------------------------------------------------------
    folder::folder (
          initializer const & init)
-      :  parent               (init.parent                              )
-      ,  name                 (init.name                                )
-      ,  size                 (init.size                                )
-      ,  file_count           (init.file_count                          )
-      ,  folder_count         (init.folder_count                        )
-      ,  sub_folders          (new f::folder * [init.folder_count]      )
-      ,  total_size           (init.size                                )
-      ,  total_file_count     (init.file_count                          )
-      ,  total_folder_count   (init.folder_count                        )
+      :  parent               (init.parent                                             )
+      ,  name                 (init.name                                               )
+      ,  size                 (init.size                                               )
+      ,  file_count           (init.file_count                                         )
+      ,  folder_count         (init.folder_count                                       )
+      ,  sub_folders          (new f::folder * [static_cast<int> (init.folder_count)]  )
+      ,  depth                (1                                                       )
+      ,  total_size           (init.size                                               )
+      ,  total_file_count     (init.file_count                                         )
+      ,  total_folder_count   (init.folder_count                                       )
    {
-      memset (sub_folders.get (), 0, init.folder_count * sizeof (void*));
+      memset (
+            sub_folders.get ()
+         ,  0
+         ,  static_cast<std::size_t> (init.folder_count) * sizeof (void*));
       if (parent)
       {
-         parent->recursive_update (size, file_count, folder_count);
+         parent->recursive_update (
+               depth
+            ,  size
+            ,  file_count
+            ,  folder_count);
       }
    }
    // -------------------------------------------------------------------------
@@ -101,9 +113,10 @@ namespace folder
             ,  0
             );
       }
-      big_size const interlocked_add (big_size const volatile* value, big_size const add)
+
+      big_size const interlocked_add (big_size volatile* value, big_size const add)
       {
-         auto value_ptr          = reinterpret_cast<__int64 volatile*>(const_cast<big_size volatile*>(value));
+         auto value_ptr          = reinterpret_cast<__int64 volatile*>(value);
          __int64 current_value  = 0;
          __int64 new_value      = 0;
 
@@ -123,8 +136,35 @@ namespace folder
             ,  current_value
             ));
 
-         return new_value;
+         return static_cast<big_size> (new_value);
       }
+
+      std::size_t const interlocked_max (std::size_t volatile* value, std::size_t const max_value)
+      {
+         auto value_ptr          = reinterpret_cast<long volatile*>(value);
+         long current_value      = 0;
+         long new_value          = 0;
+         do
+         {
+            current_value = *value_ptr;
+            new_value = static_cast<long> (std::max (static_cast<std::size_t> (current_value), max_value));
+         }
+         while (
+            current_value != _InterlockedCompareExchange (
+               value_ptr
+            ,  new_value
+            ,  current_value
+            ));
+
+         return static_cast<std::size_t> (new_value);
+      }
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   std::size_t const folder::get_depth () const throw ()
+   {
+      return depth;
    }
    // -------------------------------------------------------------------------
 
@@ -151,18 +191,20 @@ namespace folder
 
    // -------------------------------------------------------------------------
    void folder::recursive_update  (
-         big_size const size         
+         std::size_t const child_depth
+      ,  big_size const size         
       ,  big_size const file_count   
       ,  big_size const folder_count 
       )
    {
-      interlocked_add (&total_size           , size         );
-      interlocked_add (&total_file_count     , file_count   );
-      interlocked_add (&total_folder_count   , folder_count );
+      interlocked_max (&depth                , child_depth + 1 );
+      interlocked_add (&total_size           , size            );
+      interlocked_add (&total_file_count     , file_count      );
+      interlocked_add (&total_folder_count   , folder_count    );
 
       if (parent)
       {
-         parent->recursive_update (size, file_count, folder_count);
+         parent->recursive_update (child_depth + 1, size, file_count, folder_count);
       }
    }
    // -------------------------------------------------------------------------

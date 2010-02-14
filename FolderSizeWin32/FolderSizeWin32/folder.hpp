@@ -28,6 +28,7 @@ namespace folder
    // -------------------------------------------------------------------------
    typedef std::basic_string<TCHAR> tstring;
    // -------------------------------------------------------------------------
+   __declspec(align(8))
    struct folder : boost::noncopyable
    {
       typedef boost::scoped_array<folder *> folder_array;
@@ -65,6 +66,7 @@ namespace folder
       big_size const          file_count;
       big_size const          folder_count;
 
+      std::size_t const       get_depth () const throw ();
       big_size const          get_total_size () const throw ();
       big_size const          get_total_file_count () const throw ();
       big_size const          get_total_folder_count () const throw ();
@@ -74,10 +76,14 @@ namespace folder
 
    private:
       void                    recursive_update  (
-                                    big_size const size         
+                                    std::size_t const child_depth
+                                 ,  big_size const size         
                                  ,  big_size const file_count   
                                  ,  big_size const folder_count 
                                  );
+      __declspec(align(4))
+      std::size_t volatile    depth                ;
+      __declspec(align(8))
       big_size volatile       total_size           ;
       big_size volatile       total_file_count     ;
       big_size volatile       total_folder_count   ;
