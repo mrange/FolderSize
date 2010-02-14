@@ -388,6 +388,9 @@ namespace painter
                ,  DT_WORD_ELLIPSIS
                );
 
+            rect.right += 1;
+            rect.bottom += 1;
+
             FrameRect (
                   painter_context.hdc
                ,  &rect
