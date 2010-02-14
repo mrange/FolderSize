@@ -25,6 +25,8 @@
 #include "targetver.h"
 #include <windows.h>
 #include <commctrl.h>
+#include <shellapi.h>
+#include <shlobj.h>
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
@@ -37,6 +39,7 @@
 #include <cstddef>
 #include <deque>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>

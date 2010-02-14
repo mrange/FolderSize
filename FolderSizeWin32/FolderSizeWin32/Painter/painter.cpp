@@ -19,6 +19,9 @@
 #undef max
 #undef min
 // ----------------------------------------------------------------------------
+#include <algorithm>
+#include <vector>
+// ----------------------------------------------------------------------------
 #include "../linear.hpp"
 #include "../messages.hpp"
 #include "../utility.hpp"
@@ -47,6 +50,24 @@ namespace painter
    {
       std::size_t const buffer_size    = 256;
       double const      cut_off_y      = 10.0;
+
+      struct rendered_folder
+      {
+         rendered_folder (
+               RECT const & render_rect_
+            ,  f::folder const * const folder_
+            )
+            :  render_rect (render_rect_  )
+            ,  folder      (folder_       )
+         {
+         }
+
+         RECT const              render_rect;
+         f::folder const * const folder;
+
+      };
+
+      typedef s::vector<rendered_folder> rendered_folders;
 
       struct update_request : boost::noncopyable
       {
@@ -119,12 +140,14 @@ namespace painter
                ,  update_request_.bitmap_bits
                ,  update_request_.bitmap_size               )  )
          {
+            rendered_folders.reserve (64);
          }
 
          coordinate const                 centre            ;
          zoom_factor const                zoom              ;
          dimension const                  bitmap_size       ;
          win32::gdi_object<HBITMAP> const bitmap            ;
+         rendered_folders                 rendered_folders  ;
       };
 
       struct painter_context
@@ -175,8 +198,9 @@ namespace painter
             ,  typename TPainterPredicate>
          static void folder_traverser_impl (
                std::size_t                remaining_levels
-            ,  dimension const &          size
+            ,  rendered_folders &         rendered_folders
             ,  vt::transform const &      transform
+            ,  dimension const &          size
             ,  double const               x
             ,  double const               y
             ,  double const               x_step_ratio
@@ -219,19 +243,38 @@ namespace painter
                return;
             }
 
+            if (current_left_top.x () > size.x ())
+            {
+               return;
+            }
+
+            if (current_left_top.y () > size.y ())
+            {
+               return;
+            }
+
             if (
-                  current_right_bottom.x () >= 0.0
-               && current_right_bottom.y () >= 0.0
+                  current_right_bottom.x () > 0.0
+               && current_right_bottom.y () > 0.0
                && current_left_top.x () < size.x ()
                && current_left_top.y () < size.y ()
                )
             {
+               RECT rect         = {0}                      ;
+               rect.left         = IMPLICIT_CAST (current_left_top.x ()       );
+               rect.top          = IMPLICIT_CAST (current_left_top.y ()       );
+               rect.right        = IMPLICIT_CAST (current_right_bottom.x ()   );
+               rect.bottom       = IMPLICIT_CAST (current_right_bottom.y ()   );
+
+               rendered_folders.push_back (
+                  rendered_folder (
+                        rect
+                     ,  folder
+                     ));
+
                painter (
                      property
-                  ,  current_left_top.x ()
-                  ,  current_left_top.y ()
-                  ,  current_right_bottom.x ()
-                  ,  current_right_bottom.y ()
+                  ,  rect
                   ,  *folder
                   );
             }
@@ -249,11 +292,13 @@ namespace painter
 
                auto sub_property = property_picker (sub_folder);
                auto y_step = y_step_ratio * sub_property;
+               auto next_y = current_y + y_step;
 
                folder_traverser_impl (
                      remaining_levels - 1
-                  ,  size
+                  ,  rendered_folders
                   ,  transform
+                  ,  size
                   ,  next_x
                   ,  current_y
                   ,  x_step_ratio
@@ -263,7 +308,7 @@ namespace painter
                   ,  painter
                   );
 
-               current_y += y_step;
+               current_y = next_y;
             }
          }
 
@@ -271,7 +316,8 @@ namespace painter
                typename TPropertyPickerPredicate
             ,  typename TPainterPredicate>
          static void folder_traverser (
-               dimension const &          size
+               rendered_folders &         rendered_folders
+            ,  dimension const &          size
             ,  vt::transform const &      transform
             ,  f::folder const * const    root
             ,  TPropertyPickerPredicate   property_picker
@@ -288,15 +334,16 @@ namespace painter
 
             if (property > 0 && depth > 0)
             {
-               auto x_step_ratio = size.x () / depth;
-               auto y_step_ratio = size.y () / property;
+               auto x_step_ratio = 1.0 / depth;
+               auto y_step_ratio = 1.0 / property;
 
                folder_traverser_impl (
                      depth
-                  ,  size
+                  ,  rendered_folders
                   ,  transform
-                  ,  0.0
-                  ,  0.0
+                  ,  size
+                  ,  -0.5
+                  ,  -0.5
                   ,  x_step_ratio
                   ,  y_step_ratio
                   ,  root
@@ -315,19 +362,12 @@ namespace painter
 
          static void painter (
                painter_context const & painter_context
-            ,  big_size const  total_size
-            ,  double const            left
-            ,  double const            top
-            ,  double const            right
-            ,  double                  bottom
+            ,  big_size const          total_size
+            ,  RECT const &            rect
             ,  f::folder const &       folder
             )
          {
-            RECT rect         = {0}                      ;
-            rect.left         = IMPLICIT_CAST (left   )  ;
-            rect.top          = IMPLICIT_CAST (top    )  ;
-            rect.right        = IMPLICIT_CAST (right  )  ;
-            rect.bottom       = IMPLICIT_CAST (bottom )  ;
+            RECT copy_rect = rect;
 
             TCHAR buffer[buffer_size] = {0};
 
@@ -376,7 +416,7 @@ namespace painter
 
             FillRect (
                   painter_context.hdc
-               ,  &rect
+               ,  &copy_rect
                ,  painter_context.fill_brush
                );
 
@@ -384,16 +424,16 @@ namespace painter
                   painter_context.hdc
                ,  buffer
                ,  cch
-               ,  &rect
+               ,  &copy_rect
                ,  DT_WORD_ELLIPSIS
                );
 
-            rect.right += 1;
-            rect.bottom += 1;
+            copy_rect.right   += 1;
+            copy_rect.bottom  += 1;
 
             FrameRect (
                   painter_context.hdc
-               ,  &rect
+               ,  &copy_rect
                ,  painter_context.frame_brush
                );
 
@@ -511,20 +551,14 @@ namespace painter
 
                         auto painter_ = [&painter_context] (
                               __int64 const     total_size
-                           ,  double const      x
-                           ,  double const      y
-                           ,  double const      width
-                           ,  double const      height
+                           ,  RECT const &      rect
                            ,  f::folder const & folder
                            )
                            {
                               painter (
                                     painter_context
                                  ,  total_size
-                                 ,  x
-                                 ,  y
-                                 ,  width
-                                 ,  height
+                                 ,  rect
                                  ,  folder
                                  );
                            };
@@ -533,14 +567,15 @@ namespace painter
                         auto centre       = request_ptr->centre;
                         auto zoom         = request_ptr->zoom;
 
-                        auto current_transform = vt::bitmap_to_screen_transform (
+                        auto current_transform = vt::view_to_screen (
                               vt::transform_direction::forward
                            ,  bitmap_size
                            ,  centre
                            ,  zoom);
 
                         folder_traverser (
-                              request_ptr->bitmap_size
+                              response_ptr->rendered_folders
+                           ,  request_ptr->bitmap_size
                            ,  current_transform
                            ,  request_ptr->root
                            ,  size_picker
@@ -690,6 +725,34 @@ namespace painter
          }
       }
 
+      f::folder const * const hit_test (
+            POINT const & offset
+         )
+      {
+         if (!update_response.get ())
+         {
+            return NULL;
+         }
+
+         rendered_folders const & current_rendered_folders = update_response->rendered_folders;
+
+         auto end    = current_rendered_folders.end ();
+         auto find   = s::find_if (
+               current_rendered_folders.begin ()
+            ,  end
+            ,  [offset] (rendered_folder const & rf)
+               {
+                  return w::is_inside (rf.render_rect, offset);
+               });
+
+         if (find == end)
+         {
+            return NULL;
+         }
+
+         return find->folder;
+      }
+
       background_painter                              background_painter;
       update_response::ptr                            update_response   ;
    };
@@ -756,6 +819,19 @@ namespace painter
          ,  zoom
          );
    }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   f::folder const * const painter::hit_test (
+         POINT const & offset
+      )
+   {
+      return m_impl->hit_test (
+            offset
+         );
+   }
+   // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------

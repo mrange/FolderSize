@@ -19,8 +19,12 @@
 // ----------------------------------------------------------------------------
 #include <windows.h>
 #include <commctrl.h>
+#include <shellapi.h>
+#include <shlobj.h>
 // ----------------------------------------------------------------------------
+#include <algorithm>
 #include <functional>
+#include <iterator>
 // ----------------------------------------------------------------------------
 #include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
@@ -46,6 +50,7 @@ namespace main_window
 
    // -------------------------------------------------------------------------
    namespace b    = boost           ;
+   namespace f    = folder          ;
    namespace l    = linear          ;
    namespace p    = painter         ;
    namespace s    = std             ;
@@ -140,15 +145,16 @@ namespace main_window
       TCHAR                s_window_class    [s_max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T ("&Go")                                                             },
-         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T ("&Stop")                                                           },
-         {  IDM_PATH       , 200    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T ("C:\\Windows")                                                     },
-         {  IDM_FOLDERTREE , 0      , 48  , -1        , -22    , window_type::nowindow , 0                  ,  0  , _T ("")                                                                },
-         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T ("FolderSize.Win32 © Mårten Rånge 2010 - foldersize.codeplex.com")  },
+         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 104   , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T ("&Go")                                                            },
+         {  IDM_STOP       , 120    , 8   , 120 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T ("&Stop")                                                          },
+         {  IDM_BROWSE     , 210    , 8   , 210 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T ("Bro&wse")                                                        },
+         {  IDM_PATH       , 300    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T ("C:\\Windows")                                                    },
+         {  IDM_FOLDERTREE , 0      , 48  , -1        , -22    , window_type::nowindow , 0                  ,  0  , _T ("")                                                               },
+         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T ("FolderSize.Win32 © Mårten Rånge 2010 - foldersize.codeplex.com") },
          {0},
       };
 
-      child_window &       s_folder_tree                          = s_child_window[3];
+      child_window &       s_folder_tree                          = s_child_window[4];
 
       state::ptr           s_state;
 
@@ -175,6 +181,38 @@ namespace main_window
             }
 
             predicate (wc);
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      void build_path (
+            std::vector<TCHAR> &    path
+         ,  w::tstring const &      root_path
+         ,  f::folder const * const folder
+         )
+      {
+         if (folder && folder->parent)
+         {
+            build_path (
+                  path
+               ,  root_path
+               ,  folder->parent
+               );
+            path.push_back (_T ('\\'));
+            s::copy (
+                  folder->name.begin ()
+               ,  folder->name.end ()
+               ,  s::back_inserter (path)
+               );
+         }
+         else
+         {
+            s::copy (
+                  root_path.begin ()
+               ,  root_path.end ()
+               ,  s::back_inserter (path)
+               );
          }
       }
       // ----------------------------------------------------------------------
@@ -255,7 +293,7 @@ namespace main_window
          for_all_child_windows (
             [&sz] (child_window & wc)
             {
-               HWND child_window = wc.hwnd;
+               auto child_window = wc.hwnd;
                
                if (wc.hwnd && wc.window_type != window_type::nowindow)
                {
@@ -344,7 +382,7 @@ namespace main_window
                //   break;
                case IDM_GO_PAUSE:
                   {
-                     HWND path_hwnd (GetDlgItem (hwnd, IDM_PATH));
+                     auto const path_hwnd = GetDlgItem (hwnd, IDM_PATH);
 
                      auto path = w::get_window_text (path_hwnd);
 
@@ -363,6 +401,24 @@ namespace main_window
                   if (s_state.get ())
                   {
                      s_state->traverser.stop_traversing ();
+                  }
+                  break;
+                case IDM_BROWSE:
+                  {
+                     auto const path_hwnd = GetDlgItem (hwnd, IDM_PATH);
+
+                     auto path = w::get_window_text (path_hwnd);
+
+                     if (!path.empty ())
+                     {
+                        ShellExecute (
+                              NULL
+                           ,  _T ("explore")
+                           ,  path.c_str ()
+                           ,  NULL
+                           ,  NULL
+                           ,  SW_SHOWNORMAL);
+                     }
                   }
                   break;
                default:
@@ -469,6 +525,38 @@ namespace main_window
             }
             break;
          case WM_LBUTTONUP:
+            {
+               auto mouse_coord = w::get_mouse_coordinate(lParam);
+
+               if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
+               {
+                  auto adjusted_coord  =  mouse_coord;
+                  adjusted_coord.x     -= folder_tree_rect.left;
+                  adjusted_coord.y     -= folder_tree_rect.top;
+                  auto found_folder = s_state->painter.hit_test (adjusted_coord);
+
+                  if (found_folder)
+                  {
+                     std::vector<TCHAR> path_builder;
+                     path_builder.reserve (MAX_PATH);
+                     build_path (
+                           path_builder
+                        ,  s_state->traverser.get_root_path ()
+                        ,  found_folder
+                        );
+                     w::tstring const path (path_builder.begin (), path_builder.end ());
+
+                     auto const path_hwnd = GetDlgItem (hwnd, IDM_PATH);
+
+                     if (path_hwnd)
+                     {
+                        SetWindowText (path_hwnd, path.c_str ());
+                     }
+                  }
+               }
+            }
+            // Intentional fall-through
+            // break;
          case WM_KILLFOCUS:
             {
                if (s_state.get ())
@@ -693,6 +781,23 @@ namespace main_window
                   ,  FALSE);
                }
             });
+
+         TCHAR known_folder_path[MAX_PATH] = {0};
+
+         auto get_folder_hr = SHGetFolderPath (
+               hwnd
+            ,  CSIDL_PERSONAL
+            ,  NULL
+            ,  SHGFP_TYPE_CURRENT 
+            ,  known_folder_path
+            );
+
+         auto path_hwnd = GetDlgItem (hwnd, IDM_PATH);
+
+         if (SUCCEEDED (get_folder_hr) && path_hwnd)
+         {
+            SetWindowText (path_hwnd, known_folder_path);
+         }
 
          ShowWindow (hwnd, command_show);
 
