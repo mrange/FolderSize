@@ -43,6 +43,8 @@ namespace painter
       void do_request (
             folder::folder const * const  root
          ,  HWND const                    main_hwnd
+         ,  std::size_t const             processed_folder_count
+         ,  std::size_t const             unprocessed_folder_count
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom
@@ -52,6 +54,8 @@ namespace painter
             folder::folder const * const  root
          ,  HWND const                    main_hwnd
          ,  HDC const                     hdc
+         ,  std::size_t const             processed_folder_count
+         ,  std::size_t const             unprocessed_folder_count
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom

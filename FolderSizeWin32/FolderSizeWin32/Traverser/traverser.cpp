@@ -67,13 +67,15 @@ namespace traverser
          f::folder **         replacement_folder   ;
       };
 
-      HWND                       main_hwnd         ;
-      b::object_pool<f::folder>  folder_pool       ;
-      s::deque<job>              job_queue         ;
-      w::tstring const           root_path         ;
-      f::folder *                root              ;
-      bool volatile              continue_running  ;
-      w::thread const            thread            ;     
+      HWND                       main_hwnd                  ;
+      b::object_pool<f::folder>  folder_pool                ;
+      s::deque<job>              job_queue                  ;
+      w::tstring const           root_path                  ;
+      f::folder *                root                       ;
+      bool volatile              continue_running           ;
+      w::thread const            thread                     ;     
+      std::size_t volatile       processed_folder_count     ;
+      std::size_t volatile       unprocessed_folder_count   ;
 
       s::deque<job> const     create_initial_queue (job const & initial_job)
       {
@@ -86,12 +88,14 @@ namespace traverser
             HWND const main_hwnd_
          ,  w::tstring const & path
          )
-         :  main_hwnd         (main_hwnd_)
-         ,  job_queue         (create_initial_queue (job (path, _T("."), NULL, &root)))
-         ,  root_path         (path)
-         ,  root              (folder_pool.construct ())
-         ,  continue_running  (true)
-         ,  thread            (_T("traverser"), create_proc ())
+         :  main_hwnd                  (main_hwnd_)
+         ,  job_queue                  (create_initial_queue (job (path, _T("."), NULL, &root)))
+         ,  root_path                  (path)
+         ,  root                       (folder_pool.construct ())
+         ,  continue_running           (true)
+         ,  thread                     (_T("traverser"), create_proc ())
+         ,  processed_folder_count     (0)       
+         ,  unprocessed_folder_count   (0)
       {
       }
 
@@ -183,6 +187,9 @@ namespace traverser
             }
 
             job_queue.pop_front ();
+
+            unprocessed_folder_count   =  job_queue.size ();
+            processed_folder_count     =  processed_folder_count + 1;
          }
 
          update_view ();
@@ -213,6 +220,16 @@ namespace traverser
    void traverser::stop_traversing () throw ()
    {
       m_impl->continue_running = false;
+   }
+
+   std::size_t const traverser::get_processed_folder_count () const throw ()
+   {
+      return m_impl->processed_folder_count;
+   }
+
+   std::size_t const traverser::get_unprocessed_folder_count () const throw ()
+   {
+      return m_impl->unprocessed_folder_count;
    }
 
    f::folder const * traverser::get_root () const throw ()

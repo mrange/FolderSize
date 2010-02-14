@@ -339,7 +339,23 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   gdi_object<HFONT> get_standard_message_font (int height)
+   gdi_object<HFONT> const create_font (LPCTSTR const font_family, int const height)
+   {
+      if (!font_family)
+      {
+         return gdi_object<HFONT> (NULL);
+      }
+
+      LOGFONT lf = {0};
+      lf.lfHeight = height;
+      _tcscpy_s (lf.lfFaceName, font_family);
+
+      return gdi_object<HFONT> (CreateFontIndirect (&lf));
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   gdi_object<HFONT> const create_standard_message_font (int const height)
    {
       NONCLIENTMETRICS non_client_metrics = {0};
       non_client_metrics.cbSize = sizeof (NONCLIENTMETRICS);
@@ -364,9 +380,9 @@ namespace win32
 
    }
 
-   gdi_object<HFONT> get_standard_message_font ()
+   gdi_object<HFONT> const create_standard_message_font ()
    {
-      return get_standard_message_font (0);
+      return create_standard_message_font (0);
    }
    // -------------------------------------------------------------------------
 

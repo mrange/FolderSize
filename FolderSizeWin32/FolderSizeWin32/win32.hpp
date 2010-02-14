@@ -263,8 +263,10 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   gdi_object<HFONT> get_standard_message_font (int size);
-   gdi_object<HFONT> get_standard_message_font ();
+   gdi_object<HFONT> const create_font (LPCTSTR const font_family, int const height);
+   // -------------------------------------------------------------------------
+   gdi_object<HFONT> const create_standard_message_font (int const height);
+   gdi_object<HFONT> const create_standard_message_font ();
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
