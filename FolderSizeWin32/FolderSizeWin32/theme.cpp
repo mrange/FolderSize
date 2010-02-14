@@ -24,7 +24,7 @@ namespace theme
 
    win32::gdi_object<HFONT> const default_font                 =  w::create_standard_message_font  (                       );
    win32::gdi_object<HFONT> const default_big_font             =  w::create_standard_message_font  (48                     );
-   win32::gdi_object<HFONT> const default_monospace_font       =  w::create_font                   (_T("Courier New"), 18  );
+   win32::gdi_object<HFONT> const default_monospace_font       =  w::create_font                   (_T ("Courier New"), 18  );
 
 
    namespace folder_tree

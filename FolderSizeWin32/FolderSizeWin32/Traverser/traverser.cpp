@@ -89,11 +89,11 @@ namespace traverser
          ,  w::tstring const & path
          )
          :  main_hwnd                  (main_hwnd_)
-         ,  job_queue                  (create_initial_queue (job (path, _T("."), NULL, &root)))
+         ,  job_queue                  (create_initial_queue (job (path, _T ("."), NULL, &root)))
          ,  root_path                  (path)
          ,  root                       (folder_pool.construct ())
          ,  continue_running           (true)
-         ,  thread                     (_T("traverser"), create_proc ())
+         ,  thread                     (_T ("traverser"), create_proc ())
          ,  processed_folder_count     (0)       
          ,  unprocessed_folder_count   (0)
       {
@@ -121,7 +121,7 @@ namespace traverser
          {
             auto current_job = job_queue.front ();
 
-            w::find_file find_file (current_job.path + _T("\\*.*"));
+            w::find_file find_file (current_job.path + _T ("\\*.*"));
 
             if (continue_running && find_file.is_valid ())
             {
@@ -140,7 +140,7 @@ namespace traverser
 
                   if (find_file.is_directory ())
                   {
-                     if (name != _T(".") && name != _T(".."))
+                     if (name != _T (".") && name != _T (".."))
                      {
                         folder_names.push_back (find_file.get_name ());
                      }
@@ -170,7 +170,7 @@ namespace traverser
 
                   job_queue.push_back (
                      job (
-                           current_job.path + _T("\\") + folder_name
+                           current_job.path + _T ("\\") + folder_name
                         ,  folder_name
                         ,  new_folder
                         ,  sub_folder_ref

@@ -44,7 +44,7 @@ namespace win32
       {
          OutputDebugString (value);
       }
-      OutputDebugString (_T("\r\n"));
+      OutputDebugString (_T ("\r\n"));
    }
 
    tstring const get_window_text (HWND const hwnd)
@@ -129,16 +129,16 @@ namespace win32
    {
       if (value.is_valid ())
       {
-         output_debug_string (_T("FolderSize.Win32 : Joining thread: ") + thread_name);
+         output_debug_string (_T ("FolderSize.Win32 : Joining thread: ") + thread_name);
          auto res = WaitForSingleObject (value.value, ms);
 
          if (res == WAIT_OBJECT_0)
          {
-            output_debug_string (_T("FolderSize.Win32 : Thread join successful: ") + thread_name);
+            output_debug_string (_T ("FolderSize.Win32 : Thread join successful: ") + thread_name);
          }
          else
          {
-            output_debug_string (_T("FolderSize.Win32 : Thread join failed: ") + thread_name);
+            output_debug_string (_T ("FolderSize.Win32 : Thread join failed: ") + thread_name);
          }
 
          return res == WAIT_OBJECT_0;
@@ -162,18 +162,18 @@ namespace win32
       {
          try
          {
-            output_debug_string (_T("FolderSize.Win32 : Starting thread: ") + state->thread_name);
+            output_debug_string (_T ("FolderSize.Win32 : Starting thread: ") + state->thread_name);
 
             auto result = state->procedure ();
 
 
             if (result == EXIT_SUCCESS)
             {
-               output_debug_string (_T("FolderSize.Win32 : Thread exited successfully: ") + state->thread_name);
+               output_debug_string (_T ("FolderSize.Win32 : Thread exited successfully: ") + state->thread_name);
             }
             else
             {
-               output_debug_string (_T("FolderSize.Win32 : Thread exited with failure code: ") + state->thread_name);
+               output_debug_string (_T ("FolderSize.Win32 : Thread exited with failure code: ") + state->thread_name);
             }
 
             state->terminated = true;
@@ -181,7 +181,7 @@ namespace win32
          }
          catch(...)
          {
-            output_debug_string (_T("FolderSize.Win32 : Thread threw exception: ") + state->thread_name);
+            output_debug_string (_T ("FolderSize.Win32 : Thread threw exception: ") + state->thread_name);
             state->terminated = true;
             _endthreadex (EXIT_FAILURE);
          }
@@ -228,11 +228,11 @@ namespace win32
    {
       if (is_valid ())
       {
-         return find_data.cFileName ? find_data.cFileName : _T("");
+         return find_data.cFileName ? find_data.cFileName : _T ("");
       }
       else
       {
-         return _T("");
+         return _T ("");
       }
    }
 

@@ -148,7 +148,7 @@ namespace painter
       struct background_painter
       {
          background_painter ()
-            :  thread            (_T("painter"), create_proc ())
+            :  thread            (_T ("painter"), create_proc ())
             ,  new_frame_request (w::event_type::auto_reset    )
             ,  shutdown_request  (w::event_type::manual_reset  )
          {
@@ -449,19 +449,19 @@ namespace painter
                            ,  theme::folder_tree::background_brush.value
                            );
 
+                        SetBkColor (
+                              bitmap_dc.value
+                           ,  theme::folder_tree::background_color);
+
+                        SetTextColor (
+                              bitmap_dc.value
+                           ,  theme::folder_tree::folder_background_color);
+
                         {
                            w::select_object const select_font (
                                  bitmap_dc.value
                                  ,  theme::default_monospace_font.value
                               );
-
-                           SetBkColor (
-                                 bitmap_dc.value
-                              ,  theme::folder_tree::background_color);
-
-                           SetTextColor (
-                                 bitmap_dc.value
-                              ,  theme::folder_tree::folder_background_color);
 
                            TCHAR buffer [buffer_size * 8] = {0};
                            auto cch = _snwprintf (
@@ -488,6 +488,13 @@ namespace painter
                            ,  theme::default_font.value
                            );
 
+                        DrawText (
+                              bitmap_dc.value
+                           ,  _T ("Use mouse wheel to zoom, left button to move, right button resets  ")
+                           ,  -1
+                           ,  &rect
+                           , DT_RIGHT | DT_BOTTOM | DT_SINGLELINE
+                           );
                         SetBkColor (
                               bitmap_dc.value
                            ,  theme::folder_tree::folder_background_color);
