@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 // ----------------------------------------------------------------------------
+#include <boost/optional.hpp>
+// ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
 #include <boost/pool/object_pool.hpp>
 #include <boost/pool/pool.hpp>
@@ -36,10 +38,10 @@ namespace traverser
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   namespace s    = std          ;
-   namespace st   = s::tr1       ;
    namespace b    = boost        ;
    namespace f    = folder       ;
+   namespace s    = std          ;
+   namespace st   = s::tr1       ;
    namespace w    = win32        ;
    // -------------------------------------------------------------------------
 
@@ -77,6 +79,8 @@ namespace traverser
       std::size_t volatile       processed_folder_count     ;
       std::size_t volatile       unprocessed_folder_count   ;
 
+      boost::optional<DWORD>     send_next_update           ;
+
       s::deque<job> const     create_initial_queue (job const & initial_job)
       {
          s::deque<job> queue;
@@ -106,13 +110,23 @@ namespace traverser
          thread.join (10000);
       }
 
-      void update_view () const
+      void update_view (bool force_update = false)
       {
-         PostMessage (
-               main_hwnd
-            ,  messages::folder_structure_changed
-            ,  0
-            ,  0);
+         auto tick_count = GetTickCount ();
+
+         if (
+               force_update
+            || !send_next_update
+            || *send_next_update < tick_count)
+         {
+            send_next_update = tick_count + 40; //20ms delay
+
+            PostMessage (
+                  main_hwnd
+               ,  messages::folder_structure_changed
+               ,  0
+               ,  0);
+         }
       }
 
       unsigned int proc()
@@ -192,7 +206,7 @@ namespace traverser
             processed_folder_count     =  processed_folder_count + 1;
          }
 
-         update_view ();
+         update_view (true);
 
          return EXIT_SUCCESS;
       }
