@@ -60,7 +60,7 @@ namespace folder
    // -------------------------------------------------------------------------
    folder::folder ()
       :  parent               (NULL                      )
-      ,  name                 (_T("")                    )
+      ,  name                 (_T ("")                    )
       ,  size                 (0                         )
       ,  file_count           (0                         )
       ,  folder_count         (0                         )

@@ -140,11 +140,11 @@ namespace main_window
       TCHAR                s_window_class    [s_max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T("&Go")                                                             },
-         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T("&Stop")                                                           },
-         {  IDM_PATH       , 200    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T("C:\\Windows")                                                     },
-         {  IDM_FOLDERTREE , 0      , 48  , -1        , -22    , window_type::nowindow , 0                  ,  0  , _T("")                                                                },
-         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T("FolderSize.Win32 © Mårten Rånge 2010 - foldersize.codeplex.com")  },
+         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 80    , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T ("&Go")                                                             },
+         {  IDM_STOP       , 100    , 8   , 100 + 80  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T ("&Stop")                                                           },
+         {  IDM_PATH       , 200    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T ("C:\\Windows")                                                     },
+         {  IDM_FOLDERTREE , 0      , 48  , -1        , -22    , window_type::nowindow , 0                  ,  0  , _T ("")                                                                },
+         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T ("FolderSize.Win32 © Mårten Rånge 2010 - foldersize.codeplex.com")  },
          {0},
       };
 
@@ -398,8 +398,6 @@ namespace main_window
 
                   w::select_object select_font (pdc.hdc, theme::default_big_font.value);
 
-                  auto tip = _T("Click Go to start...");
-
                   SetBkColor (
                         pdc.hdc
                      ,  theme::folder_tree::background_color
@@ -412,7 +410,7 @@ namespace main_window
 
                   DrawText (
                         pdc.hdc
-                     ,  tip
+                     ,  _T ("Click Go to start...")
                      ,  -1
                      ,  &folder_tree_rect
                      ,  DT_VCENTER | DT_CENTER | DT_SINGLELINE
@@ -649,13 +647,13 @@ namespace main_window
                switch (wc.window_type)
                {
                case window_type::button:
-                  window_class = _T("BUTTON");
+                  window_class = _T ("BUTTON");
                   break;
                case window_type::edit:
-                  window_class = _T("EDIT");
+                  window_class = _T ("EDIT");
                   break;
                case window_type::static_:
-                  window_class = _T("STATIC");
+                  window_class = _T ("STATIC");
                   break;
                case window_type::nowindow:
                default:
