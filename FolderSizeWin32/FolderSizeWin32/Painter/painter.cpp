@@ -19,13 +19,6 @@
 #undef max
 #undef min
 // ----------------------------------------------------------------------------
-#include <tuple>
-#include <unordered_map>
-// ----------------------------------------------------------------------------
-#include <boost/pool/object_pool.hpp>
-#include <boost/pool/pool.hpp>
-#include <boost/pool/pool_alloc.hpp>
-// ----------------------------------------------------------------------------
 #include "../linear.hpp"
 #include "../messages.hpp"
 #include "../utility.hpp"
@@ -140,80 +133,6 @@ namespace painter
       {
       }
 
-      struct folder_info
-      {
-         folder_info ()
-            :  depth (1)
-            ,  size  (0)
-            ,  count (0)
-         {
-         }
-
-         folder_info (
-               std::size_t const       depth_
-            ,  big_size const  size_
-            ,  std::size_t const       count_)
-            :  depth (depth_)
-            ,  size  (size_)
-            ,  count (count_)
-         {
-         }
-
-         std::size_t       depth    ;
-         big_size  size   ;
-         std::size_t       count  ;
-
-      };
-
-      folder_info const operator+ (
-            folder_info const & left
-         ,  folder_info const & right
-         )
-      {
-         return folder_info (
-               std::max (left.depth, right.depth)
-            ,   left.size + right.size
-            ,  left.count + right.count
-            );
-      }
-
-      typedef f::folder const * folder_key;
-
-      typedef st::unordered_map<
-               folder_key
-            ,  folder_info
-            ,  st::hash<folder_key>
-            ,  s::equal_to<folder_key> 
-            ,  b::fast_pool_allocator<folder_key>
-            > folder_infos  ;
-
-      folder_info const update_folder_infos (
-            folder_infos & folder_infos
-         ,  f::folder const * const folder)
-      {
-         if (!folder)
-         {
-            return folder_info ();
-         }
-         
-         folder_info fi;
-
-         auto folder_count = folder->folder_count;
-
-         for (std::size_t iter = 0; iter < folder_count; ++iter)
-         {
-            fi = fi + update_folder_infos (
-                  folder_infos
-               ,  folder->sub_folders[iter]);
-         }
-
-         fi = fi + folder_info (fi.depth + 1, folder->size, folder->file_count);
-
-         folder_infos[folder] = fi;
-
-         return fi;
-      }
-
       struct painter_context
       {
          painter_context (
@@ -261,7 +180,7 @@ namespace painter
                typename TPropertyPickerPredicate
             ,  typename TPainterPredicate>
          static void folder_traverser_impl (
-               folder_infos const &       folder_infos
+               std::size_t                remaining_levels
             ,  dimension const &          size
             ,  vt::transform const &      transform
             ,  double const               x
@@ -273,21 +192,17 @@ namespace painter
             ,  TPainterPredicate          painter
             )
          {
+            if (remaining_levels == 0)
+            {
+               return;
+            }
+
             if (!folder)
             {
                return;
             }
 
-            auto folder_info_iterator = folder_infos.find (folder);
-
-            if (folder_info_iterator == folder_infos.end ())
-            {
-               return;
-            }
-
-            auto folder_info = folder_info_iterator->second;
-
-            auto property = property_picker (folder_info);
+            auto property = property_picker (folder);
 
             auto current_x = x;
             auto current_y = y;
@@ -338,19 +253,11 @@ namespace painter
                   continue;
                }
 
-               auto sub_folder_info_iterator = folder_infos.find (sub_folder);
-
-               if (sub_folder_info_iterator == folder_infos.end ())
-               {
-                  continue;
-               }
-
-               auto sub_folder_info = sub_folder_info_iterator->second;
-               auto sub_property = property_picker (sub_folder_info);
+               auto sub_property = property_picker (sub_folder);
                auto y_step = y_step_ratio * sub_property;
 
                folder_traverser_impl (
-                     folder_infos
+                     remaining_levels - 1
                   ,  size
                   ,  transform
                   ,  next_x
@@ -370,8 +277,7 @@ namespace painter
                typename TPropertyPickerPredicate
             ,  typename TPainterPredicate>
          static void folder_traverser (
-               folder_infos const &       folder_infos
-            ,  dimension const &          size
+               dimension const &          size
             ,  vt::transform const &      transform
             ,  f::folder const * const    root
             ,  TPropertyPickerPredicate   property_picker
@@ -383,23 +289,16 @@ namespace painter
                return;
             }
 
-            auto folder_info_iterator = folder_infos.find (root);
+            auto depth     = root->get_depth ();
+            auto property  = property_picker (root);
 
-            if (folder_info_iterator == folder_infos.end ())
+            if (property > 0 && depth > 0)
             {
-               return;
-            }
-
-            auto folder_info = folder_info_iterator->second;
-            auto property = property_picker (folder_info);
-
-            if (property > 0 && folder_info.depth > 0)
-            {
-               auto x_step_ratio = size.x ()/ folder_info.depth;
-               auto y_step_ratio = size.y ()/ property;
+               auto x_step_ratio = size.x () / depth;
+               auto y_step_ratio = size.y () / property;
 
                folder_traverser_impl (
-                     folder_infos
+                     depth
                   ,  size
                   ,  transform
                   ,  0.0
@@ -414,10 +313,10 @@ namespace painter
          }
 
          static big_size size_picker(
-            folder_info const & folder_info
+            f::folder const * f
             )
          {
-            return folder_info.size;
+            return f->get_total_size ();
          }
 
          static void painter (
@@ -538,14 +437,6 @@ namespace painter
                         auto response_ptr = update_response::ptr (
                            new update_response (*request_ptr));
 
-                        folder_infos folder_infos;
-
-                        auto total_folder_info = update_folder_infos (
-                              folder_infos
-                           ,  request_ptr->root
-                           );
-                        
-
                         // TODO: Should be created from a DC compatible with the window
                         w::device_context bitmap_dc (CreateCompatibleDC (NULL));
                         w::select_object const select_bitmap (
@@ -612,8 +503,7 @@ namespace painter
                            ,  zoom);
 
                         folder_traverser (
-                              folder_infos
-                           ,  request_ptr->bitmap_size
+                              request_ptr->bitmap_size
                            ,  current_transform
                            ,  request_ptr->root
                            ,  size_picker
