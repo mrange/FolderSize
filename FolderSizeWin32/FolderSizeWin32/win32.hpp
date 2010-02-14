@@ -115,7 +115,7 @@ namespace win32
       bool const is_valid () const throw ();
       bool const find_next () throw ();
       bool const is_directory () const throw ();
-      unsigned __int64 const get_size () const throw ();
+      big_size const get_size () const throw ();
       LPCTSTR const get_name () const throw ();
       ~find_file () throw ();
 

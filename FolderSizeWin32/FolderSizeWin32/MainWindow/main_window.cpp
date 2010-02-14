@@ -120,6 +120,8 @@ namespace main_window
          t::traverser               traverser         ;
          p::painter                 painter           ;
 
+         b::optional<POINT>         mouse_current_coord  ;
+
          state (
                HWND const           main_hwnd
             ,  w::tstring const &   path
@@ -178,19 +180,26 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      SIZE const get_client_size (HWND const hwnd)
+      SIZE const calculate_size (RECT const & rect)
       {
-         RECT rect = {0};
-         auto result = GetClientRect (hwnd, &rect);
-         result;
-
-         BOOST_ASSERT (result);
-         
          SIZE sz = {0};
          sz.cx = rect.right - rect.left;
          sz.cy = rect.bottom - rect.top;
 
          return sz;
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      SIZE const get_client_size (HWND const hwnd)
+      {
+         RECT rect = {0};
+         auto result = GetClientRect (hwnd, &rect);
+         UNUSED_VARIABLE (result);
+
+         BOOST_ASSERT (result);
+         
+         return calculate_size (rect);
       }
       // ----------------------------------------------------------------------
 
@@ -294,6 +303,13 @@ namespace main_window
          ,  LPARAM const   lParam
          )
       {
+         auto folder_tree_rect = calculate_window_coordinate (
+               hwnd
+            ,  s_folder_tree
+            );
+
+         auto folder_tree_size = calculate_size (folder_tree_rect);
+
          switch (message)
          {
          case messages::new_view_available:
@@ -302,15 +318,10 @@ namespace main_window
          case messages::folder_structure_changed:
             if (s_state.get ())
             {
-               auto rect = calculate_window_coordinate (
-                     hwnd
-                  ,  s_folder_tree
-                  );
-
                s_state->painter.do_request (
                      s_state->traverser.get_root ()
                   ,  hwnd
-                  ,  rect
+                  ,  folder_tree_rect
                   ,  s_state->centre
                   ,  s_state->zoom
                   );
@@ -361,18 +372,13 @@ namespace main_window
             {
                w::paint_device_context pdc (hwnd);
 
-               auto rect = calculate_window_coordinate (
-                     hwnd
-                  ,  s_folder_tree
-                  );
-
                if (s_state.get ())
                {
                   s_state->painter.paint (
                         s_state->traverser.get_root ()
                      ,  hwnd
                      ,  pdc.hdc
-                     ,  rect
+                     ,  folder_tree_rect
                      ,  s_state->centre
                      ,  s_state->zoom
                      );
@@ -382,7 +388,7 @@ namespace main_window
                {
                   FillRect (
                         pdc.hdc
-                     ,  &rect
+                     ,  &folder_tree_rect
                      ,  theme::folder_tree::background_brush.value
                      );
 
@@ -403,69 +409,82 @@ namespace main_window
                   DrawText (
                         pdc.hdc
                      ,  tip
-                     ,  sizeof(tip) / sizeof(tip[0])
-                     ,  &rect
+                     ,  -1
+                     ,  &folder_tree_rect
                      ,  DT_VCENTER | DT_CENTER | DT_SINGLELINE
                      );
 
                }
             }
             break;
-         //case WM_MOUSEMOVE:
-         //   {
-         //      auto mouse_coord = w::get_mouse_coordinate(lParam);
+         case WM_MOUSEMOVE:
+            {
+               auto mouse_coord = w::get_mouse_coordinate(lParam);
 
-         //      auto rect = calculate_window_coordinate (
-         //            hwnd
-         //         ,  s_folder_tree
-         //         );
+               if (
+                     s_state.get () 
+                  && s_state->mouse_current_coord 
+                  && w::is_inside (folder_tree_rect, mouse_coord))
+               {
+                  auto mouse_current_coord = *s_state->mouse_current_coord;
 
-         //      if (s_state.get () && w::is_inside (rect, mouse_coord))
-         //      {
-         //         auto tt = vt::original_view_to_screen (
-         //               vt::transform_direction::reverse
-         //            ,  vt::create_vector (rect.right - rect.left, rect.bottom - rect.top)
-         //            ,  s_state->centre
-         //            ,  s_state->zoom
-         //            );
+                  auto reverse_transform = vt::view_to_screen (
+                        vt::transform_direction::reverse
+                     ,  vt::create_vector (folder_tree_size.cx, folder_tree_size.cy)
+                     ,  s_state->centre
+                     ,  s_state->zoom
+                     );
 
-         //         int x = mouse_coord.x - rect.left;
-         //         int y = mouse_coord.y - rect.top;
+                  auto current_cord    = l::shrink_vector (
+                        reverse_transform * vt::create_extended_vector (
+                           mouse_current_coord.x
+                        ,  mouse_current_coord.y)
+                     );
 
-         //         auto new_centre   = l::shrink_vector (tt * vt::create_extended_vector (x, y));
+                  auto cord            = l::shrink_vector (
+                        reverse_transform * vt::create_extended_vector (
+                           mouse_coord.x
+                        ,  mouse_coord.y)
+                     );
 
-         //         TCHAR buffer[256] = {0};
+                  auto diff = cord - current_cord;
 
-         //         _snwprintf (
-         //               buffer
-         //            ,  256
-         //            ,  _T ("%d,%d - %f,%f")
-         //            ,  x
-         //            ,  y
-         //            ,  new_centre.x ()
-         //            ,  new_centre.y ()
-         //            );
+                  s_state->centre = s_state->centre - diff;
+                  s_state->mouse_current_coord = mouse_coord;
 
-         //         w::output_debug_string (buffer);
+                  invalidate_folder_tree_area (hwnd);
+               }
+            }
+            break;
+         case WM_LBUTTONDOWN:
+            {
+               auto mouse_coord = w::get_mouse_coordinate(lParam);
 
-         //      }
-         //   }
-         //   break;
+               if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
+               {
+                  s_state->mouse_current_coord = mouse_coord;
+               }
+            }
+            break;
+         case WM_LBUTTONUP:
+         case WM_KILLFOCUS:
+            {
+               if (s_state.get ())
+               {
+                  s_state->mouse_current_coord = boost::optional<POINT> ();
+               }
+            }
+            break;
          case WM_RBUTTONUP:
             {
                auto mouse_coord = w::get_mouse_coordinate(lParam);
 
-               auto rect = calculate_window_coordinate (
-                     hwnd
-                  ,  s_folder_tree
-                  );
-
-               if (s_state.get () && w::is_inside (rect, mouse_coord))
+               if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
                   s_state->centre   = s_start_centre  ;
                   s_state->zoom     = s_start_zoom    ;
 
-                  PostMessage (hwnd, messages::folder_structure_changed, 0, 0);
+                  invalidate_folder_tree_area (hwnd);
                }
             }
             break;
@@ -474,27 +493,22 @@ namespace main_window
                auto scroll = static_cast<short> (HIWORD (wParam)) / WHEEL_DELTA;
                auto mouse_coord = w::get_client_mouse_coordinate(hwnd, lParam);
 
-               auto rect = calculate_window_coordinate (
-                     hwnd
-                  ,  s_folder_tree
-                  );
-
-               if (s_state.get () && w::is_inside (rect, mouse_coord))
+               if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
                   auto scale = s::pow (1.2, scroll);
 
-                  auto reverse_transform = vt::original_view_to_screen (
+                  auto reverse_transform = vt::view_to_screen (
                         vt::transform_direction::reverse
-                     ,  vt::create_vector (rect.right - rect.left, rect.bottom - rect.top)
+                     ,  vt::create_vector (folder_tree_size.cx, folder_tree_size.cy)
                      ,  s_state->centre
                      ,  s_state->zoom
                      );
 
-                  auto x = mouse_coord.x - rect.left;
-                  auto y = mouse_coord.y - rect.top;
+                  auto x = mouse_coord.x - folder_tree_rect.left;
+                  auto y = mouse_coord.y - folder_tree_rect.top;
 
-                  auto centre_of_screen_x = (rect.right - rect.left) / 2;
-                  auto centre_of_screen_y = (rect.bottom - rect.top) / 2;
+                  auto centre_of_screen_x = folder_tree_size.cx / 2;
+                  auto centre_of_screen_y = folder_tree_size.cy / 2;
 
                   auto coord              = l::shrink_vector (
                         reverse_transform * vt::create_extended_vector (x, y)
@@ -515,7 +529,7 @@ namespace main_window
                   s_state->centre   = new_centre_of_screen  ;
                   s_state->zoom     = new_zoom              ;
 
-                  PostMessage (hwnd, messages::folder_structure_changed, 0, 0);
+                  invalidate_folder_tree_area (hwnd);
                }
             }
             break;
@@ -650,6 +664,8 @@ namespace main_window
                         sz
                      ,  wc);
 
+                  auto size = calculate_size (rect);
+
                   wc.hwnd = CreateWindowEx (
                      wc.extended_style
                   ,  window_class
@@ -660,8 +676,8 @@ namespace main_window
                      |  WS_TABSTOP
                   ,  rect.left
                   ,  rect.top
-                  ,  rect.right - rect.left
-                  ,  rect.bottom - rect.top
+                  ,  size.cx
+                  ,  size.cy
                   ,  hwnd
                   ,  reinterpret_cast<HMENU> (wc.id)
                   ,  instance

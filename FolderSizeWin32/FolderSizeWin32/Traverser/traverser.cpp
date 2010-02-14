@@ -49,26 +49,29 @@ namespace traverser
       struct job
       {
          job (
-               w::tstring const & path_
-            ,  w::tstring const & name_
-            ,  f::folder const ** folder_replacement_
+               w::tstring const &         path_
+            ,  w::tstring const &         name_
+            ,  f::folder * const          parent_folder_
+            ,  f::folder ** const         replacement_folder_
             )
             :  path                 (path_               )
             ,  name                 (name_               )
-            ,  folder_replacement   (folder_replacement_ )
+            ,  parent_folder        (parent_folder_      )
+            ,  replacement_folder   (replacement_folder_ )
          {
          }
 
          w::tstring           path                 ;
          w::tstring           name                 ;
-         f::folder const **   folder_replacement   ;
+         f::folder *          parent_folder        ;
+         f::folder **         replacement_folder   ;
       };
 
       HWND                       main_hwnd         ;
       b::object_pool<f::folder>  folder_pool       ;
       s::deque<job>              job_queue         ;
       w::tstring const           root_path         ;
-      f::folder const *          root              ;
+      f::folder *                root              ;
       bool volatile              continue_running  ;
       w::thread const            thread            ;     
 
@@ -84,7 +87,7 @@ namespace traverser
          ,  w::tstring const & path
          )
          :  main_hwnd         (main_hwnd_)
-         ,  job_queue         (create_initial_queue (job (path, _T("."), &root)))
+         ,  job_queue         (create_initial_queue (job (path, _T("."), NULL, &root)))
          ,  root_path         (path)
          ,  root              (folder_pool.construct ())
          ,  continue_running  (true)
@@ -122,7 +125,7 @@ namespace traverser
                      w::tstring
                   ,  b::pool_allocator<w::tstring>>  
                                        folder_names      ;
-               unsigned __int64        size           (0);
+               big_size        size           (0);
                std::size_t             file_count     (0);
 
                folder_names.reserve (1024);
@@ -150,7 +153,8 @@ namespace traverser
 
                auto new_folder = folder_pool.construct (
                   f::folder::initializer (
-                        current_job.name
+                        current_job.parent_folder
+                     ,  current_job.name
                      ,  size
                      ,  file_count
                      ,  folder_count));
@@ -164,13 +168,14 @@ namespace traverser
                      job (
                            current_job.path + _T("\\") + folder_name
                         ,  folder_name
+                        ,  new_folder
                         ,  sub_folder_ref
                         ));
                }
 
-               if (current_job.folder_replacement)
+               if (current_job.replacement_folder)
                {
-                  *(current_job.folder_replacement) = new_folder;
+                  *(current_job.replacement_folder) = new_folder;
                }
 
                update_view ();
