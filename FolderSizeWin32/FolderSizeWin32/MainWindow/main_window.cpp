@@ -208,11 +208,24 @@ namespace main_window
          }
          else
          {
-            s::copy (
-                  root_path.begin ()
-               ,  root_path.end ()
-               ,  s::back_inserter (path)
-               );
+            auto find_last_non_slash = root_path.find_last_not_of ( _T("\\/"));
+
+            if (w::tstring::npos == find_last_non_slash)
+            {
+               s::copy (
+                     root_path.begin ()
+                  ,  root_path.end ()
+                  ,  s::back_inserter (path)
+                  );
+            }
+            else
+            {
+               s::copy (
+                     root_path.begin ()
+                  ,  root_path.begin () + find_last_non_slash + 1
+                  ,  s::back_inserter (path)
+                  );
+            }
          }
       }
       // ----------------------------------------------------------------------
