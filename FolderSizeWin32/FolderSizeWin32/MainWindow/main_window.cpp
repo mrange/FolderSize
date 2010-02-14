@@ -321,6 +321,8 @@ namespace main_window
                s_state->painter.do_request (
                      s_state->traverser.get_root ()
                   ,  hwnd
+                  ,  s_state->traverser.get_processed_folder_count ()
+                  ,  s_state->traverser.get_unprocessed_folder_count ()
                   ,  folder_tree_rect
                   ,  s_state->centre
                   ,  s_state->zoom
@@ -378,6 +380,8 @@ namespace main_window
                         s_state->traverser.get_root ()
                      ,  hwnd
                      ,  pdc.hdc
+                     ,  s_state->traverser.get_processed_folder_count ()
+                     ,  s_state->traverser.get_unprocessed_folder_count ()
                      ,  folder_tree_rect
                      ,  s_state->centre
                      ,  s_state->zoom
@@ -394,7 +398,7 @@ namespace main_window
 
                   w::select_object select_font (pdc.hdc, theme::default_big_font.value);
 
-                  TCHAR tip []  = _T("Click Go to start");
+                  auto tip = _T("Click Go to start...");
 
                   SetBkColor (
                         pdc.hdc

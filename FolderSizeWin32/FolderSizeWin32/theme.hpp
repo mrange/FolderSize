@@ -24,6 +24,7 @@ namespace theme
 {
    extern win32::gdi_object<HFONT> const default_font                ;
    extern win32::gdi_object<HFONT> const default_big_font            ;
+   extern win32::gdi_object<HFONT> const default_monospace_font      ;
 
    namespace folder_tree
    {

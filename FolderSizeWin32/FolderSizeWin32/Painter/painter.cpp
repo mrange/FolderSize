@@ -45,7 +45,8 @@ namespace painter
    // -------------------------------------------------------------------------
    namespace
    {
-      const double cut_off_y = 10.0;
+      std::size_t const buffer_size    = 256;
+      double const      cut_off_y      = 10.0;
 
       struct update_request : boost::noncopyable
       {
@@ -55,33 +56,34 @@ namespace painter
                folder::folder const * const  root_
             ,  HWND const                    main_hwnd_
             ,  HDC const                     hdc_
+            ,  std::size_t const             processed_folder_count_
+            ,  std::size_t const             unprocessed_folder_count_
             ,  coordinate const &            centre_        
             ,  zoom_factor const &           zoom_          
             ,  dimension const &             screen_size_   
-            );
+            )
+            :  root                       (root_                           )  
+            ,  main_hwnd                  (main_hwnd_                      )
+            ,  processed_folder_count     (processed_folder_count_         )
+            ,  unprocessed_folder_count   (unprocessed_folder_count_       )
+            ,  centre                     (centre_                         )
+            ,  zoom                       (zoom_                           )
+            ,  bitmap_size                (screen_size_                    )
+            ,  bitmap_planes              (GetDeviceCaps (hdc_, BITSPIXEL) )
+            ,  bitmap_bits                (GetDeviceCaps (hdc_, PLANES)    )
+         {                                
+         }
 
-         folder::folder const * const  root              ;
+         folder::folder const * const  root                    ;
 
-         HWND const                    main_hwnd         ;
-         coordinate const              centre            ;
-         zoom_factor const             zoom              ;
-         dimension const               bitmap_size       ;
-         int const                     bitmap_planes     ;
-         int const                     bitmap_bits       ;
-      };
-
-      struct update_response : boost::noncopyable
-      {
-         typedef std::auto_ptr<update_response> ptr;
-
-         update_response (
-            update_request    &  update_request_
-            );
-
-         coordinate const                 centre            ;
-         zoom_factor const                zoom              ;
-         dimension const                  bitmap_size       ;
-         win32::gdi_object<HBITMAP> const bitmap            ;
+         HWND const                    main_hwnd               ;
+         std::size_t const             processed_folder_count  ;
+         std::size_t const             unprocessed_folder_count;
+         coordinate const              centre                  ;
+         zoom_factor const             zoom                    ;
+         dimension const               bitmap_size             ;
+         int const                     bitmap_planes           ;
+         int const                     bitmap_bits             ;
       };
 
       HBITMAP const create_bitmap (
@@ -102,36 +104,28 @@ namespace painter
                ,  NULL);
       }
 
-      update_request::update_request (
-            folder::folder const * const  root_
-         ,  HWND const                    main_hwnd_
-         ,  HDC const                     hdc_
-         ,  coordinate const &            centre_        
-         ,  zoom_factor const &           zoom_          
-         ,  dimension const &             screen_size_   
-         )
-         :  root           (root_                           )  
-         ,  main_hwnd      (main_hwnd_                      )
-         ,  centre         (centre_                         )
-         ,  zoom           (zoom_                           )
-         ,  bitmap_size    (screen_size_                    )
-         ,  bitmap_planes  (GetDeviceCaps (hdc_, BITSPIXEL) )
-         ,  bitmap_bits    (GetDeviceCaps (hdc_, PLANES)    )
+      struct update_response : boost::noncopyable
       {
-      }
+         typedef std::auto_ptr<update_response> ptr;
 
-      update_response::update_response (
-         update_request    &  update_request_
-         )
-         :  centre      (update_request_.centre             )
-         ,  zoom        (update_request_.zoom               )
-         ,  bitmap_size (update_request_.bitmap_size        )
-         ,  bitmap      (create_bitmap (
-               update_request_.bitmap_planes
-            ,  update_request_.bitmap_bits
-            ,  update_request_.bitmap_size               )  )
-      {
-      }
+         update_response (
+            update_request    &  update_request_
+            )
+            :  centre      (update_request_.centre             )
+            ,  zoom        (update_request_.zoom               )
+            ,  bitmap_size (update_request_.bitmap_size        )
+            ,  bitmap      (create_bitmap (
+                  update_request_.bitmap_planes
+               ,  update_request_.bitmap_bits
+               ,  update_request_.bitmap_size               )  )
+         {
+         }
+
+         coordinate const                 centre            ;
+         zoom_factor const                zoom              ;
+         dimension const                  bitmap_size       ;
+         win32::gdi_object<HBITMAP> const bitmap            ;
+      };
 
       struct painter_context
       {
@@ -163,7 +157,7 @@ namespace painter
          ~background_painter () throw ()
          {
             shutdown_request.set ();
-            thread.join (100000);
+            thread.join (10000);
          }
 
          w::thread_safe_scoped_ptr<update_request>    update_request_value    ;
@@ -335,16 +329,14 @@ namespace painter
             rect.right        = IMPLICIT_CAST (right  )  ;
             rect.bottom       = IMPLICIT_CAST (bottom )  ;
 
-            const std::size_t buffer_size = 128;
-
-            TCHAR value[buffer_size] = {0};
+            TCHAR buffer[buffer_size] = {0};
 
             int cch = 0;
 
             if (total_size > 1E8)
             {
                cch = _snwprintf (
-                     value
+                     buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%.1fG")
                   ,  folder.name.c_str ()
@@ -354,7 +346,7 @@ namespace painter
             else if (total_size > 1E5)
             {
                cch = _snwprintf (
-                     value
+                     buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%.1fM")
                   ,  folder.name.c_str ()
@@ -364,7 +356,7 @@ namespace painter
             else if (total_size > 1E2)
             {
                cch = _snwprintf (
-                     value
+                     buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%.1fk")
                   ,  folder.name.c_str ()
@@ -374,7 +366,7 @@ namespace painter
             else
             {
                cch = _snwprintf (
-                     value
+                     buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%I64d")
                   ,  folder.name.c_str ()
@@ -390,7 +382,7 @@ namespace painter
 
             DrawText (
                   painter_context.hdc
-               ,  value
+               ,  buffer
                ,  cch
                ,  &rect
                ,  DT_WORD_ELLIPSIS
@@ -444,6 +436,50 @@ namespace painter
                            ,  response_ptr->bitmap.value
                            );
 
+                        RECT rect   = {0};
+                        rect.right  = IMPLICIT_CAST (request_ptr->bitmap_size.x ());
+                        rect.bottom = IMPLICIT_CAST (request_ptr->bitmap_size.y ());
+
+                        FillRect (
+                              bitmap_dc.value
+                           ,  &rect
+                           ,  theme::folder_tree::background_brush.value
+                           );
+
+                        {
+                           w::select_object const select_font (
+                                 bitmap_dc.value
+                                 ,  theme::default_monospace_font.value
+                              );
+
+                           SetBkColor (
+                                 bitmap_dc.value
+                              ,  theme::folder_tree::background_color);
+
+                           SetTextColor (
+                                 bitmap_dc.value
+                              ,  theme::folder_tree::folder_background_color);
+
+                           TCHAR buffer [buffer_size * 8] = {0};
+                           auto cch = _snwprintf (
+                                 buffer
+                              ,  buffer_size * 8
+                              ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nTotal file count:%8I64d  \r\nTotal Depth:%8d  ")
+                              ,  request_ptr->unprocessed_folder_count
+                              ,  request_ptr->processed_folder_count
+                              ,  request_ptr->root->get_total_file_count ()
+                              ,  request_ptr->root->get_depth ()
+                              );
+
+                           DrawText (
+                                 bitmap_dc.value
+                              ,  buffer
+                              ,  cch
+                              ,  &rect
+                              , DT_RIGHT
+                              );
+                        }
+
                         w::select_object const select_font (
                               bitmap_dc.value
                            ,  theme::default_font.value
@@ -461,15 +497,6 @@ namespace painter
                               bitmap_dc.value
                            ,  theme::folder_tree::folder_background_brush.value
                            ,  theme::folder_tree::folder_foreground_brush.value
-                           );
-
-                        RECT rect   = {0};
-                        rect.right  = IMPLICIT_CAST (request_ptr->bitmap_size.x ());
-                        rect.bottom = IMPLICIT_CAST (request_ptr->bitmap_size.y ());
-                        FillRect (
-                              bitmap_dc.value
-                           ,  &rect
-                           ,  theme::folder_tree::background_brush.value
                            );
 
                         auto painter_ = [&painter_context] (
@@ -551,6 +578,8 @@ namespace painter
             folder::folder const * const  root
          ,  HWND const                    main_hwnd
          ,  HDC const                     hdc
+         ,  std::size_t const             processed_folder_count
+         ,  std::size_t const             unprocessed_folder_count
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom
@@ -562,13 +591,15 @@ namespace painter
 
          auto request = update_request::ptr (
                new update_request (
-                        root
-                     ,  main_hwnd
-                     ,  hdc
-                     ,  centre
-                     ,  zoom
-                     ,  screen_size
-               ));
+                     root
+                  ,  main_hwnd
+                  ,  hdc
+                  ,  processed_folder_count
+                  ,  unprocessed_folder_count
+                  ,  centre
+                  ,  zoom
+                  ,  screen_size
+                  ));
 
          background_painter.update_request_value.reset (request.release ());
          background_painter.new_frame_request.set ();
@@ -578,6 +609,8 @@ namespace painter
             folder::folder const * const  root
          ,  HWND const                    main_hwnd
          ,  HDC const                     hdc
+         ,  std::size_t const             processed_folder_count
+         ,  std::size_t const             unprocessed_folder_count
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom
@@ -609,6 +642,8 @@ namespace painter
                   root
                ,  main_hwnd
                ,  hdc
+               ,  processed_folder_count
+               ,  unprocessed_folder_count
                ,  rect
                ,  centre
                ,  zoom
@@ -667,6 +702,8 @@ namespace painter
    void painter::do_request (
          folder::folder const * const  root
       ,  HWND const                    main_hwnd
+      ,  std::size_t const             processed_folder_count
+      ,  std::size_t const             unprocessed_folder_count
       ,  RECT const &                  rect   
       ,  coordinate const &            centre
       ,  zoom_factor const &           zoom
@@ -677,6 +714,8 @@ namespace painter
             root
          ,  main_hwnd
          ,  window_dc.hdc
+         ,  processed_folder_count
+         ,  unprocessed_folder_count
          ,  rect   
          ,  centre
          ,  zoom
@@ -686,18 +725,22 @@ namespace painter
 
    // -------------------------------------------------------------------------
    void painter::paint (
-            folder::folder const * const  root
-         ,  HWND const                    main_hwnd
-         ,  HDC const                     hdc
-         ,  RECT const &                  rect   
-         ,  coordinate const &            centre
-         ,  zoom_factor const &           zoom
-         )
+         folder::folder const * const  root
+      ,  HWND const                    main_hwnd
+      ,  HDC const                     hdc
+      ,  std::size_t const             processed_folder_count
+      ,  std::size_t const             unprocessed_folder_count
+      ,  RECT const &                  rect   
+      ,  coordinate const &            centre
+      ,  zoom_factor const &           zoom
+      )
    {
       m_impl->paint (
             root
          ,  main_hwnd
          ,  hdc
+         ,  processed_folder_count
+         ,  unprocessed_folder_count
          ,  rect   
          ,  centre
          ,  zoom
