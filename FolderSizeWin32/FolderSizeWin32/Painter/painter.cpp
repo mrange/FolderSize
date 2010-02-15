@@ -375,7 +375,7 @@ namespace painter
 
             if (total_size > 1E8)
             {
-               cch = _snwprintf (
+               cch = _sntprintf (
                      buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%.1fG")
@@ -385,7 +385,7 @@ namespace painter
             }
             else if (total_size > 1E5)
             {
-               cch = _snwprintf (
+               cch = _sntprintf (
                      buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%.1fM")
@@ -395,7 +395,7 @@ namespace painter
             }
             else if (total_size > 1E2)
             {
-               cch = _snwprintf (
+               cch = _sntprintf (
                      buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%.1fk")
@@ -405,7 +405,7 @@ namespace painter
             }
             else
             {
-               cch = _snwprintf (
+               cch = _sntprintf (
                      buffer
                   ,  buffer_size
                   ,  _T ("%s\r\n%I64d")
@@ -504,7 +504,7 @@ namespace painter
                               );
 
                            TCHAR buffer [buffer_size * 8] = {0};
-                           auto cch = _snwprintf (
+                           auto cch = _sntprintf (
                                  buffer
                               ,  buffer_size * 8
                               ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nTotal file count:%8I64d  \r\nTotal Depth:%8d  ")

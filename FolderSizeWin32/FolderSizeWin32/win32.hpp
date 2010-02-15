@@ -44,7 +44,7 @@ namespace win32
    struct handle : boost::noncopyable
    {
       explicit handle (HANDLE const hnd) throw ();
-      handle (const handle &&);
+      handle (handle const &&);
       ~handle () throw ();
       bool const is_valid () const throw ();
 
@@ -72,7 +72,7 @@ namespace win32
          :  value (reinterpret_cast<TFunctionPtr> (GetProcAddress (module, function_name)))
       {
       }
-      function_pointer (const function_pointer &&);
+      function_pointer (function_pointer const &&);
 
       bool const is_valid () const throw ()
       {
@@ -90,7 +90,7 @@ namespace win32
       thread (
             tstring const & thread_name
          ,  proc const del);
-      thread (const thread &&);
+      thread (thread const &&);
 
       bool const join (unsigned int const ms) const throw ();
       bool const is_terminated () const throw ();
@@ -110,7 +110,7 @@ namespace win32
    struct find_file : boost::noncopyable
    {
       explicit find_file (tstring const & path);
-      find_file (const find_file &&);
+      find_file (find_file const &&);
 
       bool const is_valid () const throw ();
       bool const find_next () throw ();
@@ -171,7 +171,7 @@ namespace win32
    struct event : boost::noncopyable
    {
       explicit event (event_type::type const event_type);
-      event (const event &&);
+      event (event const &&);
 
       void set () throw ();
 
@@ -183,7 +183,7 @@ namespace win32
    struct paint_device_context : boost::noncopyable
    {
       explicit paint_device_context (HWND const hwnd) throw ();
-      paint_device_context (const paint_device_context &&);
+      paint_device_context (paint_device_context const &&);
       ~paint_device_context () throw ();
 
       PAINTSTRUCT const paint_struct   ;
@@ -196,7 +196,7 @@ namespace win32
    struct window_device_context : boost::noncopyable
    {
       explicit window_device_context (HWND const hwnd) throw ();
-      window_device_context (const window_device_context &&);
+      window_device_context (window_device_context const &&);
       ~window_device_context () throw ();
 
       HWND const  hwnd;
@@ -208,7 +208,7 @@ namespace win32
    struct device_context : boost::noncopyable
    {
       explicit device_context (HDC const dc) throw ();
-      device_context (const device_context &&);
+      device_context (device_context const &&);
       ~device_context () throw ();
 
       HDC const value;
@@ -242,7 +242,7 @@ namespace win32
    struct select_object : boost::noncopyable
    {
       select_object (HDC const dc, HGDIOBJ obj) throw ();
-      select_object (const select_object &&);
+      select_object (select_object const &&);
       ~select_object () throw ();
 
       HDC const      dc                         ;
@@ -254,7 +254,7 @@ namespace win32
    struct set_world_transform : boost::noncopyable 
    {
       set_world_transform (HDC const dc, XFORM const * const transform) throw ();
-      set_world_transform (const set_world_transform &&);
+      set_world_transform (set_world_transform const &&);
       ~set_world_transform () throw ();
 
       HDC const      dc                         ;

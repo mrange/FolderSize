@@ -76,7 +76,7 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      //typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaPtr)(HWND, const MARGINS*);
+      //typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaPtr)(HWND, MARGINS const *);
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -142,6 +142,7 @@ namespace main_window
 
       // ----------------------------------------------------------------------
       HINSTANCE            s_instance                             = NULL;
+      HWND                 s_main_window                          = {0};
       TCHAR                s_window_class    []                   = _T ("FOLDERSIZEWIN32");
       TCHAR                s_title           [max_load_string]  = {0};
       child_window         s_child_window    []                   =
@@ -169,8 +170,19 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      namespace iteration_control
+      {
+         enum type
+         {
+            continue_   ,
+            break_      ,
+         };
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       template<typename TPredicate>
-      void for_all_child_windows (TPredicate const predicate)
+      iteration_control::type const for_all_child_windows (TPredicate const predicate)
       {
          for (int iter = 0; ; ++iter)
          {
@@ -178,17 +190,65 @@ namespace main_window
 
             if (wc.window_type == window_type::terminator)
             {
-               return;
+               return iteration_control::continue_;
             }
 
-            predicate (wc);
+            if (predicate (wc) == iteration_control::break_)
+            {
+               return iteration_control::break_;
+            }
          }
       }
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
       template<typename TPredicate>
-      int find_child_window (TPredicate const predicate)
+      iteration_control::type const for_all_child_windows (
+            int const start_index
+         ,  TPredicate const predicate)
+      {
+         if (start_index < 0)
+         {
+            return iteration_control::break_;
+         }
+
+         auto iter = start_index;
+
+         if (s_child_window[iter].window_type == window_type::terminator)
+         {
+            iter = 0;
+         }
+
+         if (s_child_window[iter].window_type == window_type::terminator)
+         {
+            return iteration_control::break_;
+         }
+
+         do
+         {
+            child_window & wc = s_child_window[iter];
+
+            if (predicate (wc) == iteration_control::break_)
+            {
+               return iteration_control::break_;
+            }
+
+            ++iter;
+
+            if (s_child_window[iter].window_type == window_type::terminator)
+            {
+               iter = 0;
+            }
+         }
+         while (start_index != iter);
+
+         return iteration_control::continue_;
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      template<typename TPredicate>
+      int const find_child_window (TPredicate const predicate)
       {
          for (int iter = 0; ; ++iter)
          {
@@ -326,7 +386,7 @@ namespace main_window
          SIZE sz = get_client_size (hwnd);
 
          for_all_child_windows (
-            [&sz] (child_window & wc)
+            [&sz] (child_window const & wc) -> iteration_control::type
             {
                auto child_window = wc.hwnd;
                
@@ -346,6 +406,8 @@ namespace main_window
                      ,  rect.bottom    - rect.top
                      ,  SWP_NOACTIVATE | SWP_NOZORDER );
                }
+
+               return iteration_control::continue_;
             });
       }
       // ----------------------------------------------------------------------
@@ -407,14 +469,19 @@ namespace main_window
                auto wmId    = LOWORD (wParam);
                auto wmEvent = HIWORD (wParam);
                // Parse the menu selections:
+               
+               TCHAR buffer[max_load_string] = {0};
+               _sntprintf (
+                     buffer
+                  ,  max_load_string
+                  ,  _T("WM_COMMAND: %d, %d")
+                  ,  wmId
+                  ,  wmEvent);
+
+               w::output_debug_string (buffer);
+
                switch (wmId)
                {
-               //case IDM_ABOUT:
-               //   DialogBox (hInst, MAKEINTRESOURCE (IDD_ABOUTBOX), hwnd, About);
-               //   break;
-               //case IDM_EXIT:
-               //   DestroyWindow (hwnd);
-               //   break;
                case IDM_GO_PAUSE:
                   {
                      auto const path_hwnd = GetDlgItem (hwnd, IDM_PATH);
@@ -455,6 +522,8 @@ namespace main_window
                            ,  SW_SHOWNORMAL);
                      }
                   }
+                  break;
+               case IDM_PATH:
                   break;
                default:
                   return DefWindowProc (hwnd, message, wParam, lParam);
@@ -708,8 +777,6 @@ namespace main_window
       // ----------------------------------------------------------------------
       bool init_instance (HINSTANCE const instance, int const command_show)
       {
-         HWND hwnd   = {0};
-
          INITCOMMONCONTROLSEX InitCtrls = {0};
       	InitCtrls.dwSize = sizeof(InitCtrls);
          InitCtrls.dwICC = ICC_WIN95_CLASSES;
@@ -717,7 +784,7 @@ namespace main_window
 
          s_instance = instance; // Store instance handle in our global variable
 
-         hwnd = CreateWindowEx (
+         s_main_window = CreateWindowEx (
                WS_EX_APPWINDOW | WS_EX_COMPOSITED /*| WS_EX_LAYERED*/
             ,  s_window_class
             ,  s_title
@@ -734,13 +801,13 @@ namespace main_window
             ,  NULL
             );
 
-         if (!hwnd)
+         if (!s_main_window)
          {
             return false;
          }
 
          SendMessage (
-               hwnd
+               s_main_window
             ,  WM_SETFONT
             ,  reinterpret_cast<WPARAM> (theme::default_font.value)
             ,  FALSE);
@@ -760,10 +827,10 @@ namespace main_window
          //   UNUSED_VARIABLE (extend_frame_result);
          //}
 
-         auto sz = get_client_size (hwnd);
+         auto sz = get_client_size (s_main_window);
 
          for_all_child_windows (
-            [hwnd,instance, sz] (child_window & wc)
+            [instance, sz] (child_window & wc) -> iteration_control::type
             {
                LPCTSTR window_class = NULL;
 
@@ -812,7 +879,7 @@ namespace main_window
                   ,  rect.top
                   ,  size.cx
                   ,  size.cy
-                  ,  hwnd
+                  ,  s_main_window
                   ,  reinterpret_cast<HMENU> (wc.id)
                   ,  instance
                   ,  NULL
@@ -824,26 +891,35 @@ namespace main_window
                   ,  reinterpret_cast<WPARAM> (theme::default_font.value)
                   ,  FALSE);
                }
+
+               return iteration_control::continue_;
             });
 
          TCHAR known_folder_path[MAX_PATH] = {0};
 
          auto get_folder_hr = SHGetFolderPath (
-               hwnd
+               s_main_window
             ,  CSIDL_PERSONAL
             ,  NULL
             ,  SHGFP_TYPE_CURRENT 
             ,  known_folder_path
             );
 
-         auto path_hwnd = GetDlgItem (hwnd, IDM_PATH);
+         auto path_hwnd = GetDlgItem (s_main_window, IDM_PATH);
 
          if (SUCCEEDED (get_folder_hr) && path_hwnd)
          {
             SetWindowText (path_hwnd, known_folder_path);
          }
 
-         ShowWindow (hwnd, command_show);
+         SendMessage (
+               s_main_window
+            ,  WM_CHANGEUISTATE
+            ,  UIS_SET | UISF_HIDEACCEL << 16
+            ,  0
+            );
+
+         ShowWindow (s_main_window, command_show);
 
          return true;
       }
@@ -884,7 +960,103 @@ namespace main_window
       // Main message loop:
       while (GetMessage (&msg, NULL, 0, 0))
       {
-         if (!TranslateAccelerator (msg.hwnd, accelerator_table, &msg))
+         switch(msg.message)
+         {
+         case WM_TIMER:
+         case WM_MOUSEMOVE:
+            break;
+         default:
+            TCHAR buffer[max_load_string] = {0};
+            _sntprintf (
+                  buffer
+               ,  max_load_string
+               ,  _T("WM: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+               ,  msg.hwnd
+               ,  msg.message
+               ,  msg.wParam
+               ,  msg.lParam
+               );
+            w::output_debug_string (buffer);
+            break;
+         }
+
+         auto process_message = true;
+
+         switch(msg.message)
+         {
+         case WM_SYSKEYDOWN:
+            switch (msg.wParam)
+            {
+            case VK_MENU:
+               {
+                  SendMessage (
+                        s_main_window
+                     ,  WM_CHANGEUISTATE
+                     ,  UIS_INITIALIZE | UISF_HIDEACCEL << 16
+                     ,  0
+                     );
+                  break;
+               }
+            }
+            break;
+         case WM_SYSKEYUP:
+            switch (msg.wParam)
+            {
+            case VK_MENU:
+               {
+                  SendMessage (
+                        s_main_window
+                     ,  WM_CHANGEUISTATE
+                     ,  UIS_SET | UISF_HIDEACCEL << 16
+                     ,  0
+                     );
+                  break;
+               }
+            }
+            break;
+         case WM_KEYDOWN:
+            break;
+         case WM_KEYUP:
+            switch (msg.wParam)
+            {
+            case VK_TAB:
+               {
+                  auto index = find_child_window (
+                     [&msg] (child_window const & wc)
+                     {
+                        return wc.hwnd == msg.hwnd;
+                     });
+
+                  for_all_child_windows (
+                        index + 1
+                     ,  [] (child_window const & wc) -> iteration_control::type
+                        {
+                           switch (wc.window_type)
+                           {
+                           case window_type::nowindow:
+                           case window_type::static_:
+                           case window_type::terminator:
+                              return iteration_control::continue_;
+                           default:
+                              SetFocus (wc.hwnd);
+                              return iteration_control::break_;
+                           }
+                        });
+
+                  SendMessage (
+                        s_main_window
+                     ,  WM_CHANGEUISTATE
+                     ,  UIS_INITIALIZE | UISF_HIDEFOCUS << 16
+                     ,  0
+                     );
+                  process_message = false;
+               }
+               break;
+            }
+            break;
+         }
+
+         if (process_message && !TranslateAccelerator (msg.hwnd, accelerator_table, &msg))
          {
             TranslateMessage (&msg);
             DispatchMessage (&msg);
