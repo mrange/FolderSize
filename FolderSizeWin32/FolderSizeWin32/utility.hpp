@@ -22,6 +22,8 @@
 // ----------------------------------------------------------------------------
 #define UNUSED_VARIABLE(expr) expr
 #define IMPLICIT_CAST(expr) (utility::implicit_cast (expr))
+#define IS_ON utility::is_on
+#define IS_OFF utility::is_off
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
@@ -97,6 +99,20 @@ namespace utility
       )
    {
       return implicit_cast_helper<TValueType> (value);
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   template<typename TLeft, typename TRight>
+   bool const is_on (TLeft const & bits, TRight const & comparand)
+   {
+      return (bits & static_cast<TLeft> (comparand)) == static_cast<TLeft> (comparand);
+   }
+
+   template<typename TLeft, typename TRight>
+   bool const is_off (TLeft const & bits, TRight const & comparand)
+   {
+      return (bits & static_cast<TLeft> (comparand)) == 0;
    }
    // -------------------------------------------------------------------------
 }

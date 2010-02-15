@@ -217,16 +217,6 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t rows_>
-   vector<value_type_, rows_> const operator+ (
-         vector<value_type_, rows_> && left
-      ,  vector<value_type_, rows_> const && right
-      )
-   {
-      left += right;
-      return left;
-   }
-
-   template<typename value_type_, std::size_t rows_>
    vector<value_type_, rows_> const operator-= (
          vector<value_type_, rows_> & left
       ,  vector<value_type_, rows_> const & right
@@ -251,15 +241,6 @@ namespace linear
       return v;
    }
 
-   template<typename value_type_, std::size_t rows_>
-   vector<value_type_, rows_> const operator- (
-         vector<value_type_, rows_> && left
-      ,  vector<value_type_, rows_> const && right
-      )
-   {
-      left -= right;
-      return left;
-   }
    // -------------------------------------------------------------------------
 
 
@@ -333,7 +314,7 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
-   matrix<value_type_, rows_, columns_> const operator+= (
+   matrix<value_type_, rows_, columns_> & operator+= (
          matrix<value_type_, rows_, columns_> & left
       ,  matrix<value_type_, rows_, columns_> const & right
       )
@@ -347,7 +328,7 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
-   matrix<value_type_, rows_, columns_> const operator+ (
+   matrix<value_type_, rows_, columns_> operator+ (
          matrix<value_type_, rows_, columns_> const & left
       ,  matrix<value_type_, rows_, columns_> const & right
       )
@@ -358,17 +339,7 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
-   matrix<value_type_, rows_, columns_> const operator+ (
-         matrix<value_type_, rows_, columns_> && left
-      ,  matrix<value_type_, rows_, columns_> const && right
-      )
-   {
-      left += right;
-      return left;
-   }
-
-   template<typename value_type_, std::size_t rows_, std::size_t columns_>
-   matrix<value_type_, rows_, columns_> const operator-= (
+   matrix<value_type_, rows_, columns_> & operator-= (
          matrix<value_type_, rows_, columns_> & left
       ,  matrix<value_type_, rows_, columns_> const & right
       )
@@ -382,7 +353,7 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
-   matrix<value_type_, rows_, columns_> const operator- (
+   matrix<value_type_, rows_, columns_> operator- (
          matrix<value_type_, rows_, columns_> const & left
       ,  matrix<value_type_, rows_, columns_> const & right
       )
@@ -390,16 +361,6 @@ namespace linear
       auto m = left;
       m -= right;
       return m;
-   }
-
-   template<typename value_type_, std::size_t rows_, std::size_t columns_>
-   matrix<value_type_, rows_, columns_> const operator- (
-         matrix<value_type_, rows_, columns_> && left
-      ,  matrix<value_type_, rows_, columns_> const && right
-      )
-   {
-      left -= right;
-      return left;
    }
 
    template<typename value_type_, std::size_t left_rows_, std::size_t shared_dimension_, std::size_t right_columns_>

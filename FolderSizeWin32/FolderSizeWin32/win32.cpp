@@ -40,11 +40,13 @@ namespace win32
 
    void output_debug_string (LPCTSTR const value)
    {
+#ifdef _DEBUG
       if (value)
       {
          OutputDebugString (value);
       }
       OutputDebugString (_T ("\r\n"));
+#endif
    }
 
    tstring const get_window_text (HWND const hwnd)
@@ -368,7 +370,10 @@ namespace win32
       
       if (system_parameters_info_result)
       {
-         non_client_metrics.lfMessageFont.lfHeight = height;
+         if (height != 0)
+         {
+            non_client_metrics.lfMessageFont.lfHeight = height;
+         }
          return gdi_object<HFONT> (
             CreateFontIndirect (
                &non_client_metrics.lfMessageFont));
