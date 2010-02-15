@@ -225,6 +225,11 @@ namespace win32
       }
       gdi_object (gdi_object const &&);
 
+      bool const is_valid () const throw ()
+      {
+         return value != NULL;
+      }
+
       ~gdi_object () throw ()
       {
          if (value)
@@ -267,6 +272,10 @@ namespace win32
    // -------------------------------------------------------------------------
    gdi_object<HFONT> const create_standard_message_font (int const height);
    gdi_object<HFONT> const create_standard_message_font ();
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   gdi_object<HBITMAP> const load_bitmap_resource (int resource_id);
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------

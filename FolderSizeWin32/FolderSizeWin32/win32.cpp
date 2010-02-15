@@ -392,6 +392,16 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   gdi_object<HBITMAP> const load_bitmap_resource (int resource_id)
+   {
+      return gdi_object<HBITMAP> (
+         LoadBitmap (
+               GetModuleHandle (NULL)
+            ,  MAKEINTRESOURCE (resource_id)));
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    bool const is_inside (RECT const & rect, POINT const & point)
    {
       return 
