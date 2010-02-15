@@ -419,7 +419,6 @@ namespace main_window
                hwnd
             ,  s_folder_tree
             );
-         UNUSED_VARIABLE (rect);
 
          auto result = InvalidateRect (
                hwnd
@@ -438,6 +437,8 @@ namespace main_window
          ,  LPARAM const   lParam
          )
       {
+         auto sz = get_client_size (hwnd);
+
          auto folder_tree_rect = calculate_window_coordinate (
                hwnd
             ,  s_folder_tree
@@ -462,6 +463,13 @@ namespace main_window
                   ,  s_state->centre
                   ,  s_state->zoom
                   );
+            }
+            break;
+         case WM_CTLCOLORSTATIC:
+            {
+               auto hdc = reinterpret_cast<HDC> (wParam);
+               SetBkMode (hdc, TRANSPARENT);
+               return (LRESULT)(HBRUSH)GetStockObject(NULL_BRUSH);
             }
             break;
          case WM_COMMAND:
@@ -576,6 +584,66 @@ namespace main_window
                      ,  DT_VCENTER | DT_CENTER | DT_SINGLELINE
                      );
 
+               }
+
+               {
+                  TRIVERTEX vertex[2] = {0};
+                  vertex[0].x     = 0;
+                  vertex[0].y     = 0;
+                  vertex[0].Red   = 0xF000;
+                  vertex[0].Green = 0xF000;
+                  vertex[0].Blue  = 0xF000;
+                  vertex[0].Alpha = 0xFF00;
+
+                  vertex[1].x     = sz.cx;
+                  vertex[1].y     = folder_tree_rect.top;
+                  vertex[1].Red   = 0xCC00;
+                  vertex[1].Green = 0xCC00;
+                  vertex[1].Blue  = 0xCC00;
+                  vertex[1].Alpha = 0xFF00;
+
+                  GRADIENT_RECT gRect = {0};
+                  gRect.UpperLeft  = 0;
+                  gRect.LowerRight = 1;
+
+                  GdiGradientFill (
+                        pdc.hdc
+                     ,  vertex
+                     ,  2
+                     ,  &gRect
+                     ,  1
+                     ,  GRADIENT_FILL_RECT_V
+                     );
+               }
+
+               {
+                  TRIVERTEX vertex[2] = {0};
+                  vertex[0].x     = 0;
+                  vertex[0].y     = folder_tree_rect.bottom;
+                  vertex[0].Red   = 0xF000;
+                  vertex[0].Green = 0xF000;
+                  vertex[0].Blue  = 0xF000;
+                  vertex[0].Alpha = 0xFF00;
+
+                  vertex[1].x     = sz.cx;
+                  vertex[1].y     = sz.cy;
+                  vertex[1].Red   = 0xCC00;
+                  vertex[1].Green = 0xCC00;
+                  vertex[1].Blue  = 0xCC00;
+                  vertex[1].Alpha = 0xFF00;
+
+                  GRADIENT_RECT gRect = {0};
+                  gRect.UpperLeft  = 0;
+                  gRect.LowerRight = 1;
+
+                  GdiGradientFill (
+                        pdc.hdc
+                     ,  vertex
+                     ,  2
+                     ,  &gRect
+                     ,  1
+                     ,  GRADIENT_FILL_RECT_V
+                     );
                }
             }
             break;
