@@ -102,16 +102,17 @@ namespace main_window
          window_type::type    window_type;
          DWORD                style;
          DWORD                extended_style;
-         LPCTSTR              title;
 
          HWND                 hwnd;
       };
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      int const            s_max_load_string                      = 100;
-      vt::vector const     s_start_centre                         = vt::create_vector (0.00,0.00);
-      vt::vector const     s_start_zoom                           = vt::create_vector (0.99,0.99);
+      int const            max_load_string                        = 128;
+      int const            la                                     = 0x00000000;
+      int const            ra                                     = 0x80000000;
+      vt::vector const     start_centre                           = vt::create_vector (0.00,0.00);
+      vt::vector const     start_zoom                             = vt::create_vector (0.99,0.99);
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -131,8 +132,8 @@ namespace main_window
                HWND const           main_hwnd
             ,  w::tstring const &   path
             )
-            :  centre         (s_start_centre      )
-            ,  zoom           (s_start_zoom        )
+            :  centre         (start_centre      )
+            ,  zoom           (start_zoom        )
             ,  traverser      (main_hwnd  , path   )
          {
          }
@@ -141,16 +142,16 @@ namespace main_window
 
       // ----------------------------------------------------------------------
       HINSTANCE            s_instance                             = NULL;
-      TCHAR                s_title           [s_max_load_string]  = {0};
-      TCHAR                s_window_class    [s_max_load_string]  = {0};
+      TCHAR                s_window_class    []                   = _T ("FOLDERSIZEWIN32");
+      TCHAR                s_title           [max_load_string]  = {0};
       child_window         s_child_window    []                   =
       {
-         {  IDM_GO_PAUSE   , 8      , 8   , 8 + 104   , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  , _T ("&Go")                                                            },
-         {  IDM_STOP       , 120    , 8   , 120 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T ("&Stop")                                                          },
-         {  IDM_BROWSE     , 210    , 8   , 210 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  , _T ("Bro&wse")                                                        },
-         {  IDM_PATH       , 300    , 11  , -8        , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  , _T ("C:\\Windows")                                                    },
-         {  IDM_FOLDERTREE , 0      , 48  , -1        , -22    , window_type::nowindow , 0                  ,  0  , _T ("")                                                               },
-         {  0              , 8      , -22 , -8        , -1     , window_type::static_  , SS_CENTER          ,  0  , _T ("FolderSize.Win32 © Mårten Rånge 2010 - foldersize.codeplex.com") },
+         {  IDM_GO_PAUSE   , 8      , 8         , 8 + 104   , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  },
+         {  IDM_STOP       , 120    , 8         , 120 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  },
+         {  IDM_BROWSE     , 210    , 8         , 210 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  },
+         {  IDM_PATH       , 300    , 11        , ra | 8    , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  },
+         {  IDM_FOLDERTREE , 0      , 48        , ra | 0    , ra | 22, window_type::nowindow , 0                  ,  0  },
+         {  IDM_INFO       , 8      , ra | 22   , ra | 8    , ra | 0 , window_type::static_  , SS_CENTER          ,  0  },
          {0},
       };
 
@@ -168,8 +169,8 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      typedef st::function<void (child_window&)>  child_window_predicate;
-      void for_all_child_windows (child_window_predicate const predicate)
+      template<typename TPredicate>
+      void for_all_child_windows (TPredicate const predicate)
       {
          for (int iter = 0; ; ++iter)
          {
@@ -181,6 +182,27 @@ namespace main_window
             }
 
             predicate (wc);
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      template<typename TPredicate>
+      int find_child_window (TPredicate const predicate)
+      {
+         for (int iter = 0; ; ++iter)
+         {
+            child_window & wc = s_child_window[iter];
+
+            if (wc.window_type == window_type::terminator)
+            {
+               return -1;
+            }
+
+            if (predicate (wc))
+            {
+               return iter;
+            }
          }
       }
       // ----------------------------------------------------------------------
@@ -261,9 +283,9 @@ namespace main_window
       {
          auto calculate_coord = [] (int c, int rc) -> int
          {
-            if (c < 0)
+            if ((c & ra) == ra)
             {
-               return rc + c;
+               return rc - (c & ~ra);
             }
             else
             {
@@ -584,8 +606,8 @@ namespace main_window
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
-                  s_state->centre   = s_start_centre  ;
-                  s_state->zoom     = s_start_zoom    ;
+                  s_state->centre   = start_centre  ;
+                  s_state->zoom     = start_zoom    ;
 
                   invalidate_folder_tree_area (hwnd);
                }
@@ -672,7 +694,7 @@ namespace main_window
          wcex.cbClsExtra      = 0;
          wcex.cbWndExtra      = 0;
          wcex.hInstance       = instance;
-         wcex.hIcon           = LoadIcon (instance, MAKEINTRESOURCE (IDI_FOLDERSIZEWIN32));
+         wcex.hIcon           = LoadIcon (instance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
          wcex.hCursor         = LoadCursor (NULL, IDC_ARROW);
          wcex.hbrBackground   = (HBRUSH)(COLOR_WINDOW + 0);
          wcex.lpszMenuName    = NULL;
@@ -769,10 +791,19 @@ namespace main_window
 
                   auto size = calculate_size (rect);
 
+                  TCHAR buffer[max_load_string]  = {0};
+
+                  LoadString (
+                        instance
+                     ,  wc.id
+                     ,  buffer
+                     ,  max_load_string
+                     );
+
                   wc.hwnd = CreateWindowEx (
                      wc.extended_style
                   ,  window_class
-                  ,  wc.title
+                  ,  buffer
                   ,     wc.style 
                      |  WS_CHILD 
                      |  WS_VISIBLE
@@ -839,8 +870,7 @@ namespace main_window
       HACCEL accelerator_table   = { 0 };
 
       // Initialize global strings
-      LoadString (instance, IDS_APP_TITLE, s_title, s_max_load_string);
-      LoadString (instance, IDC_FOLDERSIZEWIN32, s_window_class, s_max_load_string);
+      LoadString (instance, IDC_FOLDERSIZEWIN32, s_title, max_load_string);
       register_window_class (instance);
 
       // Perform application initialization:
@@ -849,7 +879,7 @@ namespace main_window
          return FALSE;
       }
 
-      accelerator_table = LoadAccelerators (instance, MAKEINTRESOURCE (IDR_ACCELERATOR));
+      accelerator_table = LoadAccelerators (instance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
 
       // Main message loop:
       while (GetMessage (&msg, NULL, 0, 0))
