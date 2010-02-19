@@ -38,6 +38,9 @@
 #include "../view_transform.hpp"
 #include "../win32.hpp"
 // ----------------------------------------------------------------------------
+#undef max
+#undef min
+// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 #pragma comment(lib, "comctl32.lib")
@@ -84,7 +87,6 @@ namespace main_window
       {
          enum type
          {
-            terminator = 0 ,
             nowindow       ,
             static_        ,
             button         ,
@@ -153,7 +155,6 @@ namespace main_window
          {  IDM_PATH       , 300    , 11        , ra | 8    , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  },
          {  IDM_FOLDERTREE , 0      , 48        , ra | 0    , ra | 22, window_type::nowindow , 0                  ,  0  },
          {  IDM_INFO       , 8      , ra | 22   , ra | 8    , ra | 0 , window_type::static_  , SS_CENTER          ,  0  },
-         {0},
       };
 
       child_window &       s_folder_tree                          = s_child_window[4];
@@ -181,17 +182,21 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      template<typename T>
+      int const size_of_array (T const & a)
+      {
+         return sizeof (a) / sizeof (a[0]);
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       template<typename TPredicate>
       iteration_control::type const for_all_child_windows (TPredicate const predicate)
       {
-         for (int iter = 0; ; ++iter)
+         auto size = size_of_array (s_child_window);
+         for (auto iter = 0; iter < size; ++iter)
          {
             child_window & wc = s_child_window[iter];
-
-            if (wc.window_type == window_type::terminator)
-            {
-               return iteration_control::continue_;
-            }
 
             if (predicate (wc) == iteration_control::break_)
             {
@@ -203,26 +208,15 @@ namespace main_window
 
       // ----------------------------------------------------------------------
       template<typename TPredicate>
-      iteration_control::type const for_all_child_windows (
-            int const start_index
+      iteration_control::type const circle_child_windows (
+            bool const forward
+         ,  int const start_index
          ,  TPredicate const predicate)
       {
-         if (start_index < 0)
-         {
-            return iteration_control::break_;
-         }
+         auto size = size_of_array (s_child_window);
+         auto increment = forward ? 1 : -1;
 
-         auto iter = start_index;
-
-         if (s_child_window[iter].window_type == window_type::terminator)
-         {
-            iter = 0;
-         }
-
-         if (s_child_window[iter].window_type == window_type::terminator)
-         {
-            return iteration_control::break_;
-         }
+         auto iter = start_index % size;
 
          do
          {
@@ -233,12 +227,7 @@ namespace main_window
                return iteration_control::break_;
             }
 
-            ++iter;
-
-            if (s_child_window[iter].window_type == window_type::terminator)
-            {
-               iter = 0;
-            }
+            iter = (iter + increment) % size;
          }
          while (start_index != iter);
 
@@ -250,20 +239,17 @@ namespace main_window
       template<typename TPredicate>
       int const find_child_window (TPredicate const predicate)
       {
-         for (int iter = 0; ; ++iter)
+         int size = size_of_array (s_child_window);
+         for (int iter = 0; iter < size; ++iter)
          {
             child_window & wc = s_child_window[iter];
-
-            if (wc.window_type == window_type::terminator)
-            {
-               return -1;
-            }
 
             if (predicate (wc))
             {
                return iter;
             }
          }
+         return -1;
       }
       // ----------------------------------------------------------------------
 
@@ -430,6 +416,44 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      void gradient_fill (
+            HDC const hdc
+         ,  RECT const & rect
+         ,  COLORREF const top_color
+         ,  COLORREF const bottom_color
+         )
+      {
+            TRIVERTEX vertex[2] = {0};
+            vertex[0].x     = rect.left;
+            vertex[0].y     = rect.top;
+            vertex[0].Red   = GetRValue (top_color) << 8;
+            vertex[0].Green = GetGValue (top_color) << 8;
+            vertex[0].Blue  = GetBValue (top_color) << 8;
+            vertex[0].Alpha = 0xFF00;
+
+            vertex[1].x     = rect.right;
+            vertex[1].y     = rect.bottom;
+            vertex[1].Red   = GetRValue (bottom_color) << 8;
+            vertex[1].Green = GetGValue (bottom_color) << 8;
+            vertex[1].Blue  = GetBValue (bottom_color) << 8;
+            vertex[1].Alpha = 0xFF00;
+
+            GRADIENT_RECT gRect = {0};
+            gRect.UpperLeft  = 0;
+            gRect.LowerRight = 1;
+
+            GdiGradientFill (
+                  hdc
+               ,  vertex
+               ,  2
+               ,  &gRect
+               ,  1
+               ,  GRADIENT_FILL_RECT_V
+               );
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       LRESULT CALLBACK window_process (
             HWND const     hwnd
          ,  UINT const     message
@@ -437,14 +461,37 @@ namespace main_window
          ,  LPARAM const   lParam
          )
       {
-         auto sz = get_client_size (hwnd);
+         switch(message)
+         {
+         case WM_TIMER:
+         case WM_MOUSEMOVE:
+         case WM_PAINT:
+            break;
+         default:
+            TCHAR buffer[max_load_string] = {0};
+            _sntprintf (
+                  buffer
+               ,  max_load_string
+               ,  _T("WM2: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+               ,  hwnd
+               ,  message
+               ,  wParam
+               ,  lParam
+               );
+            w::output_debug_string (buffer);
+            break;
+         }
+
+         auto sz           = get_client_size (hwnd);
+         LRESULT l_result  = 0;
 
          auto folder_tree_rect = calculate_window_coordinate (
                hwnd
             ,  s_folder_tree
             );
 
-         auto folder_tree_size = calculate_size (folder_tree_rect);
+         auto do_default_proc    = false;
+         auto folder_tree_size   = calculate_size (folder_tree_rect);
 
          switch (message)
          {
@@ -469,7 +516,15 @@ namespace main_window
             {
                auto hdc = reinterpret_cast<HDC> (wParam);
                SetBkMode (hdc, TRANSPARENT);
-               return (LRESULT)(HBRUSH)GetStockObject(NULL_BRUSH);
+               l_result = (LRESULT)(HBRUSH)GetStockObject(NULL_BRUSH);
+               break;
+            }
+            break;
+         case WM_CTLCOLORBTN:
+            {
+               auto hdc = reinterpret_cast<HDC> (wParam);
+               l_result = (LRESULT)theme::background_brush.value;
+               break;
             }
             break;
          case WM_COMMAND:
@@ -533,8 +588,41 @@ namespace main_window
                   break;
                case IDM_PATH:
                   break;
+               case IDM_NEXT_CONTROL:
+                  {
+                     auto focus_hwnd = GetFocus ();
+                     auto index = find_child_window (
+                        [focus_hwnd] (child_window const & wc)
+                        {
+                           return wc.hwnd == focus_hwnd;
+                        });
+
+                     circle_child_windows (
+                           true
+                        ,  index + 1
+                        ,  [] (child_window const & wc) -> iteration_control::type
+                           {
+                              switch (wc.window_type)
+                              {
+                              case window_type::nowindow:
+                              case window_type::static_:
+                                 return iteration_control::continue_;
+                              default:
+                                 SetFocus (wc.hwnd);
+                                 return iteration_control::break_;
+                              }
+                           });
+
+                     //SendMessage (
+                     //      s_main_window
+                     //   ,  WM_CHANGEUISTATE
+                     //   ,  UIS_INITIALIZE | UISF_HIDEFOCUS << 16
+                     //   ,  0
+                     //   );
+                  }
                default:
-                  return DefWindowProc (hwnd, message, wParam, lParam);
+                  do_default_proc = true;
+                  break;
                }
             }
             break;
@@ -587,64 +675,35 @@ namespace main_window
                }
 
                {
-                  TRIVERTEX vertex[2] = {0};
-                  vertex[0].x     = 0;
-                  vertex[0].y     = 0;
-                  vertex[0].Red   = 0xF000;
-                  vertex[0].Green = 0xF000;
-                  vertex[0].Blue  = 0xF000;
-                  vertex[0].Alpha = 0xFF00;
+                  RECT rect = {0};
+                  rect.left      = 0;
+                  rect.top       = 0;
+                  rect.right     = sz.cx;
+                  rect.bottom    = folder_tree_rect.top;
 
-                  vertex[1].x     = sz.cx;
-                  vertex[1].y     = folder_tree_rect.top;
-                  vertex[1].Red   = 0xCC00;
-                  vertex[1].Green = 0xCC00;
-                  vertex[1].Blue  = 0xCC00;
-                  vertex[1].Alpha = 0xFF00;
-
-                  GRADIENT_RECT gRect = {0};
-                  gRect.UpperLeft  = 0;
-                  gRect.LowerRight = 1;
-
-                  GdiGradientFill (
+                  gradient_fill (
                         pdc.hdc
-                     ,  vertex
-                     ,  2
-                     ,  &gRect
-                     ,  1
-                     ,  GRADIENT_FILL_RECT_V
+                     ,  rect
+                     ,  theme::background_gradient_top_color
+                     ,  theme::background_gradient_bottom_color
                      );
                }
 
                {
-                  TRIVERTEX vertex[2] = {0};
-                  vertex[0].x     = 0;
-                  vertex[0].y     = folder_tree_rect.bottom;
-                  vertex[0].Red   = 0xF000;
-                  vertex[0].Green = 0xF000;
-                  vertex[0].Blue  = 0xF000;
-                  vertex[0].Alpha = 0xFF00;
+                  RECT rect = {0};
+                  rect.left      = 0;
+                  rect.top       = folder_tree_rect.bottom;
+                  rect.right     = sz.cx;
+                  rect.bottom    = sz.cy;
 
-                  vertex[1].x     = sz.cx;
-                  vertex[1].y     = sz.cy;
-                  vertex[1].Red   = 0xCC00;
-                  vertex[1].Green = 0xCC00;
-                  vertex[1].Blue  = 0xCC00;
-                  vertex[1].Alpha = 0xFF00;
-
-                  GRADIENT_RECT gRect = {0};
-                  gRect.UpperLeft  = 0;
-                  gRect.LowerRight = 1;
-
-                  GdiGradientFill (
+                  gradient_fill (
                         pdc.hdc
-                     ,  vertex
-                     ,  2
-                     ,  &gRect
-                     ,  1
-                     ,  GRADIENT_FILL_RECT_V
+                     ,  rect
+                     ,  theme::background_gradient_top_color
+                     ,  theme::background_gradient_bottom_color
                      );
                }
+
             }
             break;
          case WM_MOUSEMOVE:
@@ -813,9 +872,16 @@ namespace main_window
             }
             break;
          default:
-            return DefWindowProc (hwnd, message, wParam, lParam);
+            do_default_proc = true;
+            break;
          }
-         return 0;
+
+         if (do_default_proc)
+         {
+            l_result = DefWindowProc (hwnd, message, wParam, lParam);
+         }
+
+         return l_result;
       }
       // ---------------------------------------------------------------------
 
@@ -833,7 +899,7 @@ namespace main_window
          wcex.hInstance       = instance;
          wcex.hIcon           = LoadIcon (instance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
          wcex.hCursor         = LoadCursor (NULL, IDC_ARROW);
-         wcex.hbrBackground   = (HBRUSH)(COLOR_WINDOW + 0);
+         wcex.hbrBackground   = NULL;
          wcex.lpszMenuName    = NULL;
          wcex.lpszClassName   = s_window_class;
          wcex.hIconSm         = LoadIcon (wcex.hInstance, MAKEINTRESOURCE (IDI_SMALL));
@@ -1080,46 +1146,6 @@ namespace main_window
                      );
                   break;
                }
-            }
-            break;
-         case WM_KEYDOWN:
-            break;
-         case WM_KEYUP:
-            switch (msg.wParam)
-            {
-            case VK_TAB:
-               {
-                  auto index = find_child_window (
-                     [&msg] (child_window const & wc)
-                     {
-                        return wc.hwnd == msg.hwnd;
-                     });
-
-                  for_all_child_windows (
-                        index + 1
-                     ,  [] (child_window const & wc) -> iteration_control::type
-                        {
-                           switch (wc.window_type)
-                           {
-                           case window_type::nowindow:
-                           case window_type::static_:
-                           case window_type::terminator:
-                              return iteration_control::continue_;
-                           default:
-                              SetFocus (wc.hwnd);
-                              return iteration_control::break_;
-                           }
-                        });
-
-                  SendMessage (
-                        s_main_window
-                     ,  WM_CHANGEUISTATE
-                     ,  UIS_INITIALIZE | UISF_HIDEFOCUS << 16
-                     ,  0
-                     );
-                  process_message = false;
-               }
-               break;
             }
             break;
          }

@@ -26,6 +26,12 @@ namespace theme
    extern win32::gdi_object<HFONT> const default_big_font            ;
    extern win32::gdi_object<HFONT> const default_monospace_font      ;
 
+   extern COLORREF const background_color                            ;
+   extern COLORREF const background_gradient_top_color               ;
+   extern COLORREF const background_gradient_bottom_color            ;
+
+   extern win32::gdi_object<HBRUSH> const background_brush           ;
+
    namespace folder_tree
    {
       extern COLORREF const background_color                         ;
