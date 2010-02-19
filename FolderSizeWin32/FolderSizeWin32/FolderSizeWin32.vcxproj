@@ -98,6 +98,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="theme.hpp" />
     <ClInclude Include="utility.hpp" />
+    <ClInclude Include="versioninfo.h" />
     <ClInclude Include="view_transform.hpp" />
     <ClInclude Include="win32.hpp" />
     <ClInclude Include="Traverser\traverser.hpp" />
