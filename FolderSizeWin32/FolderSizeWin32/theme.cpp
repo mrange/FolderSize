@@ -26,6 +26,11 @@ namespace theme
    win32::gdi_object<HFONT> const default_big_font             =  w::create_standard_message_font  (48                     );
    win32::gdi_object<HFONT> const default_monospace_font       =  w::create_font                   (_T ("Courier New"), 18  );
 
+   COLORREF const background_color                             = RGB (0xDE, 0xDE, 0xDE);
+   COLORREF const background_gradient_top_color                = RGB (0xF0, 0xF0, 0xF0);
+   COLORREF const background_gradient_bottom_color             = RGB (0xCC, 0xCC, 0xCC);
+
+   win32::gdi_object<HBRUSH> const background_brush            (CreateSolidBrush (background_color          ));
 
    namespace folder_tree
    {
