@@ -33,19 +33,36 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   void output_debug_string (tstring const & value)
+   void trace_string (tstring const & value)
    {
-      output_debug_string (value.c_str ());
+      trace_string (value.c_str ());
    }
 
-   void output_debug_string (LPCTSTR const value)
+   void trace_string (LPCTSTR const value)
    {
-#ifdef _DEBUG
       if (value)
       {
-         OutputDebugString (value);
+         // FYI: Thanks to C++0x of r-value ref this only creates one copy of 
+         // tstring and appends to it. In C++98 the code below would've created
+         // 2 additional tstrings
+         auto output = tstring (_T("FolderSize.Win32 : ")) + value + _T ("\r\n");
+         OutputDebugString (output.c_str ());
       }
-      OutputDebugString (_T ("\r\n"));
+      else
+      {
+         OutputDebugString ( _T("FolderSize.Win32 : NO MESSAGE\r\n"));
+      }
+   }
+
+   void debug_string (tstring const & value)
+   {
+      debug_string (value.c_str ());
+   }
+
+   void debug_string (LPCTSTR const value)
+   {
+#ifdef _DEBUG
+      trace_string (value);
 #endif
    }
 
@@ -131,16 +148,16 @@ namespace win32
    {
       if (value.is_valid ())
       {
-         output_debug_string (_T ("FolderSize.Win32 : Joining thread: ") + thread_name);
+         trace_string (_T ("Joining thread: ") + thread_name);
          auto res = WaitForSingleObject (value.value, ms);
 
          if (res == WAIT_OBJECT_0)
          {
-            output_debug_string (_T ("FolderSize.Win32 : Thread join successful: ") + thread_name);
+            trace_string (_T ("Thread join successful: ") + thread_name);
          }
          else
          {
-            output_debug_string (_T ("FolderSize.Win32 : Thread join failed: ") + thread_name);
+            trace_string (_T ("Thread join failed: ") + thread_name);
          }
 
          return res == WAIT_OBJECT_0;
@@ -164,18 +181,18 @@ namespace win32
       {
          try
          {
-            output_debug_string (_T ("FolderSize.Win32 : Starting thread: ") + state->thread_name);
+            trace_string (_T ("Starting thread: ") + state->thread_name);
 
             auto result = state->procedure ();
 
 
             if (result == EXIT_SUCCESS)
             {
-               output_debug_string (_T ("FolderSize.Win32 : Thread exited successfully: ") + state->thread_name);
+               trace_string (_T ("Thread exited successfully: ") + state->thread_name);
             }
             else
             {
-               output_debug_string (_T ("FolderSize.Win32 : Thread exited with failure code: ") + state->thread_name);
+               trace_string (_T ("Thread exited with failure code: ") + state->thread_name);
             }
 
             state->terminated = true;
@@ -183,7 +200,7 @@ namespace win32
          }
          catch (...)
          {
-            output_debug_string (_T ("FolderSize.Win32 : Thread threw exception: ") + state->thread_name);
+            trace_string (_T ("Thread threw exception: ") + state->thread_name);
             state->terminated = true;
             _endthreadex (EXIT_FAILURE);
          }

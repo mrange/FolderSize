@@ -216,7 +216,12 @@ namespace main_window
          auto size = size_of_array (s_child_window);
          auto increment = forward ? 1 : -1;
 
-         auto iter = start_index % size;
+         auto iter = (start_index + increment + size) % size;
+
+         if (iter < 0)
+         {
+            return;
+         }
 
          do
          {
@@ -453,12 +458,67 @@ namespace main_window
       }
       // ----------------------------------------------------------------------
 
+      void set_ui_state (
+            int property
+         )
+      {
+         if (s_main_window)
+         {
+            SendMessage (
+                  s_main_window
+               ,  WM_CHANGEUISTATE
+               ,  UIS_SET | property << 16
+               ,  0
+               );
+         }
+      }
+
+      void clear_ui_state (
+            int property
+         )
+      {
+         if (s_main_window)
+         {
+            SendMessage (
+                  s_main_window
+               ,  WM_CHANGEUISTATE
+               ,  UIS_CLEAR | property << 16
+               ,  0
+               );
+         }
+      }
+
+      // ----------------------------------------------------------------------
+      void log_windows_message (
+            LPCTSTR const  prelude
+         ,  HWND const     hwnd
+         ,  UINT const     message
+         ,  WPARAM const   w_param
+         ,  LPARAM         l_param)
+      {
+#ifdef _DEBUG
+            TCHAR buffer[max_load_string] = {0};
+            _stprintf_s (
+                  buffer
+               ,  _T ("%16s : 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+               ,  prelude ? prelude : _T ("WM")
+               ,  hwnd
+               ,  message
+               ,  w_param
+               ,  l_param
+               );
+            w::debug_string (buffer);
+#endif
+      }
+
+      // ----------------------------------------------------------------------
+
       // ----------------------------------------------------------------------
       LRESULT CALLBACK window_process (
             HWND const     hwnd
          ,  UINT const     message
-         ,  WPARAM const   wParam
-         ,  LPARAM const   lParam
+         ,  WPARAM const   w_param
+         ,  LPARAM const   l_param
          )
       {
          switch (message)
@@ -468,16 +528,13 @@ namespace main_window
          case WM_PAINT:
             break;
          default:
-            TCHAR buffer[max_load_string] = {0};
-            _stprintf_s (
-                  buffer
-               ,  _T ("WM2: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+            log_windows_message (
+                  _T ("MainWindow")
                ,  hwnd
                ,  message
-               ,  wParam
-               ,  lParam
+               ,  w_param
+               ,  l_param
                );
-            w::output_debug_string (buffer);
             break;
          }
 
@@ -513,7 +570,7 @@ namespace main_window
             break;
          case WM_CTLCOLORSTATIC:
             {
-               auto hdc = reinterpret_cast<HDC> (wParam);
+               auto hdc = reinterpret_cast<HDC> (w_param);
                SetBkMode (hdc, TRANSPARENT);
                l_result = reinterpret_cast<LRESULT> (reinterpret_cast<HBRUSH> (GetStockObject (NULL_BRUSH)));
                break;
@@ -521,15 +578,15 @@ namespace main_window
             break;
          case WM_CTLCOLORBTN:
             {
-               //auto hdc = reinterpret_cast<HDC> (wParam);
+               //auto hdc = reinterpret_cast<HDC> (w_param);
                l_result = reinterpret_cast<LRESULT> (theme::background_brush.value);
                break;
             }
             break;
          case WM_COMMAND:
             {
-               auto wmId    = LOWORD (wParam);
-               auto wmEvent = HIWORD (wParam);
+               auto wmId    = LOWORD (w_param);
+               auto wmEvent = HIWORD (w_param);
                // Parse the menu selections:
                
                TCHAR buffer[max_load_string] = {0};
@@ -539,7 +596,7 @@ namespace main_window
                   ,  wmId
                   ,  wmEvent);
 
-               w::output_debug_string (buffer);
+               w::debug_string (buffer);
 
                switch (wmId)
                {
@@ -551,7 +608,7 @@ namespace main_window
 
                      if (!path.empty ())
                      {
-                        w::output_debug_string (_T ("FolderSize.Win32 : New job started"));
+                        w::trace_string (_T ("New job started"));
                         s_state = state::ptr ();
 
                         s_state = state::ptr (new state (hwnd, path));
@@ -560,7 +617,7 @@ namespace main_window
                   }
                   break;
                case IDM_STOP:
-                  w::output_debug_string  (_T ("FolderSize.Win32 : Job terminated"));
+                  w::trace_string  (_T ("Job terminated"));
                   if (s_state.get ())
                   {
                      s_state->traverser.stop_traversing ();
@@ -586,38 +643,6 @@ namespace main_window
                   break;
                case IDM_PATH:
                   break;
-               case IDM_NEXT_CONTROL:
-                  {
-                     auto focus_hwnd = GetFocus ();
-                     auto index = find_child_window (
-                        [focus_hwnd] (child_window const & wc)
-                        {
-                           return wc.hwnd == focus_hwnd;
-                        });
-
-                     circle_child_windows (
-                           true
-                        ,  index + 1
-                        ,  [] (child_window const & wc) -> iteration_control::type
-                           {
-                              switch (wc.window_type)
-                              {
-                              case window_type::nowindow:
-                              case window_type::static_:
-                                 return iteration_control::continue_;
-                              default:
-                                 SetFocus (wc.hwnd);
-                                 return iteration_control::break_;
-                              }
-                           });
-
-                     //SendMessage (
-                     //      s_main_window
-                     //   ,  WM_CHANGEUISTATE
-                     //   ,  UIS_INITIALIZE | UISF_HIDEFOCUS << 16
-                     //   ,  0
-                     //   );
-                  }
                default:
                   do_default_proc = true;
                   break;
@@ -706,7 +731,7 @@ namespace main_window
             break;
          case WM_MOUSEMOVE:
             {
-               auto mouse_coord = w::get_mouse_coordinate (lParam);
+               auto mouse_coord = w::get_mouse_coordinate (l_param);
 
                if (
                      s_state.get () 
@@ -745,7 +770,7 @@ namespace main_window
             break;
          case WM_LBUTTONDOWN:
             {
-               auto mouse_coord = w::get_mouse_coordinate (lParam);
+               auto mouse_coord = w::get_mouse_coordinate (l_param);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -755,7 +780,7 @@ namespace main_window
             break;
          case WM_LBUTTONUP:
             {
-               auto mouse_coord = w::get_mouse_coordinate (lParam);
+               auto mouse_coord = w::get_mouse_coordinate (l_param);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -796,7 +821,7 @@ namespace main_window
             break;
          case WM_RBUTTONUP:
             {
-               auto mouse_coord = w::get_mouse_coordinate (lParam);
+               auto mouse_coord = w::get_mouse_coordinate (l_param);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -809,8 +834,8 @@ namespace main_window
             break;
          case WM_MOUSEWHEEL:
             {
-               auto scroll = static_cast<short> (HIWORD (wParam)) / WHEEL_DELTA;
-               auto mouse_coord = w::get_client_mouse_coordinate (hwnd, lParam);
+               auto scroll = static_cast<short> (HIWORD (w_param)) / WHEEL_DELTA;
+               auto mouse_coord = w::get_client_mouse_coordinate (hwnd, l_param);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -861,7 +886,7 @@ namespace main_window
             break;
          case WM_GETMINMAXINFO:
             {
-               MINMAXINFO * const minMaxInfo = reinterpret_cast<MINMAXINFO*> (lParam);
+               MINMAXINFO * const minMaxInfo = reinterpret_cast<MINMAXINFO*> (l_param);
                if (minMaxInfo)
                {
                   minMaxInfo->ptMinTrackSize.x = 400;
@@ -876,7 +901,7 @@ namespace main_window
 
          if (do_default_proc)
          {
-            l_result = DefWindowProc (hwnd, message, wParam, lParam);
+            l_result = DefWindowProc (hwnd, message, w_param, l_param);
          }
 
          return l_result;
@@ -1044,12 +1069,8 @@ namespace main_window
             SetWindowText (path_hwnd, known_folder_path);
          }
 
-         SendMessage (
-               s_main_window
-            ,  WM_CHANGEUISTATE
-            ,  UIS_SET | UISF_HIDEACCEL << 16
-            ,  0
-            );
+         set_ui_state   (UISF_HIDEACCEL);
+         clear_ui_state (UISF_HIDEFOCUS);
 
          ShowWindow (s_main_window, command_show);
 
@@ -1071,8 +1092,8 @@ namespace main_window
       auto set_priority_class_result = SetPriorityClass (GetCurrentProcess (), IDLE_PRIORITY_CLASS);
       UNUSED_VARIABLE (set_priority_class_result);
 
-      MSG msg                    = { 0 };
-      HACCEL accelerator_table   = { 0 };
+      MSG msg                    = {0};
+      HACCEL accelerator_table   = {0};
 
       // Initialize global strings
       LoadString (instance, IDC_FOLDERSIZEWIN32, s_title, max_load_string);
@@ -1095,16 +1116,13 @@ namespace main_window
          case WM_MOUSEMOVE:
             break;
          default:
-            TCHAR buffer[max_load_string] = {0};
-            _stprintf_s (
-                  buffer
-               ,  _T ("WM: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+            log_windows_message (
+                  _T ("main_loop")
                ,  msg.hwnd
                ,  msg.message
                ,  msg.wParam
                ,  msg.lParam
                );
-            w::output_debug_string (buffer);
             break;
          }
 
@@ -1112,43 +1130,102 @@ namespace main_window
 
          switch (msg.message)
          {
+         case WM_KEYDOWN:
+            switch (msg.wParam)
+            {
+            case VK_TAB:
+               {
+                  auto forward = 
+                        IS_OFF (GetKeyState (VK_SHIFT), 0x8000)
+                     && IS_OFF (GetKeyState (VK_RSHIFT), 0x8000);
+
+                  auto focus_hwnd = msg.hwnd;
+                  auto index = find_child_window (
+                     [focus_hwnd] (child_window const & wc)
+                     {
+                        return wc.hwnd == focus_hwnd;
+                     });
+
+                  circle_child_windows (
+                        forward
+                     ,  index
+                     ,  [] (child_window const & wc) -> iteration_control::type
+                        {
+                           switch (wc.window_type)
+                           {
+                           case window_type::nowindow:
+                           case window_type::static_:
+                              return iteration_control::continue_;
+                           default:
+                              SetFocus (wc.hwnd);
+                              return iteration_control::break_;
+                           }
+                        });
+
+                  set_ui_state   (UISF_HIDEACCEL);
+                  process_message = false;
+               }
+            }
+         case WM_KEYUP:
+            switch (msg.wParam)
+            {
+            case VK_TAB:
+               set_ui_state   (UISF_HIDEACCEL);
+               process_message = false;
+               break;
+            }
+            break;
          case WM_SYSKEYDOWN:
+            // WM_SYSKEY* redirect to main window in order to get accelerators to work
+            if (IS_ON (msg.lParam, 0x20000000))
+            {
+               msg.hwnd = s_main_window;
+            }
             switch (msg.wParam)
             {
             case VK_MENU:
                {
-                  SendMessage (
-                        s_main_window
-                     ,  WM_CHANGEUISTATE
-                     ,  UIS_INITIALIZE | UISF_HIDEACCEL << 16
-                     ,  0
-                     );
+                  clear_ui_state (UISF_HIDEACCEL);
                   break;
                }
             }
             break;
          case WM_SYSKEYUP:
+            // WM_SYSKEY* redirect to main window in order to get accelerators to work
+            if (IS_ON (msg.lParam, 0x20000000))
+            {
+               msg.hwnd = s_main_window;
+            }
             switch (msg.wParam)
             {
             case VK_MENU:
                {
-                  SendMessage (
-                        s_main_window
-                     ,  WM_CHANGEUISTATE
-                     ,  UIS_SET | UISF_HIDEACCEL << 16
-                     ,  0
-                     );
+                  set_ui_state   (UISF_HIDEACCEL);
                   break;
                }
             }
             break;
          }
 
-         if (process_message && !TranslateAccelerator (msg.hwnd, accelerator_table, &msg))
+         if (process_message)
          {
-            TranslateMessage (&msg);
-            DispatchMessage (&msg);
+            if (TranslateAccelerator (msg.hwnd, accelerator_table, &msg))
+            {
+               log_windows_message (
+                     _T ("accelerator")
+                  ,  msg.hwnd
+                  ,  msg.message
+                  ,  msg.wParam
+                  ,  msg.lParam
+                  );
+            }
+            else
+            {
+               TranslateMessage (&msg);
+               DispatchMessage (&msg);
+            }
          }
+
       }
 
       s_state = state::ptr ();
