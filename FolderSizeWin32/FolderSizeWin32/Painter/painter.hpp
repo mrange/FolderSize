@@ -33,6 +33,14 @@ namespace painter
    typedef linear::vector<double, 2>      zoom_factor ;
    typedef linear::vector<double, 2>      dimension   ;
    typedef linear::vector<double, 4>      view_rect   ;
+   namespace select_property
+   {
+      enum type
+      {
+         size  ,
+         count ,
+      };
+   }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -52,6 +60,8 @@ namespace painter
       folder::folder const * const  folder      ;
    };
    // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct painter : boost::noncopyable
    {
       painter ();
@@ -62,6 +72,7 @@ namespace painter
          ,  HWND const                    main_hwnd
          ,  std::size_t const             processed_folder_count
          ,  std::size_t const             unprocessed_folder_count
+         ,  select_property::type         select_property
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom
@@ -73,6 +84,7 @@ namespace painter
          ,  HDC const                     hdc
          ,  std::size_t const             processed_folder_count
          ,  std::size_t const             unprocessed_folder_count
+         ,  select_property::type         select_property
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom

@@ -63,6 +63,7 @@ namespace painter
             ,  HDC const                     hdc_
             ,  std::size_t const             processed_folder_count_
             ,  std::size_t const             unprocessed_folder_count_
+            ,  select_property::type const   select_property_
             ,  coordinate const &            centre_        
             ,  zoom_factor const &           zoom_          
             ,  dimension const &             screen_size_   
@@ -71,6 +72,7 @@ namespace painter
             ,  main_hwnd                  (main_hwnd_                      )
             ,  processed_folder_count     (processed_folder_count_         )
             ,  unprocessed_folder_count   (unprocessed_folder_count_       )
+            ,  select_property            (select_property_                )
             ,  centre                     (centre_                         )
             ,  zoom                       (zoom_                           )
             ,  bitmap_size                (screen_size_                    )
@@ -84,6 +86,7 @@ namespace painter
          HWND const                    main_hwnd               ;
          std::size_t const             processed_folder_count  ;
          std::size_t const             unprocessed_folder_count;
+         select_property::type const   select_property         ;
          coordinate const              centre                  ;
          zoom_factor const             zoom                    ;
          dimension const               bitmap_size             ;
@@ -116,10 +119,11 @@ namespace painter
          update_response (
             update_request    &  update_request_
             )
-            :  centre      (update_request_.centre             )
-            ,  zoom        (update_request_.zoom               )
-            ,  bitmap_size (update_request_.bitmap_size        )
-            ,  bitmap      (create_bitmap (
+            :  select_property   (update_request_.select_property    )
+            ,  centre            (update_request_.centre             )
+            ,  zoom              (update_request_.zoom               )
+            ,  bitmap_size       (update_request_.bitmap_size        )
+            ,  bitmap            (create_bitmap (
                   update_request_.bitmap_planes
                ,  update_request_.bitmap_bits
                ,  update_request_.bitmap_size               )  )
@@ -127,6 +131,7 @@ namespace painter
             rendered_folders.reserve (64);
          }
 
+         select_property::type const      select_property   ;
          coordinate const                 centre            ;
          zoom_factor const                zoom              ;
          dimension const                  bitmap_size       ;
@@ -351,6 +356,13 @@ namespace painter
             return f->get_total_size ();
          }
 
+         static big_size count_picker (
+            f::folder const * f
+            )
+         {
+            return f->get_total_file_count ();
+         }
+
          static void painter (
                painter_context const & painter_context
             ,  big_size const          total_size
@@ -493,10 +505,9 @@ namespace painter
                            TCHAR buffer [buffer_size * 8] = {0};
                            auto cch = _stprintf_s (
                                  buffer
-                              ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nTotal file count:%8I64d  \r\nMax folder depth:%8d  ")
+                              ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nMax folder depth:%8d  ")
                               ,  request_ptr->unprocessed_folder_count
                               ,  request_ptr->processed_folder_count
-                              ,  request_ptr->root->get_total_file_count ()
                               ,  request_ptr->root->get_depth ()
                               );
 
@@ -587,14 +598,28 @@ namespace painter
                            ,  centre
                            ,  zoom);
 
-                        folder_traverser (
-                              response_ptr->rendered_folders
-                           ,  request_ptr->bitmap_size
-                           ,  current_transform
-                           ,  request_ptr->root
-                           ,  size_picker
-                           ,  painter_
-                           );
+                        if (request_ptr->select_property == select_property::size)
+                        {
+                           folder_traverser (
+                                 response_ptr->rendered_folders
+                              ,  request_ptr->bitmap_size
+                              ,  current_transform
+                              ,  request_ptr->root
+                              ,  size_picker
+                              ,  painter_
+                              );
+                        }
+                        else
+                        {
+                           folder_traverser (
+                                 response_ptr->rendered_folders
+                              ,  request_ptr->bitmap_size
+                              ,  current_transform
+                              ,  request_ptr->root
+                              ,  count_picker
+                              ,  painter_
+                              );
+                        }
 
                         update_response_value.reset (response_ptr.release ());
 
@@ -639,6 +664,7 @@ namespace painter
          ,  HDC const                     hdc
          ,  std::size_t const             processed_folder_count
          ,  std::size_t const             unprocessed_folder_count
+         ,  select_property::type         select_property
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom
@@ -655,6 +681,7 @@ namespace painter
                   ,  hdc
                   ,  processed_folder_count
                   ,  unprocessed_folder_count
+                  ,  select_property
                   ,  centre
                   ,  zoom
                   ,  screen_size
@@ -670,6 +697,7 @@ namespace painter
          ,  HDC const                     hdc
          ,  std::size_t const             processed_folder_count
          ,  std::size_t const             unprocessed_folder_count
+         ,  select_property::type         select_property
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
          ,  zoom_factor const &           zoom
@@ -689,9 +717,10 @@ namespace painter
 
          if (
                update_response.get ()
-            && update_response->centre        == centre
-            && update_response->zoom          == zoom
-            && update_response->bitmap_size   == screen_size
+            && update_response->select_property == select_property
+            && update_response->centre          == centre
+            && update_response->zoom            == zoom
+            && update_response->bitmap_size     == screen_size
             )
          {
          }
@@ -703,6 +732,7 @@ namespace painter
                ,  hdc
                ,  processed_folder_count
                ,  unprocessed_folder_count
+               ,  select_property
                ,  rect
                ,  centre
                ,  zoom
@@ -817,6 +847,7 @@ namespace painter
       ,  HWND const                    main_hwnd
       ,  std::size_t const             processed_folder_count
       ,  std::size_t const             unprocessed_folder_count
+      ,  select_property::type         select_property
       ,  RECT const &                  rect   
       ,  coordinate const &            centre
       ,  zoom_factor const &           zoom
@@ -829,6 +860,7 @@ namespace painter
          ,  window_dc.hdc
          ,  processed_folder_count
          ,  unprocessed_folder_count
+         ,  select_property
          ,  rect   
          ,  centre
          ,  zoom
@@ -843,6 +875,7 @@ namespace painter
       ,  HDC const                     hdc
       ,  std::size_t const             processed_folder_count
       ,  std::size_t const             unprocessed_folder_count
+      ,  select_property::type         select_property
       ,  RECT const &                  rect   
       ,  coordinate const &            centre
       ,  zoom_factor const &           zoom
@@ -854,6 +887,7 @@ namespace painter
          ,  hdc
          ,  processed_folder_count
          ,  unprocessed_folder_count
+         ,  select_property
          ,  rect   
          ,  centre
          ,  zoom
