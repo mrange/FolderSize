@@ -458,6 +458,7 @@ namespace main_window
       }
       // ----------------------------------------------------------------------
 
+      // ----------------------------------------------------------------------
       void set_ui_state (
             int property
          )
@@ -472,7 +473,9 @@ namespace main_window
                );
          }
       }
+      // ----------------------------------------------------------------------
 
+      // ----------------------------------------------------------------------
       void clear_ui_state (
             int property
          )
@@ -487,6 +490,7 @@ namespace main_window
                );
          }
       }
+      // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
       void log_windows_message (
@@ -510,7 +514,19 @@ namespace main_window
             w::debug_string (buffer);
 #endif
       }
+      // ----------------------------------------------------------------------
 
+      // ----------------------------------------------------------------------
+      POINT const adjust_coord (
+         RECT const & rect,
+         POINT const & coord
+         )
+      {
+         POINT p = {0};
+         p.x = coord.x - rect.left;
+         p.y = coord.y - rect.top;
+         return p;
+      }
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -768,6 +784,38 @@ namespace main_window
                }
             }
             break;
+         case WM_LBUTTONDBLCLK:
+            {
+               auto mouse_coord = w::get_mouse_coordinate (l_param);
+
+               if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
+               {
+                  auto adjusted_coord  =  adjust_coord (folder_tree_rect, mouse_coord);
+                  auto found_folder    = s_state->painter.hit_test (adjusted_coord);
+
+                  if (found_folder.folder)
+                  {
+                     auto folder_height = found_folder.view_rect.values[3] - found_folder.view_rect.values[1];
+                     if (folder_height > 0)
+                     {
+                        auto new_zoom = vt::create_vector (
+                              1 / folder_height
+                           ,  1 / folder_height
+                           );
+
+                        auto offset = l::scale_vector (0.5, l::invert_vector (new_zoom));
+
+                        s_state->centre   = vt::create_vector (
+                              found_folder.view_rect.values [0] + offset.x ()
+                           ,  found_folder.view_rect.values [1] + offset.y ()
+                           );
+                        s_state->zoom     = l::scale_vector (start_zoom, new_zoom);
+                     }
+                  }
+                  invalidate_folder_tree_area (hwnd);
+               }
+            }
+            break;
          case WM_LBUTTONDOWN:
             {
                auto mouse_coord = w::get_mouse_coordinate (l_param);
@@ -784,19 +832,17 @@ namespace main_window
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
-                  auto adjusted_coord  =  mouse_coord;
-                  adjusted_coord.x     -= folder_tree_rect.left;
-                  adjusted_coord.y     -= folder_tree_rect.top;
-                  auto found_folder = s_state->painter.hit_test (adjusted_coord);
+                  auto adjusted_coord  =  adjust_coord (folder_tree_rect, mouse_coord);
+                  auto found_folder    = s_state->painter.hit_test (adjusted_coord);
 
-                  if (found_folder)
+                  if (found_folder.folder)
                   {
                      std::vector<TCHAR> path_builder;
                      path_builder.reserve (MAX_PATH);
                      build_path (
                            path_builder
                         ,  s_state->traverser.get_root_path ()
-                        ,  found_folder
+                        ,  found_folder.folder
                         );
                      w::tstring const path (path_builder.begin (), path_builder.end ());
 
@@ -915,7 +961,7 @@ namespace main_window
 
          wcex.cbSize          = sizeof (WNDCLASSEX);
 
-         wcex.style           = CS_HREDRAW | CS_VREDRAW;
+         wcex.style           = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
          wcex.lpfnWndProc     = window_process;
          wcex.cbClsExtra      = 0;
          wcex.cbWndExtra      = 0;
