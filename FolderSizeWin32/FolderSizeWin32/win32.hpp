@@ -35,10 +35,14 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   void output_debug_string (tstring const & value);
+   void trace_string (tstring const & value);
+   void trace_string (LPCTSTR const value);
 
-   void output_debug_string (LPCTSTR const value);
+   void debug_string (tstring const & value);
+   void debug_string (LPCTSTR const value);
+   // -------------------------------------------------------------------------
 
+   // -------------------------------------------------------------------------
    tstring const get_window_text (HWND const hwnd);
    // -------------------------------------------------------------------------
    struct handle : boost::noncopyable
