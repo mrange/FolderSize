@@ -83,7 +83,7 @@ namespace view_transform
             case transform_direction::reverse:
                return linear::translating_matrix (-v);
             default:
-               BOOST_ASSERT(false);
+               BOOST_ASSERT (false);
                return linear::identity_matrix<double, 3> ();
             }
          };
@@ -103,7 +103,7 @@ namespace view_transform
             case transform_direction::reverse:
                return linear::scaling_matrix (linear::invert_vector (v));
             default:
-               BOOST_ASSERT(false);
+               BOOST_ASSERT (false);
                return linear::identity_matrix<double, 3> ();
             }
          };
@@ -146,7 +146,7 @@ namespace view_transform
                {
                case transform_direction::forward:
                   {
-                     for(auto iter = 0u; iter < count; ++iter)
+                     for (auto iter = 0u; iter < count; ++iter)
                      {
                         result = configuration[iter] (state) * result;
                      }
@@ -154,14 +154,14 @@ namespace view_transform
                   }
                case transform_direction::reverse:
                   {
-                     for(auto iter = count; iter > 0u; --iter)
+                     for (auto iter = count; iter > 0u; --iter)
                      {
                         result = configuration[iter - 1] (state) * result;
                      }
                      break;
                   }
                default:
-                  BOOST_ASSERT(false);
+                  BOOST_ASSERT (false);
                   break;
                }
                return result;

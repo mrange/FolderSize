@@ -157,9 +157,9 @@ namespace painter
             ,  HBRUSH const fill_brush_
             ,  HBRUSH const frame_brush_
             )
-            :  hdc(hdc_)
-            ,  fill_brush(fill_brush_)
-            ,  frame_brush(frame_brush_)
+            :  hdc (hdc_)
+            ,  fill_brush (fill_brush_)
+            ,  frame_brush (frame_brush_)
          {
          }
 
@@ -353,7 +353,7 @@ namespace painter
             }
          }
 
-         static big_size size_picker(
+         static big_size size_picker (
             f::folder const * f
             )
          {
@@ -375,9 +375,8 @@ namespace painter
 
             if (total_size > 1E8)
             {
-               cch = _sntprintf (
+               cch = _stprintf_s (
                      buffer
-                  ,  buffer_size
                   ,  _T ("%s\r\n%.1fG")
                   ,  folder.name.c_str ()
                   ,  total_size / 1E9
@@ -385,9 +384,8 @@ namespace painter
             }
             else if (total_size > 1E5)
             {
-               cch = _sntprintf (
+               cch = _stprintf_s (
                      buffer
-                  ,  buffer_size
                   ,  _T ("%s\r\n%.1fM")
                   ,  folder.name.c_str ()
                   ,  total_size / 1E6
@@ -395,9 +393,8 @@ namespace painter
             }
             else if (total_size > 1E2)
             {
-               cch = _sntprintf (
+               cch = _stprintf_s (
                      buffer
-                  ,  buffer_size
                   ,  _T ("%s\r\n%.1fk")
                   ,  folder.name.c_str ()
                   ,  total_size / 1E3
@@ -405,9 +402,8 @@ namespace painter
             }
             else
             {
-               cch = _sntprintf (
+               cch = _stprintf_s (
                      buffer
-                  ,  buffer_size
                   ,  _T ("%s\r\n%I64d")
                   ,  folder.name.c_str ()
                   ,  total_size
@@ -504,9 +500,8 @@ namespace painter
                               );
 
                            TCHAR buffer [buffer_size * 8] = {0};
-                           auto cch = _sntprintf (
+                           auto cch = _stprintf_s (
                                  buffer
-                              ,  buffer_size * 8
                               ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nTotal file count:%8I64d  \r\nTotal Depth:%8d  ")
                               ,  request_ptr->unprocessed_folder_count
                               ,  request_ptr->processed_folder_count
@@ -760,7 +755,7 @@ namespace painter
 
    // -------------------------------------------------------------------------
    painter::painter ()
-      :  m_impl (new impl())
+      :  m_impl (new impl ())
    {
    }
    // -------------------------------------------------------------------------

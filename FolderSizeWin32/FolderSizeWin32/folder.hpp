@@ -28,7 +28,7 @@ namespace folder
    // -------------------------------------------------------------------------
    typedef std::basic_string<TCHAR> tstring;
    // -------------------------------------------------------------------------
-   __declspec(align(8))
+   __declspec (align (8))
    struct folder : boost::noncopyable
    {
       typedef boost::scoped_array<folder *> folder_array;
@@ -81,9 +81,9 @@ namespace folder
                                  ,  big_size const file_count   
                                  ,  big_size const folder_count 
                                  );
-      __declspec(align(4))
+      __declspec (align (4))
       std::size_t volatile    depth                ;
-      __declspec(align(8))
+      __declspec (align (8))
       big_size volatile       total_size           ;
       big_size volatile       total_file_count     ;
       big_size volatile       total_folder_count   ;

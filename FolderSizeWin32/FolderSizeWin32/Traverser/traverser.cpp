@@ -129,7 +129,7 @@ namespace traverser
          }
       }
 
-      unsigned int proc()
+      unsigned int proc ()
       {
          while (continue_running && job_queue.size () > 0)
          {
