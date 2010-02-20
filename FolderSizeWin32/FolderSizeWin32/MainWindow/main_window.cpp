@@ -91,6 +91,7 @@ namespace main_window
             static_        ,
             button         ,
             edit           ,
+            combo          ,
          };
       }
 
@@ -152,15 +153,18 @@ namespace main_window
          {  IDM_GO_PAUSE   , 8      , 8         , 8 + 104   , 8 + 32 , window_type::button   , BS_DEFPUSHBUTTON   ,  0  },
          {  IDM_STOP       , 120    , 8         , 120 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  },
          {  IDM_BROWSE     , 210    , 8         , 210 + 82  , 8 + 32 , window_type::button   , BS_PUSHBUTTON      ,  0  },
-         {  IDM_PATH       , 300    , 11        , ra | 8    , 8 + 29 , window_type::edit     , WS_BORDER          ,  0  },
+         {  IDM_PATH       , 300    , 10        , ra | 108  , 10 + 29 , window_type::edit     , WS_BORDER          ,  0  },
+         {  IDM_SELECTOR   , ra |100, 10        , ra | 8    , 10 + 29 , window_type::combo    , CBS_DROPDOWNLIST | CBS_HASSTRINGS ,  0  },
          {  IDM_FOLDERTREE , 0      , 48        , ra | 0    , ra | 22, window_type::nowindow , 0                  ,  0  },
          {  IDM_INFO       , 8      , ra | 22   , ra | 8    , ra | 0 , window_type::static_  , SS_CENTER          ,  0  },
       };
 
-      child_window &       s_folder_tree                          = s_child_window[4];
+      child_window &       s_selector                             = s_child_window[4];
+      child_window &       s_folder_tree                          = s_child_window[5];
 
       state::ptr           s_state;
 
+      p::select_property::type   s_select_property                = p::select_property::size;
       //w::dll               s_dwm_dll (_T ("DwmApi"));
       // ----------------------------------------------------------------------
 
@@ -578,6 +582,7 @@ namespace main_window
                   ,  hwnd
                   ,  s_state->traverser.get_processed_folder_count ()
                   ,  s_state->traverser.get_unprocessed_folder_count ()
+                  ,  s_select_property
                   ,  folder_tree_rect
                   ,  s_state->centre
                   ,  s_state->zoom
@@ -589,32 +594,31 @@ namespace main_window
                auto hdc = reinterpret_cast<HDC> (w_param);
                SetBkMode (hdc, TRANSPARENT);
                l_result = reinterpret_cast<LRESULT> (reinterpret_cast<HBRUSH> (GetStockObject (NULL_BRUSH)));
-               break;
             }
             break;
+         //case WM_CTLCOLOREDIT:
          case WM_CTLCOLORBTN:
             {
                //auto hdc = reinterpret_cast<HDC> (w_param);
                l_result = reinterpret_cast<LRESULT> (theme::background_brush.value);
-               break;
             }
             break;
          case WM_COMMAND:
             {
-               auto wmId    = LOWORD (w_param);
-               auto wmEvent = HIWORD (w_param);
+               auto wm_id     = LOWORD (w_param);
+               auto wm_event  = HIWORD (w_param);
                // Parse the menu selections:
                
                TCHAR buffer[max_load_string] = {0};
                _stprintf_s (
                      buffer
                   ,  _T ("WM_COMMAND: %d, %d")
-                  ,  wmId
-                  ,  wmEvent);
+                  ,  wm_id
+                  ,  wm_event);
 
                w::debug_string (buffer);
 
-               switch (wmId)
+               switch (wm_id)
                {
                case IDM_GO_PAUSE:
                   {
@@ -659,6 +663,28 @@ namespace main_window
                   break;
                case IDM_PATH:
                   break;
+               case IDM_SELECTOR:
+                  {
+                     if (
+                           wm_event == CBN_SELENDOK
+                        //|| wm_event == CBN_SELCHANGE
+                        //|| wm_event == CBN_SELENDCANCEL
+                        )
+                     {
+                        auto selection = SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0);
+                        if (selection == 0 && s_select_property != p::select_property::size)
+                        {
+                           s_select_property = p::select_property::size;
+                           invalidate_folder_tree_area (hwnd);
+                        }
+                        else if (selection == 1 && s_select_property != p::select_property::count)
+                        {
+                           s_select_property = p::select_property::count;
+                           invalidate_folder_tree_area (hwnd);
+                        }
+                     }
+                  }
+                  break;
                default:
                   do_default_proc = true;
                   break;
@@ -677,6 +703,7 @@ namespace main_window
                      ,  pdc.hdc
                      ,  s_state->traverser.get_processed_folder_count ()
                      ,  s_state->traverser.get_unprocessed_folder_count ()
+                     ,  s_select_property
                      ,  folder_tree_rect
                      ,  s_state->centre
                      ,  s_state->zoom
@@ -935,7 +962,7 @@ namespace main_window
                MINMAXINFO * const minMaxInfo = reinterpret_cast<MINMAXINFO*> (l_param);
                if (minMaxInfo)
                {
-                  minMaxInfo->ptMinTrackSize.x = 400;
+                  minMaxInfo->ptMinTrackSize.x = 600;
                   minMaxInfo->ptMinTrackSize.y = 400;
                }
             }
@@ -1039,6 +1066,9 @@ namespace main_window
 
                switch (wc.window_type)
                {
+               case window_type::combo:
+                  window_class = _T ("COMBOBOX");
+                  break;
                case window_type::button:
                   window_class = _T ("BUTTON");
                   break;
@@ -1117,6 +1147,10 @@ namespace main_window
 
          set_ui_state   (UISF_HIDEACCEL);
          clear_ui_state (UISF_HIDEFOCUS);
+
+         SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( _T("Size")));
+         SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( _T("Count")));
+         SendMessage(s_selector.hwnd, CB_SETCURSEL, 0, 0L);
 
          ShowWindow (s_main_window, command_show);
 
