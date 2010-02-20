@@ -30,7 +30,9 @@ namespace theme
    extern COLORREF const background_gradient_top_color               ;
    extern COLORREF const background_gradient_bottom_color            ;
 
-   extern win32::gdi_object<HBRUSH> const background_brush           ;
+   extern win32::gdi_object<HBRUSH> const    background_brush        ;
+
+   extern win32::gdi_object<HBITMAP> const   brand_bitmap            ;
 
    namespace folder_tree
    {

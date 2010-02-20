@@ -416,6 +416,31 @@ namespace win32
                GetModuleHandle (NULL)
             ,  MAKEINTRESOURCE (resource_id)));
    }
+
+   SIZE const get_bitmap_size (HDC const hdc, HBITMAP const bitmap)
+   {
+      SIZE result = {0};
+      if (hdc && bitmap)
+      {
+         BITMAPINFO bmi = {0};
+         bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+         auto get_bits_result = GetDIBits (
+               hdc
+            ,  bitmap
+            ,  0
+            ,  0
+            ,  NULL
+            ,  &bmi
+            ,  DIB_RGB_COLORS
+            );
+         if (get_bits_result)
+         {
+            result.cx   = bmi.bmiHeader.biWidth    ;
+            result.cy   = bmi.bmiHeader.biHeight   ;
+         }
+      }
+      return result;
+   }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------

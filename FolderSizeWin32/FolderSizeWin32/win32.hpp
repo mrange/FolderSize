@@ -280,6 +280,7 @@ namespace win32
 
    // -------------------------------------------------------------------------
    gdi_object<HBITMAP> const load_bitmap_resource (int resource_id);
+   SIZE const get_bitmap_size (HDC const hdc, HBITMAP const bitmap);
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
