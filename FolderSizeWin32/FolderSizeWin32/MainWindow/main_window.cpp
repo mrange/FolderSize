@@ -191,7 +191,7 @@ namespace main_window
 
       // ----------------------------------------------------------------------
       template<typename TPredicate>
-      iteration_control::type const for_all_child_windows (TPredicate const predicate)
+      void for_all_child_windows (TPredicate const predicate)
       {
          auto size = size_of_array (s_child_window);
          for (auto iter = 0; iter < size; ++iter)
@@ -200,7 +200,7 @@ namespace main_window
 
             if (predicate (wc) == iteration_control::break_)
             {
-               return iteration_control::break_;
+               return;
             }
          }
       }
@@ -208,7 +208,7 @@ namespace main_window
 
       // ----------------------------------------------------------------------
       template<typename TPredicate>
-      iteration_control::type const circle_child_windows (
+      void circle_child_windows (
             bool const forward
          ,  int const start_index
          ,  TPredicate const predicate)
@@ -224,14 +224,14 @@ namespace main_window
 
             if (predicate (wc) == iteration_control::break_)
             {
-               return iteration_control::break_;
+               return;
             }
 
             iter = (iter + increment) % size;
          }
          while (start_index != iter);
 
-         return iteration_control::continue_;
+         return;
       }
       // ----------------------------------------------------------------------
 
@@ -276,7 +276,7 @@ namespace main_window
          }
          else
          {
-            auto find_last_non_slash = root_path.find_last_not_of ( _T("\\/"));
+            auto find_last_non_slash = root_path.find_last_not_of ( _T ("\\/"));
 
             if (w::tstring::npos == find_last_non_slash)
             {
@@ -461,7 +461,7 @@ namespace main_window
          ,  LPARAM const   lParam
          )
       {
-         switch(message)
+         switch (message)
          {
          case WM_TIMER:
          case WM_MOUSEMOVE:
@@ -469,10 +469,9 @@ namespace main_window
             break;
          default:
             TCHAR buffer[max_load_string] = {0};
-            _sntprintf (
+            _stprintf_s (
                   buffer
-               ,  max_load_string
-               ,  _T("WM2: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+               ,  _T ("WM2: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
                ,  hwnd
                ,  message
                ,  wParam
@@ -516,14 +515,14 @@ namespace main_window
             {
                auto hdc = reinterpret_cast<HDC> (wParam);
                SetBkMode (hdc, TRANSPARENT);
-               l_result = (LRESULT)(HBRUSH)GetStockObject(NULL_BRUSH);
+               l_result = reinterpret_cast<LRESULT> (reinterpret_cast<HBRUSH> (GetStockObject (NULL_BRUSH)));
                break;
             }
             break;
          case WM_CTLCOLORBTN:
             {
-               auto hdc = reinterpret_cast<HDC> (wParam);
-               l_result = (LRESULT)theme::background_brush.value;
+               //auto hdc = reinterpret_cast<HDC> (wParam);
+               l_result = reinterpret_cast<LRESULT> (theme::background_brush.value);
                break;
             }
             break;
@@ -534,10 +533,9 @@ namespace main_window
                // Parse the menu selections:
                
                TCHAR buffer[max_load_string] = {0};
-               _sntprintf (
+               _stprintf_s (
                      buffer
-                  ,  max_load_string
-                  ,  _T("WM_COMMAND: %d, %d")
+                  ,  _T ("WM_COMMAND: %d, %d")
                   ,  wmId
                   ,  wmEvent);
 
@@ -708,7 +706,7 @@ namespace main_window
             break;
          case WM_MOUSEMOVE:
             {
-               auto mouse_coord = w::get_mouse_coordinate(lParam);
+               auto mouse_coord = w::get_mouse_coordinate (lParam);
 
                if (
                      s_state.get () 
@@ -747,7 +745,7 @@ namespace main_window
             break;
          case WM_LBUTTONDOWN:
             {
-               auto mouse_coord = w::get_mouse_coordinate(lParam);
+               auto mouse_coord = w::get_mouse_coordinate (lParam);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -757,7 +755,7 @@ namespace main_window
             break;
          case WM_LBUTTONUP:
             {
-               auto mouse_coord = w::get_mouse_coordinate(lParam);
+               auto mouse_coord = w::get_mouse_coordinate (lParam);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -798,7 +796,7 @@ namespace main_window
             break;
          case WM_RBUTTONUP:
             {
-               auto mouse_coord = w::get_mouse_coordinate(lParam);
+               auto mouse_coord = w::get_mouse_coordinate (lParam);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -812,7 +810,7 @@ namespace main_window
          case WM_MOUSEWHEEL:
             {
                auto scroll = static_cast<short> (HIWORD (wParam)) / WHEEL_DELTA;
-               auto mouse_coord = w::get_client_mouse_coordinate(hwnd, lParam);
+               auto mouse_coord = w::get_client_mouse_coordinate (hwnd, lParam);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
@@ -912,9 +910,9 @@ namespace main_window
       bool init_instance (HINSTANCE const instance, int const command_show)
       {
          INITCOMMONCONTROLSEX InitCtrls = {0};
-      	InitCtrls.dwSize = sizeof(InitCtrls);
+      	InitCtrls.dwSize = sizeof (InitCtrls);
          InitCtrls.dwICC = ICC_WIN95_CLASSES;
-      	InitCommonControlsEx(&InitCtrls);
+      	InitCommonControlsEx (&InitCtrls);
 
          s_instance = instance; // Store instance handle in our global variable
 
@@ -1070,9 +1068,6 @@ namespace main_window
       ,  LPTSTR const    command_line
       ,  int const       command_show)
    {
-      UNREFERENCED_PARAMETER (previous_instance);
-      UNREFERENCED_PARAMETER (command_line);
-
       auto set_priority_class_result = SetPriorityClass (GetCurrentProcess (), IDLE_PRIORITY_CLASS);
       UNUSED_VARIABLE (set_priority_class_result);
 
@@ -1094,17 +1089,16 @@ namespace main_window
       // Main message loop:
       while (GetMessage (&msg, NULL, 0, 0))
       {
-         switch(msg.message)
+         switch (msg.message)
          {
          case WM_TIMER:
          case WM_MOUSEMOVE:
             break;
          default:
             TCHAR buffer[max_load_string] = {0};
-            _sntprintf (
+            _stprintf_s (
                   buffer
-               ,  max_load_string
-               ,  _T("WM: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+               ,  _T ("WM: 0x%08X, 0x%04X, 0x%08X, 0x%08X")
                ,  msg.hwnd
                ,  msg.message
                ,  msg.wParam
@@ -1116,7 +1110,7 @@ namespace main_window
 
          auto process_message = true;
 
-         switch(msg.message)
+         switch (msg.message)
          {
          case WM_SYSKEYDOWN:
             switch (msg.wParam)

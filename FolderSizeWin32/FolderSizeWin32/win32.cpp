@@ -181,7 +181,7 @@ namespace win32
             state->terminated = true;
             _endthreadex (result);
          }
-         catch(...)
+         catch (...)
          {
             output_debug_string (_T ("FolderSize.Win32 : Thread threw exception: ") + state->thread_name);
             state->terminated = true;
@@ -283,7 +283,7 @@ namespace win32
 
    window_device_context::~window_device_context () throw ()
    {
-      auto result = ReleaseDC(hwnd, hdc);
+      auto result = ReleaseDC (hwnd, hdc);
       UNUSED_VARIABLE (result);
    }
    // -------------------------------------------------------------------------
@@ -364,7 +364,7 @@ namespace win32
 
       auto system_parameters_info_result = SystemParametersInfo (
             SPI_GETNONCLIENTMETRICS
-         ,  sizeof(NONCLIENTMETRICS)
+         ,  sizeof (NONCLIENTMETRICS)
          ,  &non_client_metrics
          ,  0);
       

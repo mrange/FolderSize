@@ -61,7 +61,7 @@ namespace linear
       {
       }
 
-      LINEAR_INLINE value_type const operator() (std::size_t const row) const throw ()
+      LINEAR_INLINE value_type const operator () (std::size_t const row) const throw ()
       {
          BOOST_ASSERT (row < no_of_values);
          return values[row];
@@ -271,7 +271,7 @@ namespace linear
       {
       }
 
-      LINEAR_INLINE value_type const operator() (std::size_t const row, std::size_t const column) const throw ()
+      LINEAR_INLINE value_type const operator () (std::size_t const row, std::size_t const column) const throw ()
       {
          BOOST_ASSERT (column + columns * row < no_of_values);
          return values[column + columns * row];
@@ -372,9 +372,7 @@ namespace linear
       matrix<value_type_, left_rows_, right_columns_> result (no_initialize::value);
 
       auto result_values_ptr = result.values;
-      auto right_step = shared_dimension_;
       auto default_value = value_type_ ();
-
 
       for (auto row = 0; row < left_rows_; ++row)
       {
@@ -449,13 +447,13 @@ namespace linear
 
    // -------------------------------------------------------------------------
    template<typename value_type_, std::size_t dimension_>
-   matrix<value_type_, dimension_, dimension_> const zero_matrix()
+   matrix<value_type_, dimension_, dimension_> const zero_matrix ()
    {
       return matrix<value_type_, dimension_, dimension_> ();
    }
 
    template<typename value_type_, std::size_t dimension_>
-   matrix<value_type_, dimension_, dimension_> const identity_matrix()
+   matrix<value_type_, dimension_, dimension_> const identity_matrix ()
    {
       matrix<value_type_, dimension_, dimension_> result;
 
@@ -471,7 +469,7 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t dimension_>
-   matrix<value_type_, dimension_ + 1, dimension_ + 1> const translating_matrix(
+   matrix<value_type_, dimension_ + 1, dimension_ + 1> const translating_matrix (
       vector<value_type_, dimension_> const & offset
       )
    {
@@ -487,7 +485,7 @@ namespace linear
    }
 
    template<typename value_type_, std::size_t dimension_>
-   matrix<value_type_, dimension_ + 1, dimension_ + 1> const scaling_matrix(
+   matrix<value_type_, dimension_ + 1, dimension_ + 1> const scaling_matrix (
       vector<value_type_, dimension_> const & scaling
       )
    {
