@@ -51,22 +51,6 @@ namespace painter
       std::size_t const buffer_size    = 256;
       double const      cut_off_y      = 10.0;
 
-      struct rendered_folder
-      {
-         rendered_folder (
-               RECT const & render_rect_
-            ,  f::folder const * const folder_
-            )
-            :  render_rect (render_rect_  )
-            ,  folder      (folder_       )
-         {
-         }
-
-         RECT const              render_rect;
-         f::folder const * const folder;
-
-      };
-
       typedef s::vector<rendered_folder> rendered_folders;
 
       struct update_request : boost::noncopyable
@@ -266,9 +250,16 @@ namespace painter
                rect.right        = IMPLICIT_CAST (current_right_bottom.x ()   );
                rect.bottom       = IMPLICIT_CAST (current_right_bottom.y ()   );
 
+               view_rect view_rect                                            ;
+               view_rect.values[0]      = current_x                           ;
+               view_rect.values[1]      = current_y                           ;
+               view_rect.values[2]      = current_x + x_step_ratio            ;
+               view_rect.values[3]      = current_y + height                  ;
+
                rendered_folders.push_back (
                   rendered_folder (
                         rect
+                     ,  view_rect
                      ,  folder
                      ));
 
@@ -502,7 +493,7 @@ namespace painter
                            TCHAR buffer [buffer_size * 8] = {0};
                            auto cch = _stprintf_s (
                                  buffer
-                              ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nTotal file count:%8I64d  \r\nTotal Depth:%8d  ")
+                              ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nTotal file count:%8I64d  \r\nMax folder depth:%8d  ")
                               ,  request_ptr->unprocessed_folder_count
                               ,  request_ptr->processed_folder_count
                               ,  request_ptr->root->get_total_file_count ()
@@ -748,13 +739,13 @@ namespace painter
          }
       }
 
-      f::folder const * const hit_test (
+      rendered_folder const hit_test (
             POINT const & offset
          )
       {
          if (!update_response.get ())
          {
-            return NULL;
+            return rendered_folder ();
          }
 
          rendered_folders const & current_rendered_folders = update_response->rendered_folders;
@@ -770,15 +761,41 @@ namespace painter
 
          if (find == end)
          {
-            return NULL;
+            return rendered_folder ();
          }
 
-         return find->folder;
+         return *find;
       }
 
       background_painter                              background_painter;
       update_response::ptr                            update_response   ;
    };
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   rendered_folder::rendered_folder ()
+      :  render_rect (w::zero_rect ()  )
+      ,  folder      (NULL             )
+   {
+   }
+
+   rendered_folder::rendered_folder (
+         RECT const &                  render_rect_
+      ,  ::painter::view_rect const  & view_rect_
+      ,  f::folder const * const       folder_
+      )
+      :  render_rect (render_rect_  )
+      ,  view_rect   (view_rect_    )
+      ,  folder      (folder_       )
+   {
+   }
+
+   rendered_folder::rendered_folder (rendered_folder const && rf)
+      :  render_rect (rf.render_rect   )
+      ,  view_rect   (rf.view_rect     )
+      ,  folder      (rf.folder        )
+   {
+   }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -845,7 +862,7 @@ namespace painter
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   f::folder const * const painter::hit_test (
+   rendered_folder const painter::hit_test (
          POINT const & offset
       )
    {

@@ -32,8 +32,25 @@ namespace painter
    typedef linear::vector<double, 2>      coordinate  ;
    typedef linear::vector<double, 2>      zoom_factor ;
    typedef linear::vector<double, 2>      dimension   ;
+   typedef linear::vector<double, 4>      view_rect   ;
    // -------------------------------------------------------------------------
 
+   // -------------------------------------------------------------------------
+   struct rendered_folder
+   {
+      rendered_folder ();
+      rendered_folder (
+            RECT const &                  render_rect
+         ,  view_rect const  &            view_rect
+         ,  folder::folder const * const  folder
+         );
+
+      rendered_folder (rendered_folder const &&);
+
+      RECT const                    render_rect ;
+      view_rect const               view_rect   ;
+      folder::folder const * const  folder      ;
+   };
    // -------------------------------------------------------------------------
    struct painter : boost::noncopyable
    {
@@ -61,7 +78,7 @@ namespace painter
          ,  zoom_factor const &           zoom
          );
 
-      folder::folder const * const hit_test (
+      rendered_folder const hit_test (
             POINT const & offset
          );
 

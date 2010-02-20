@@ -444,6 +444,12 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   RECT const  zero_rect ()
+   {
+      RECT rect = {0};
+      return rect;
+   }
+
    bool const is_inside (RECT const & rect, POINT const & point)
    {
       return 
