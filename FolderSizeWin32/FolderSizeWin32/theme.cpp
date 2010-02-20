@@ -18,19 +18,27 @@
 // ----------------------------------------------------------------------------
 #include "theme.hpp"
 // ----------------------------------------------------------------------------
+#include "resource.h"
+// ----------------------------------------------------------------------------
 namespace theme
 {
    namespace w = win32;
 
    win32::gdi_object<HFONT> const default_font                 =  w::create_standard_message_font  (                       );
    win32::gdi_object<HFONT> const default_big_font             =  w::create_standard_message_font  (48                     );
-   win32::gdi_object<HFONT> const default_monospace_font       =  w::create_font                   (_T ("Courier New"), 18  );
+   win32::gdi_object<HFONT> const default_monospace_font       =  w::create_font                   (_T ("Courier New"), 18 );
 
    COLORREF const background_color                             = RGB (0xDE, 0xDE, 0xDE);
    COLORREF const background_gradient_top_color                = RGB (0xF0, 0xF0, 0xF0);
    COLORREF const background_gradient_bottom_color             = RGB (0xCC, 0xCC, 0xCC);
 
-   win32::gdi_object<HBRUSH> const background_brush            (CreateSolidBrush (background_color          ));
+   win32::gdi_object<HBRUSH> const background_brush            (CreateSolidBrush (background_color)                        );
+
+#ifdef IDB_BRAND_BITMAP
+   win32::gdi_object<HBITMAP> const   brand_bitmap             (win32::load_bitmap_resource (IDB_BRAND_BITMAP)             );
+#else
+   win32::gdi_object<HBITMAP> const   brand_bitmap             (NULL                                                       );
+#endif
 
    namespace folder_tree
    {

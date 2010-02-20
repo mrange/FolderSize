@@ -518,6 +518,34 @@ namespace painter
                               );
                         }
 
+                        if (theme::brand_bitmap.is_valid ())
+                        {
+                           w::device_context brand_bitmap_dc (CreateCompatibleDC (bitmap_dc.value));
+
+                           w::select_object select_bitmap (
+                                 brand_bitmap_dc.value
+                                 ,  theme::brand_bitmap.value
+                                 );
+
+                           auto brand_bitmap_size = w::get_bitmap_size (
+                                 bitmap_dc.value
+                              ,  theme::brand_bitmap.value
+                              );
+
+                           BitBlt (
+                                 bitmap_dc.value
+                              ,  rect.right - brand_bitmap_size.cx - 8
+                              ,  rect.bottom - brand_bitmap_size.cy - 8
+                              ,  brand_bitmap_size.cx
+                              ,  brand_bitmap_size.cy
+                              ,  brand_bitmap_dc.value
+                              ,  0
+                              ,  0
+                              ,  SRCCOPY
+                              );
+                        }
+
+
                         w::select_object const select_font (
                               bitmap_dc.value
                            ,  theme::default_font.value
