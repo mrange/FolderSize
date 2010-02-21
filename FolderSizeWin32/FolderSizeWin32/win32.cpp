@@ -46,7 +46,7 @@ namespace win32
          if (get_version_ex_result)
          {
             return 
-               st::make_tuple (6, 1) <= st::make_tuple (
+               st::make_tuple (6u, 1u) <= st::make_tuple (
                      os_version_info.dwMajorVersion
                   ,  os_version_info.dwMinorVersion
                   );
