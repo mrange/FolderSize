@@ -113,6 +113,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="theme.cpp" />
+    <ClCompile Include="utility.cpp" />
     <ClCompile Include="view_transform.cpp" />
     <ClCompile Include="win32.cpp" />
     <ClCompile Include="Traverser\traverser.cpp" />

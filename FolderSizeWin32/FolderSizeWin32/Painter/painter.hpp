@@ -37,8 +37,9 @@ namespace painter
    {
       enum type
       {
-         size  ,
-         count ,
+         size           ,
+         physical_size  ,
+         count          ,
       };
    }
    // -------------------------------------------------------------------------

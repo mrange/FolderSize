@@ -35,6 +35,28 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   extern bool const windows7_or_later                                           ;
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   template<typename TValueType>
+   TValueType const get_windows7_dependent_value (
+         TValueType const & windows7_value
+      ,  TValueType const & legacy_value
+      )
+   {
+      if (windows7_or_later)
+      {
+         return windows7_value;
+      }
+      else
+      {
+         return legacy_value;
+      }
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    void trace_string (tstring const & value);
    void trace_string (LPCTSTR const value);
 
@@ -121,7 +143,7 @@ namespace win32
       bool const is_directory () const throw ();
       big_size const get_size () const throw ();
       DWORD const get_reparse_point_tag () const throw (); 
-
+      DWORD const get_file_attributes () const throw ();
       LPCTSTR const get_name () const throw ();
       ~find_file () throw ();
 

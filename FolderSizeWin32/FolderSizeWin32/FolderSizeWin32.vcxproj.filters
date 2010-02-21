@@ -60,6 +60,7 @@
     </ClCompile>
     <ClCompile Include="view_transform.cpp" />
     <ClCompile Include="Win32.cpp" />
+    <ClCompile Include="utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FolderSizeWin32.rc">

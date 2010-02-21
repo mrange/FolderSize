@@ -18,6 +18,7 @@
 // ----------------------------------------------------------------------------
 #include <process.h>
 // ----------------------------------------------------------------------------
+#include <tuple>
 #include <vector>
 // ----------------------------------------------------------------------------
 #include "win32.hpp"
@@ -30,6 +31,34 @@ namespace win32
    namespace s    = std          ;
    namespace st   = s::tr1       ;
    namespace b    = boost        ;
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   namespace
+   {
+      bool const is_windows7_or_later ()
+      {
+         OSVERSIONINFO os_version_info = {0};
+         os_version_info.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+         auto get_version_ex_result = GetVersionEx (
+               &os_version_info
+            );
+         if (get_version_ex_result)
+         {
+            return 
+               st::make_tuple (6, 1) <= st::make_tuple (
+                     os_version_info.dwMajorVersion
+                  ,  os_version_info.dwMinorVersion
+                  );
+         }
+         else
+         {
+            return false;
+         }
+      }
+   }
+   // -------------------------------------------------------------------------
+   bool const windows7_or_later                    = is_windows7_or_later ();              
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -216,9 +245,14 @@ namespace win32
    find_file::find_file (
       tstring const & path
       )
-      :  find_file_handle (FindFirstFile (
+      :  find_file_handle (FindFirstFileEx (
                path.c_str ()
-            ,  &find_data))
+            ,  get_windows7_dependent_value (FindExInfoBasic, FindExInfoStandard)
+            ,  &find_data
+            ,  FindExSearchNameMatch
+            ,  NULL
+            ,  get_windows7_dependent_value (FIND_FIRST_EX_LARGE_FETCH, 0)
+            ))
    {
       
    }
@@ -253,6 +287,11 @@ namespace win32
       {
          return 0;
       }
+   }
+
+   DWORD const find_file::get_file_attributes () const throw ()
+   {
+      return find_data.dwFileAttributes;
    }
 
    LPCTSTR const find_file::get_name () const throw ()

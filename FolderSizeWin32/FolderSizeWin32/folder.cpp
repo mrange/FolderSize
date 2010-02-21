@@ -44,13 +44,15 @@ namespace folder
    folder::initializer::initializer (
          folder * const          parent_
       ,  tstring const &         name_
-      ,  big_size const  size_
-      ,  std::size_t             file_count_
+      ,  big_size const          size_
+      ,  big_size const          physical_size_          
+      ,  std::size_t const       file_count_
       ,  std::size_t const       folder_count_   
       )
       :  parent         (parent_       )
       ,  name           (name_         )          
       ,  size           (size_         )
+      ,  physical_size  (physical_size_)
       ,  file_count     (file_count_   )
       ,  folder_count   (folder_count_ )
    {
@@ -60,13 +62,15 @@ namespace folder
    // -------------------------------------------------------------------------
    folder::folder ()
       :  parent               (NULL                      )
-      ,  name                 (_T ("")                    )
+      ,  name                 (_T ("")                   )
       ,  size                 (0                         )
+      ,  physical_size        (0                         )
       ,  file_count           (0                         )
       ,  folder_count         (0                         )
       ,  sub_folders          (new f::folder * [0]       )
       ,  depth                (0                         )
       ,  total_size           (0                         )
+      ,  total_physical_size  (0                         )
       ,  total_file_count     (0                         )
       ,  total_folder_count   (0                         )
    {
@@ -79,11 +83,13 @@ namespace folder
       :  parent               (init.parent                                             )
       ,  name                 (init.name                                               )
       ,  size                 (init.size                                               )
+      ,  physical_size        (init.physical_size                                      )
       ,  file_count           (init.file_count                                         )
       ,  folder_count         (init.folder_count                                       )
       ,  sub_folders          (new f::folder * [static_cast<int> (init.folder_count)]  )
       ,  depth                (1                                                       )
       ,  total_size           (init.size                                               )
+      ,  total_physical_size  (init.physical_size                                      )
       ,  total_file_count     (init.file_count                                         )
       ,  total_folder_count   (init.folder_count                                       )
    {
@@ -96,6 +102,7 @@ namespace folder
          parent->recursive_update (
                depth
             ,  size
+            ,  physical_size
             ,  file_count
             ,  folder_count);
       }
@@ -176,6 +183,13 @@ namespace folder
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   big_size const folder::get_total_physical_size () const throw ()
+   {
+      return interlocked_read (&total_physical_size);
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    big_size const folder::get_total_file_count () const throw ()
    {
       return interlocked_read (&total_file_count);
@@ -193,18 +207,26 @@ namespace folder
    void folder::recursive_update  (
          std::size_t const child_depth
       ,  big_size const size         
+      ,  big_size const physical_size         
       ,  big_size const file_count   
       ,  big_size const folder_count 
       )
    {
       interlocked_max (&depth                , child_depth + 1 );
       interlocked_add (&total_size           , size            );
+      interlocked_add (&total_physical_size  , physical_size   );
       interlocked_add (&total_file_count     , file_count      );
       interlocked_add (&total_folder_count   , folder_count    );
 
       if (parent)
       {
-         parent->recursive_update (child_depth + 1, size, file_count, folder_count);
+         parent->recursive_update (
+               child_depth + 1
+            ,  size
+            ,  physical_size
+            , file_count
+            , folder_count
+            );
       }
    }
    // -------------------------------------------------------------------------

@@ -24,6 +24,8 @@
 #define IMPLICIT_CAST(expr) (utility::implicit_cast (expr))
 #define IS_ON utility::is_on
 #define IS_OFF utility::is_off
+#define ANY_IS_ON utility::any_is_on
+#define ANY_IS_OFF utility::any_is_off
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
@@ -114,6 +116,20 @@ namespace utility
    {
       return (bits & static_cast<TLeft> (comparand)) == 0;
    }
+
+   template<typename TLeft, typename TRight>
+   bool const any_is_on (TLeft const & bits, TRight const & comparand)
+   {
+      return (bits & static_cast<TLeft> (comparand)) != 0;
+   }
+
+   template<typename TLeft, typename TRight>
+   bool const any_is_off (TLeft const & bits, TRight const & comparand)
+   {
+      return (bits & static_cast<TLeft> (comparand)) != static_cast<TLeft> (comparand);
+   }
+   // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------
