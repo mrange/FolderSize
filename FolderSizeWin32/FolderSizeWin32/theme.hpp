@@ -23,8 +23,9 @@
 namespace theme
 {
    extern win32::tstring const               welcome_string                   ;      
-   extern win32::tstring const               size_string                   ;      
-   extern win32::tstring const               count_string                   ;      
+   extern win32::tstring const               size_string                      ;      
+   extern win32::tstring const               physical_size_string             ;      
+   extern win32::tstring const               count_string                     ;      
 
    extern win32::gdi_object<HFONT> const     default_font                     ;
    extern win32::gdi_object<HFONT> const     default_big_font                 ;
@@ -45,10 +46,12 @@ namespace theme
 
       extern COLORREF const                     background_color              ;
       extern COLORREF const                     folder_background_color       ;
+      extern COLORREF const                     cfolder_background_color      ;
       extern COLORREF const                     folder_foreground_color       ;
 
       extern win32::gdi_object<HBRUSH> const    background_brush              ;
       extern win32::gdi_object<HBRUSH> const    folder_background_brush       ;
+      extern win32::gdi_object<HBRUSH> const    cfolder_background_brush      ;
       extern win32::gdi_object<HBRUSH> const    folder_foreground_brush       ;
    }
 }

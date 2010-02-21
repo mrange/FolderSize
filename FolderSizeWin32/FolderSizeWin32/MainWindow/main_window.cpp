@@ -328,7 +328,7 @@ namespace main_window
          auto result = GetClientRect (hwnd, &rect);
          UNUSED_VARIABLE (result);
 
-         BOOST_ASSERT (result);
+         FS_ASSERT (result);
          
          return calculate_size (rect);
       }
@@ -537,6 +537,24 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      p::select_property::type const get_select_property_from_index (int index)
+      {
+         switch (index)
+         {
+         case 0:
+            return p::select_property::size;
+         case 1:
+            return p::select_property::physical_size;
+         case 2:
+            return p::select_property::count;
+         default:
+            FS_ASSERT (false);
+            return p::select_property::size;
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       LRESULT CALLBACK window_process (
             HWND const     hwnd
          ,  UINT const     message
@@ -674,15 +692,11 @@ namespace main_window
                         //|| wm_event == CBN_SELENDCANCEL
                         )
                      {
-                        auto selection = SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0);
-                        if (selection == 0 && s_select_property != p::select_property::size)
+                        auto selection = get_select_property_from_index (SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0));
+
+                        if (selection != s_select_property)
                         {
-                           s_select_property = p::select_property::size;
-                           invalidate_folder_tree_area (hwnd);
-                        }
-                        else if (selection == 1 && s_select_property != p::select_property::count)
-                        {
-                           s_select_property = p::select_property::count;
+                           s_select_property = selection;
                            invalidate_folder_tree_area (hwnd);
                         }
                      }
@@ -1143,6 +1157,7 @@ namespace main_window
          clear_ui_state (UISF_HIDEFOCUS);
 
          SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::size_string.c_str ()));
+         SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::physical_size_string.c_str ()));
          SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::count_string.c_str ()));
          SendMessage(s_selector.hwnd, CB_SETCURSEL, 0, 0L);
 

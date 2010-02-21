@@ -157,7 +157,8 @@ namespace traverser
                      w::tstring
                   ,  b::pool_allocator<w::tstring>>  
                                        folder_names      ;
-               big_size        size           (0);
+               big_size                size           (0);
+               big_size                physical_size  (0);
                std::size_t             file_count     (0);
 
                folder_names.reserve (1024);
@@ -181,7 +182,29 @@ namespace traverser
                      if (!skippable_reparse_point (find_file.get_reparse_point_tag ()))
                      {
                         size += find_file.get_size ();
+                        if (ANY_IS_ON (
+                              find_file.get_file_attributes ()
+                           ,  FILE_ATTRIBUTE_COMPRESSED | FILE_ATTRIBUTE_SPARSE_FILE
+                           ))
+                        {
+                           auto file_path = current_job.path + _T ("\\") + find_file.get_name ();
+                           DWORD hiword = 0;
+                           DWORD loword = GetCompressedFileSize (
+                                 file_path.c_str ()
+                              ,  &hiword);
+
+                           if (loword != INVALID_FILE_SIZE)
+                           {
+                              physical_size += static_cast<big_size> (hiword) << 32 | loword;
+                           }
+                        }
+                        else
+                        {
+                           // Potentially we should 
+                           physical_size += find_file.get_size ();
+                        }
                      }
+
                      ++file_count;
                   }
                }
@@ -194,6 +217,7 @@ namespace traverser
                         current_job.parent_folder
                      ,  current_job.name
                      ,  size
+                     ,  physical_size
                      ,  file_count
                      ,  folder_count));
 

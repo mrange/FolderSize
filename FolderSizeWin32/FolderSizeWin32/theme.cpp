@@ -24,9 +24,10 @@ namespace theme
 {
    namespace w = win32;  
 
-   w::tstring const           welcome_string                   = w::load_string_resource (IDC_WELCOME_MSG   , _T("Click Go to start..."));      
-   w::tstring const           size_string                      = w::load_string_resource (IDC_SIZE_CHOICE   , _T("Size"));            
-   w::tstring const           count_string                     = w::load_string_resource (IDC_COUNT_CHOICE  , _T("Count"));            
+   w::tstring const           welcome_string                   = w::load_string_resource (IDC_WELCOME_MSG            , _T("Click Go to start...")  );      
+   w::tstring const           size_string                      = w::load_string_resource (IDC_SIZE_CHOICE            , _T("Size")                  );            
+   w::tstring const           physical_size_string             = w::load_string_resource (IDC_PHYSICAL_SIZE_CHOICE   , _T("Physical")              );            
+   w::tstring const           count_string                     = w::load_string_resource (IDC_COUNT_CHOICE           , _T("Count")                 );            
 
    w::gdi_object<HFONT> const default_font                     = w::create_standard_message_font  (                       );
    w::gdi_object<HFONT> const default_big_font                 = w::create_standard_message_font  (48                     );
@@ -51,10 +52,12 @@ namespace theme
 
       COLORREF const background_color                          = RGB (0x29, 0x39, 0x55);
       COLORREF const folder_background_color                   = RGB (0xBC, 0xC7, 0xD8);
+      COLORREF const cfolder_background_color                  = RGB (0xD8, 0xC6, 0xBC);
       COLORREF const folder_foreground_color                   = RGB (0x42, 0x48, 0x51);
 
       w::gdi_object<HBRUSH> const background_brush             (CreateSolidBrush (background_color          ));
       w::gdi_object<HBRUSH> const folder_background_brush      (CreateSolidBrush (folder_background_color   ));
+      w::gdi_object<HBRUSH> const cfolder_background_brush     (CreateSolidBrush (cfolder_background_color  ));
       w::gdi_object<HBRUSH> const folder_foreground_brush      (CreateSolidBrush (folder_foreground_color   ));
    }
 }

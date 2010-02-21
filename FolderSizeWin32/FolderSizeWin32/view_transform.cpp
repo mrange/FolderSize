@@ -83,7 +83,7 @@ namespace view_transform
             case transform_direction::reverse:
                return linear::translating_matrix (-v);
             default:
-               BOOST_ASSERT (false);
+               FS_ASSERT (false);
                return linear::identity_matrix<double, 3> ();
             }
          };
@@ -103,7 +103,7 @@ namespace view_transform
             case transform_direction::reverse:
                return linear::scaling_matrix (linear::invert_vector (v));
             default:
-               BOOST_ASSERT (false);
+               FS_ASSERT (false);
                return linear::identity_matrix<double, 3> ();
             }
          };
@@ -161,7 +161,7 @@ namespace view_transform
                      break;
                   }
                default:
-                  BOOST_ASSERT (false);
+                  FS_ASSERT (false);
                   break;
                }
                return result;

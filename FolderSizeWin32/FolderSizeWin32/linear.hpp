@@ -47,8 +47,8 @@ namespace linear
          no_of_values   = rows   ,
       };
 
-      BOOST_STATIC_ASSERT (rows > 0);
-      BOOST_STATIC_ASSERT (std::tr1::is_pod<value_type>::value);
+      FS_STATIC_ASSERT (rows > 0);
+      FS_STATIC_ASSERT (std::tr1::is_pod<value_type>::value);
 
       typedef vector<value_type, rows> type;
 
@@ -63,43 +63,43 @@ namespace linear
 
       LINEAR_INLINE value_type const operator () (std::size_t const row) const throw ()
       {
-         BOOST_ASSERT (row < no_of_values);
+         FS_ASSERT (row < no_of_values);
          return values[row];
       }
 
       LINEAR_INLINE value_type const x () const throw ()
       {
-         BOOST_STATIC_ASSERT (0 < no_of_values);
+         FS_STATIC_ASSERT (0 < no_of_values);
          return values[0];
       }
 
       LINEAR_INLINE value_type const y () const throw ()
       {
-         BOOST_STATIC_ASSERT (1 < no_of_values);
+         FS_STATIC_ASSERT (1 < no_of_values);
          return values[1];
       }
 
       LINEAR_INLINE value_type const z () const throw ()
       {
-         BOOST_STATIC_ASSERT (2 < no_of_values);
+         FS_STATIC_ASSERT (2 < no_of_values);
          return values[2];
       }
 
       LINEAR_INLINE void x (value_type const x_) throw ()
       {
-         BOOST_STATIC_ASSERT (0 < no_of_values);
+         FS_STATIC_ASSERT (0 < no_of_values);
          values[0] = x_;
       }
 
       LINEAR_INLINE void y (value_type const y_) throw ()
       {
-         BOOST_STATIC_ASSERT (1 < no_of_values);
+         FS_STATIC_ASSERT (1 < no_of_values);
          values[1] = y_;
       }
 
       LINEAR_INLINE void z (value_type const z_) throw ()
       {
-         BOOST_STATIC_ASSERT (2 < no_of_values);
+         FS_STATIC_ASSERT (2 < no_of_values);
          values[2] = z_;
       }
 
@@ -135,7 +135,7 @@ namespace linear
    {
       vector<value_type_, rows_ - 1> v (no_initialize::value);
 
-      BOOST_ASSERT ((value.values [vector<value_type_, rows_>::no_of_values - 1] == 1));
+      FS_ASSERT ((value.values [vector<value_type_, rows_>::no_of_values - 1] == 1));
 
       memcpy (v.values, value.values, sizeof (value.values) - sizeof (value_type_));
 
@@ -256,9 +256,9 @@ namespace linear
          no_of_values   = rows * columns  ,
       };
 
-      BOOST_STATIC_ASSERT (columns  > 0);
-      BOOST_STATIC_ASSERT (rows     > 0);
-      BOOST_STATIC_ASSERT (std::tr1::is_pod<value_type>::value);
+      FS_STATIC_ASSERT (columns  > 0);
+      FS_STATIC_ASSERT (rows     > 0);
+      FS_STATIC_ASSERT (std::tr1::is_pod<value_type>::value);
 
       typedef matrix<value_type, rows, columns> type;
 
@@ -273,7 +273,7 @@ namespace linear
 
       LINEAR_INLINE value_type const operator () (std::size_t const row, std::size_t const column) const throw ()
       {
-         BOOST_ASSERT (column + columns * row < no_of_values);
+         FS_ASSERT (column + columns * row < no_of_values);
          return values[column + columns * row];
       }
 

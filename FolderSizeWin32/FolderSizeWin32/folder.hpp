@@ -38,6 +38,7 @@ namespace folder
          folder * const          parent         ;
          tstring const &         name           ;
          big_size const          size           ;
+         big_size const          physical_size  ;
          big_size const          file_count     ;
          big_size const          folder_count   ;
 
@@ -45,6 +46,7 @@ namespace folder
                folder * const          parent
             ,  tstring const &         name          
             ,  big_size const          size          
+            ,  big_size const          physical_size          
             ,  std::size_t const       file_count
             ,  std::size_t const       folder_count
             );
@@ -56,18 +58,20 @@ namespace folder
          initializer const & init
          );
 
-      folder * const          parent;
+      folder * const          parent            ;
 
-      tstring const           name;
+      tstring const           name              ;
 
-      folder_array const      sub_folders;
+      folder_array const      sub_folders       ;
 
-      big_size const          size;
-      big_size const          file_count;
-      big_size const          folder_count;
+      big_size const          size              ;
+      big_size const          physical_size     ;
+      big_size const          file_count        ;
+      big_size const          folder_count      ;
 
       std::size_t const       get_depth () const throw ();
       big_size const          get_total_size () const throw ();
+      big_size const          get_total_physical_size () const throw ();
       big_size const          get_total_file_count () const throw ();
       big_size const          get_total_folder_count () const throw ();
 
@@ -78,6 +82,7 @@ namespace folder
       void                    recursive_update  (
                                     std::size_t const child_depth
                                  ,  big_size const size         
+                                 ,  big_size const physical_size         
                                  ,  big_size const file_count   
                                  ,  big_size const folder_count 
                                  );
@@ -85,6 +90,7 @@ namespace folder
       std::size_t volatile    depth                ;
       __declspec (align (8))
       big_size volatile       total_size           ;
+      big_size volatile       total_physical_size  ;
       big_size volatile       total_file_count     ;
       big_size volatile       total_folder_count   ;
    };

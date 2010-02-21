@@ -43,6 +43,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 // ----------------------------------------------------------------------------
 
@@ -59,9 +60,11 @@ typedef unsigned __int64 big_size;
 #  include <boost/pool/pool.hpp>
 #  include <boost/pool/pool_alloc.hpp>
 #  include <boost/scoped_array.hpp>
+#  include <boost/static_assert.hpp>
 #pragma warning (pop)
 // ----------------------------------------------------------------------------
-
+#define FS_ASSERT BOOST_ASSERT
+#define FS_STATIC_ASSERT BOOST_STATIC_ASSERT
 // ----------------------------------------------------------------------------
 #ifdef UNICODE
 #  if defined _M_IX86

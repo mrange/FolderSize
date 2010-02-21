@@ -143,18 +143,12 @@ namespace painter
       {
          painter_context (
                HDC const hdc_
-            ,  HBRUSH const fill_brush_
-            ,  HBRUSH const frame_brush_
             )
             :  hdc (hdc_)
-            ,  fill_brush (fill_brush_)
-            ,  frame_brush (frame_brush_)
          {
          }
 
          HDC const            hdc               ;
-         HBRUSH const         fill_brush        ;
-         HBRUSH const         frame_brush       ;
       };
 
       struct background_painter
@@ -356,6 +350,13 @@ namespace painter
             return f->get_total_size ();
          }
 
+         static big_size physical_size_picker (
+            f::folder const * f
+            )
+         {
+            return f->get_total_physical_size ();
+         }
+
          static big_size count_picker (
             f::folder const * f
             )
@@ -413,10 +414,31 @@ namespace painter
                   );
             }
 
+            COLORREF                      background_color = {0};
+            w::gdi_object<HBRUSH> const * background_brush = NULL;
+
+            if (folder.size > folder.physical_size)
+            {
+               background_color = theme::folder_tree::cfolder_background_color;
+               background_brush = &theme::folder_tree::cfolder_background_brush;
+            }
+            else
+            {
+               background_color = theme::folder_tree::folder_background_color;
+               background_brush = &theme::folder_tree::folder_background_brush;
+            }
+
+            SetBkColor (
+                  painter_context.hdc
+               ,  background_color
+               );
+
+            FS_ASSERT (background_brush);
+
             FillRect (
                   painter_context.hdc
                ,  &copy_rect
-               ,  painter_context.fill_brush
+               ,  background_brush->value
                );
 
             DrawText (
@@ -433,11 +455,10 @@ namespace painter
             FrameRect (
                   painter_context.hdc
                ,  &copy_rect
-               ,  painter_context.frame_brush
+               ,  theme::folder_tree::folder_foreground_brush.value
                );
 
          }
-
 
          unsigned int proc ()
          {
@@ -570,8 +591,6 @@ namespace painter
 
                         painter_context const painter_context (
                               bitmap_dc.value
-                           ,  theme::folder_tree::folder_background_brush.value
-                           ,  theme::folder_tree::folder_foreground_brush.value
                            );
 
                         auto painter_ = [&painter_context] (
@@ -598,18 +617,18 @@ namespace painter
                            ,  centre
                            ,  zoom);
 
-                        if (request_ptr->select_property == select_property::size)
+                        if (request_ptr->select_property == select_property::physical_size)
                         {
                            folder_traverser (
                                  response_ptr->rendered_folders
                               ,  request_ptr->bitmap_size
                               ,  current_transform
                               ,  request_ptr->root
-                              ,  size_picker
+                              ,  physical_size_picker
                               ,  painter_
                               );
                         }
-                        else
+                        else if (request_ptr->select_property == select_property::count)
                         {
                            folder_traverser (
                                  response_ptr->rendered_folders
@@ -617,6 +636,17 @@ namespace painter
                               ,  current_transform
                               ,  request_ptr->root
                               ,  count_picker
+                              ,  painter_
+                              );
+                        }
+                        else // if (request_ptr->select_property == select_property::size)
+                        {
+                           folder_traverser (
+                                 response_ptr->rendered_folders
+                              ,  request_ptr->bitmap_size
+                              ,  current_transform
+                              ,  request_ptr->root
+                              ,  size_picker
                               ,  painter_
                               );
                         }
