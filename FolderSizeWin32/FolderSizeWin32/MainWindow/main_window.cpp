@@ -157,12 +157,13 @@ namespace main_window
          {  IDM_GO_PAUSE   , la | 8    , la | 8    , la | 8 + 104    , la | 8 + 32  , window_type::button   , BS_DEFPUSHBUTTON                  ,  0  },
          {  IDM_STOP       , la | 120  , la | 8    , la | 120 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
          {  IDM_BROWSE     , la | 210  , la | 8    , la | 210 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
-         {  IDM_PATH       , la | 300  , la | 10   , ra | 108        , la | 10 + 28 , window_type::edit     , 0                                 ,  WS_EX_CLIENTEDGE  },
+         {  IDM_PATH       , la | 300  , la | 10   , ra | 108        , la | 10 + 28 , window_type::edit     , ES_AUTOHSCROLL                    ,  WS_EX_CLIENTEDGE  },
          {  IDM_SELECTOR   , ra | 100  , la | 10   , ra | 8          , la | 10 + 29 , window_type::combo    , CBS_DROPDOWNLIST | CBS_HASSTRINGS ,  0  },
          {  IDM_FOLDERTREE , la | 0    , la | 48   , ra | 0          , ra | 22      , window_type::nowindow , 0                                 ,  0  },
          {  IDM_INFO       , la | 8    , ra | 22   , ra | 8          , ra | 0       , window_type::static_  , SS_CENTER                         ,  0  },
       };
 
+      child_window &             s_path                           = s_child_window[3];
       child_window &             s_selector                       = s_child_window[4];
       child_window &             s_folder_tree                    = s_child_window[5];
 
@@ -683,22 +684,34 @@ namespace main_window
                   }
                   break;
                case IDM_PATH:
+                     switch (wm_event)
+                     {
+                     case EN_SETFOCUS:
+                        {
+                           auto hwnd         = reinterpret_cast<HWND> (l_param);
+                           auto text_length  = GetWindowTextLength (hwnd);
+                           SendMessage (hwnd, EM_SETSEL, 0, text_length);
+                        }
+                        break;
+                     }
                   break;
                case IDM_SELECTOR:
                   {
-                     if (
-                           wm_event == CBN_SELENDOK
-                        //|| wm_event == CBN_SELCHANGE
-                        //|| wm_event == CBN_SELENDCANCEL
-                        )
+                     switch (wm_event)
                      {
-                        auto selection = get_select_property_from_index (SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0));
-
-                        if (selection != s_select_property)
+                     case CBN_SELENDOK:
+                     //case CBN_SELCHANGE:
+                     //case CBN_SELENDCANCEL:
                         {
-                           s_select_property = selection;
-                           invalidate_folder_tree_area (hwnd);
+                           auto selection = get_select_property_from_index (SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0));
+
+                           if (selection != s_select_property)
+                           {
+                              s_select_property = selection;
+                              invalidate_folder_tree_area (hwnd);
+                           }
                         }
+                        break;
                      }
                   }
                   break;
@@ -1160,6 +1173,8 @@ namespace main_window
          SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::physical_size_string.c_str ()));
          SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::count_string.c_str ()));
          SendMessage(s_selector.hwnd, CB_SETCURSEL, 0, 0L);
+
+         SetFocus (s_path.hwnd);
 
          ShowWindow (s_main_window, command_show);
 
