@@ -129,6 +129,20 @@ namespace traverser
          }
       }
 
+      bool const skippable_reparse_point (DWORD const reparse_tag) throw ()
+      {
+         if (
+               reparse_tag == IO_REPARSE_TAG_SYMLINK
+            || reparse_tag == IO_REPARSE_TAG_MOUNT_POINT)
+         {
+            return true;
+         }
+         else
+         {
+            return false;
+         }
+      }
+
       unsigned int proc ()
       {
          while (continue_running && job_queue.size () > 0)
@@ -154,14 +168,20 @@ namespace traverser
 
                   if (find_file.is_directory ())
                   {
-                     if (name != _T (".") && name != _T (".."))
+                     if (
+                           !skippable_reparse_point (find_file.get_reparse_point_tag ())
+                        && name != _T (".") 
+                        && name != _T (".."))
                      {
                         folder_names.push_back (find_file.get_name ());
                      }
                   }
                   else
                   {
-                     size += find_file.get_size ();
+                     if (!skippable_reparse_point (find_file.get_reparse_point_tag ()))
+                     {
+                        size += find_file.get_size ();
+                     }
                      ++file_count;
                   }
                }

@@ -39,7 +39,9 @@
     <ClInclude Include="utility.hpp" />
     <ClInclude Include="view_transform.hpp" />
     <ClInclude Include="Win32.hpp" />
-    <ClInclude Include="versioninfo.h" />
+    <ClInclude Include="versioninfo.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="folder.cpp" />
