@@ -39,11 +39,7 @@ namespace theme
 
    w::gdi_object<HBRUSH> const background_brush                (CreateSolidBrush (background_color)                        );
 
-#ifdef IDB_BRAND_BITMAP
    w::gdi_object<HBITMAP> const   brand_bitmap                 (w::load_bitmap_resource (IDB_BRAND_BITMAP)             );
-#else
-   w::gdi_object<HBITMAP> const   brand_bitmap                 (NULL                                                       );
-#endif
 
    namespace folder_tree
    {
