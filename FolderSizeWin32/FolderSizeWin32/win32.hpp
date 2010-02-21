@@ -120,6 +120,8 @@ namespace win32
       bool const find_next () throw ();
       bool const is_directory () const throw ();
       big_size const get_size () const throw ();
+      DWORD const get_reparse_point_tag () const throw (); 
+
       LPCTSTR const get_name () const throw ();
       ~find_file () throw ();
 

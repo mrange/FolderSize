@@ -243,6 +243,18 @@ namespace win32
       return (static_cast<big_size>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
    }
 
+   DWORD const find_file::get_reparse_point_tag () const throw ()
+   {
+      if (IS_ON (find_data.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+      {
+         return find_data.dwReserved0;
+      }
+      else
+      {
+         return 0;
+      }
+   }
+
    LPCTSTR const find_file::get_name () const throw ()
    {
       if (is_valid ())

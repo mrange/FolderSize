@@ -111,11 +111,10 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      int const            string_buffer_size                     = 128;
-      int const            la                                     = 0x00000000;
-      int const            ra                                     = 0x80000000;
-      vt::vector const     start_centre                           = vt::create_vector (0.00,0.00);
-      vt::vector const     start_zoom                             = vt::create_vector (0.99,0.99);
+      vt::vector const           start_centre                     = vt::create_vector (0.00,0.00);
+      vt::vector const           start_zoom                       = vt::create_vector (0.99,0.99);
+      int const                  string_buffer_size               = 128;
+      TCHAR const                window_class    []             = _T ("FOLDERSIZEWIN32");
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -144,26 +143,31 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      HINSTANCE            s_instance                             = NULL;
-      HWND                 s_main_window                          = NULL;
-      TCHAR const          s_window_class    []                   = _T ("FOLDERSIZEWIN32");
-      child_window         s_child_window    []                   =
+      HINSTANCE                  s_instance                       = NULL;
+      HWND                       s_main_window                    = NULL;
+      p::select_property::type   s_select_property                = p::select_property::size;
+
+      // la = left aligned
+      int const                  la                               = 0x00000000;
+      // ra = left aligned
+      int const                  ra                               = 0x80000000;
+
+      child_window               s_child_window    []             =
       {
          {  IDM_GO_PAUSE   , la | 8    , la | 8    , la | 8 + 104    , la | 8 + 32  , window_type::button   , BS_DEFPUSHBUTTON                  ,  0  },
          {  IDM_STOP       , la | 120  , la | 8    , la | 120 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
          {  IDM_BROWSE     , la | 210  , la | 8    , la | 210 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
-         {  IDM_PATH       , la | 300  , la | 10   , ra | 108        , la | 10 + 29 , window_type::edit     , WS_BORDER                         ,  0  },
+         {  IDM_PATH       , la | 300  , la | 10   , ra | 108        , la | 10 + 28 , window_type::edit     , 0                                 ,  WS_EX_CLIENTEDGE  },
          {  IDM_SELECTOR   , ra | 100  , la | 10   , ra | 8          , la | 10 + 29 , window_type::combo    , CBS_DROPDOWNLIST | CBS_HASSTRINGS ,  0  },
          {  IDM_FOLDERTREE , la | 0    , la | 48   , ra | 0          , ra | 22      , window_type::nowindow , 0                                 ,  0  },
          {  IDM_INFO       , la | 8    , ra | 22   , ra | 8          , ra | 0       , window_type::static_  , SS_CENTER                         ,  0  },
       };
 
-      child_window &       s_selector                             = s_child_window[4];
-      child_window &       s_folder_tree                          = s_child_window[5];
+      child_window &             s_selector                       = s_child_window[4];
+      child_window &             s_folder_tree                    = s_child_window[5];
 
-      state::ptr           s_state;
+      state::ptr                 s_state;
 
-      p::select_property::type   s_select_property                = p::select_property::size;
       //w::dll               s_dwm_dll (_T ("DwmApi"));
       // ----------------------------------------------------------------------
 
@@ -996,7 +1000,7 @@ namespace main_window
          wcex.hCursor         = LoadCursor (NULL, IDC_ARROW);
          wcex.hbrBackground   = NULL;
          wcex.lpszMenuName    = NULL;
-         wcex.lpszClassName   = s_window_class;
+         wcex.lpszClassName   = window_class;
          wcex.hIconSm         = LoadIcon (wcex.hInstance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
 
          return RegisterClassEx (&wcex);
@@ -1015,8 +1019,8 @@ namespace main_window
 
          s_main_window = CreateWindowEx (
                WS_EX_APPWINDOW | WS_EX_COMPOSITED /*| WS_EX_LAYERED*/
-            ,  s_window_class
-            ,  w::load_string_resource (IDC_FOLDERSIZEWIN32, s_window_class).c_str()
+            ,  window_class
+            ,  w::load_string_resource (IDC_FOLDERSIZEWIN32, window_class).c_str()
             ,     WS_OVERLAPPEDWINDOW
                |  WS_VISIBLE
                |  WS_TABSTOP
@@ -1093,7 +1097,7 @@ namespace main_window
                   wc.hwnd = CreateWindowEx (
                      wc.extended_style
                   ,  window_class
-                  ,  w::load_string_resource (wc.id, window_class).c_str()
+                  ,  w::load_string_resource (wc.id).c_str()
                   ,     wc.style 
                      |  WS_CHILD 
                      |  WS_VISIBLE
