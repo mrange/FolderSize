@@ -19,9 +19,6 @@
     <None Include="FolderSizeWin32.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="small.ico">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="folder.hpp" />

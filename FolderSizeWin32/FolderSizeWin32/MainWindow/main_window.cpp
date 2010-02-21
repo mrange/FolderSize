@@ -997,7 +997,7 @@ namespace main_window
          wcex.hbrBackground   = NULL;
          wcex.lpszMenuName    = NULL;
          wcex.lpszClassName   = s_window_class;
-         wcex.hIconSm         = LoadIcon (wcex.hInstance, MAKEINTRESOURCE (IDI_SMALL));
+         wcex.hIconSm         = LoadIcon (wcex.hInstance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
 
          return RegisterClassEx (&wcex);
       }

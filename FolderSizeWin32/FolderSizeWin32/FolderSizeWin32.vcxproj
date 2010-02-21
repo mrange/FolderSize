@@ -86,7 +86,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="FolderSizeWin32.ico" />
-    <None Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="folder.hpp" />
