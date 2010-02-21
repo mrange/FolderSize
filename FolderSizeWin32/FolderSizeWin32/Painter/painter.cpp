@@ -505,7 +505,7 @@ namespace painter
                            TCHAR buffer [buffer_size * 8] = {0};
                            auto cch = _stprintf_s (
                                  buffer
-                              ,  _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nMax folder depth:%8d  ")
+                              ,  theme::folder_tree::progress_string.c_str ()
                               ,  request_ptr->unprocessed_folder_count
                               ,  request_ptr->processed_folder_count
                               ,  request_ptr->root->get_depth ()
@@ -555,7 +555,7 @@ namespace painter
 
                         DrawText (
                               bitmap_dc.value
-                           ,  _T ("Use mouse wheel to zoom, left button to move, right button resets  ")
+                           ,  theme::folder_tree::info_string.c_str ()
                            ,  -1
                            ,  &rect
                            , DT_RIGHT | DT_BOTTOM | DT_SINGLELINE

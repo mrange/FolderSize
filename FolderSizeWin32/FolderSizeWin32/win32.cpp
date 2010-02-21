@@ -45,12 +45,12 @@ namespace win32
          // FYI: Thanks to C++0x of r-value ref this only creates one copy of 
          // tstring and appends to it. In C++98 the code below would've created
          // 2 additional tstrings
-         auto output = tstring (_T("FolderSize.Win32 : ")) + value + _T ("\r\n");
+         auto output = tstring (_T ("FolderSize.Win32 : ")) + value + _T ("\r\n");
          OutputDebugString (output.c_str ());
       }
       else
       {
-         OutputDebugString ( _T("FolderSize.Win32 : NO MESSAGE\r\n"));
+         OutputDebugString ( _T ("FolderSize.Win32 : NO MESSAGE\r\n"));
       }
    }
 
@@ -409,6 +409,33 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   tstring const load_string_resource (int const resource_id)
+   {
+      return load_string_resource (resource_id, _T (""));
+   }
+
+   tstring const load_string_resource (int const resource_id, LPCTSTR const default_value)
+   {
+      LPCTSTR value = NULL;
+      auto load_string_result = LoadString (
+            GetModuleHandle (NULL)
+         ,  resource_id
+         ,  reinterpret_cast<LPTSTR> (&value)
+         ,  0);
+
+      if (load_string_result)
+      {
+         return tstring (value, load_string_result);
+      }
+      else if (default_value)
+      {
+         return tstring (default_value);
+      }
+      else
+      {
+         return tstring ();
+      }
+   }
    gdi_object<HBITMAP> const load_bitmap_resource (int resource_id)
    {
       return gdi_object<HBITMAP> (

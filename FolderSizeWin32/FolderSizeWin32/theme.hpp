@@ -22,27 +22,34 @@
 // ----------------------------------------------------------------------------
 namespace theme
 {
-   extern win32::gdi_object<HFONT> const default_font                ;
-   extern win32::gdi_object<HFONT> const default_big_font            ;
-   extern win32::gdi_object<HFONT> const default_monospace_font      ;
+   extern win32::tstring const               welcome_string                   ;      
+   extern win32::tstring const               size_string                   ;      
+   extern win32::tstring const               count_string                   ;      
 
-   extern COLORREF const background_color                            ;
-   extern COLORREF const background_gradient_top_color               ;
-   extern COLORREF const background_gradient_bottom_color            ;
+   extern win32::gdi_object<HFONT> const     default_font                     ;
+   extern win32::gdi_object<HFONT> const     default_big_font                 ;
+   extern win32::gdi_object<HFONT> const     default_monospace_font           ;
 
-   extern win32::gdi_object<HBRUSH> const    background_brush        ;
+   extern COLORREF const                     background_color                 ;
+   extern COLORREF const                     background_gradient_top_color    ;
+   extern COLORREF const                     background_gradient_bottom_color ;
 
-   extern win32::gdi_object<HBITMAP> const   brand_bitmap            ;
+   extern win32::gdi_object<HBRUSH> const    background_brush                 ;
+
+   extern win32::gdi_object<HBITMAP> const   brand_bitmap                     ;
 
    namespace folder_tree
    {
-      extern COLORREF const background_color                         ;
-      extern COLORREF const folder_background_color                  ;
-      extern COLORREF const folder_foreground_color                  ;
+      extern win32::tstring const               progress_string               ;
+      extern win32::tstring const               info_string                   ;
 
-      extern win32::gdi_object<HBRUSH> const background_brush        ;
-      extern win32::gdi_object<HBRUSH> const folder_background_brush ;
-      extern win32::gdi_object<HBRUSH> const folder_foreground_brush ;
+      extern COLORREF const                     background_color              ;
+      extern COLORREF const                     folder_background_color       ;
+      extern COLORREF const                     folder_foreground_color       ;
+
+      extern win32::gdi_object<HBRUSH> const    background_brush              ;
+      extern win32::gdi_object<HBRUSH> const    folder_background_brush       ;
+      extern win32::gdi_object<HBRUSH> const    folder_foreground_brush       ;
    }
 }
 // ----------------------------------------------------------------------------
