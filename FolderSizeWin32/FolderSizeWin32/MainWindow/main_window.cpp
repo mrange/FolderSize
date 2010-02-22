@@ -556,6 +556,18 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      void select_and_focus (HWND const hwnd)
+      {
+         if (hwnd)
+         {
+            auto text_length  = GetWindowTextLength (hwnd);
+            SendMessage (hwnd, EM_SETSEL, 0, text_length);
+            SetFocus (hwnd);
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       LRESULT CALLBACK window_process (
             HWND const     hwnd
          ,  UINT const     message
@@ -642,6 +654,11 @@ namespace main_window
 
                switch (wm_id)
                {
+               case IDM_SELECT_AND_FOCUS_PATH:
+                  {
+                     select_and_focus (s_path.hwnd);
+                  }
+                  break;
                case IDM_GO_PAUSE:
                   {
                      auto const path_hwnd = GetDlgItem (hwnd, IDM_PATH);
@@ -689,8 +706,7 @@ namespace main_window
                      case EN_SETFOCUS:
                         {
                            auto hwnd         = reinterpret_cast<HWND> (l_param);
-                           auto text_length  = GetWindowTextLength (hwnd);
-                           SendMessage (hwnd, EM_SETSEL, 0, text_length);
+                           select_and_focus (hwnd);
                         }
                         break;
                      }
