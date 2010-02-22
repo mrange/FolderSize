@@ -538,7 +538,7 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      p::select_property::type const get_select_property_from_index (int index)
+      p::select_property::type const calculate_select_property_from_index (int index)
       {
          switch (index)
          {
@@ -564,6 +564,16 @@ namespace main_window
             SendMessage (hwnd, EM_SETSEL, 0, text_length);
             SetFocus (hwnd);
          }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      static void change_select_property (int const increment)
+      {
+         auto index = SendMessage(s_selector.hwnd, CB_GETCURSEL, 0, 0L);
+         auto new_index = (index + increment + 3) % 3;
+         SendMessage(s_selector.hwnd, CB_SETCURSEL, new_index, 0L);
+         s_select_property = calculate_select_property_from_index (new_index);
       }
       // ----------------------------------------------------------------------
 
@@ -659,6 +669,18 @@ namespace main_window
                      select_and_focus (s_path.hwnd);
                   }
                   break;
+               case IDM_NEXT_SELECTOR:
+                  {
+                     change_select_property  (1);
+                     invalidate_folder_tree_area (hwnd);
+                  }
+                  break;
+               case IDM_PREVIOUS_SELECTOR:
+                  {
+                     change_select_property  (-1);
+                     invalidate_folder_tree_area (hwnd);
+                  }
+                  break;
                case IDM_GO_PAUSE:
                   {
                      auto const path_hwnd = GetDlgItem (hwnd, IDM_PATH);
@@ -719,7 +741,7 @@ namespace main_window
                      //case CBN_SELCHANGE:
                      //case CBN_SELENDCANCEL:
                         {
-                           auto selection = get_select_property_from_index (SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0));
+                           auto selection = calculate_select_property_from_index (SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0));
 
                            if (selection != s_select_property)
                            {
@@ -1289,6 +1311,10 @@ namespace main_window
             {
             case VK_TAB:
                set_ui_state   (UISF_HIDEACCEL);
+               process_message = false;
+               break;
+            case VK_ESCAPE:
+               PostQuitMessage (0);
                process_message = false;
                break;
             }
