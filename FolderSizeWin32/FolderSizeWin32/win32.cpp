@@ -425,7 +425,10 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   gdi_object<HFONT> const create_standard_message_font (int const height)
+   gdi_object<HFONT> const create_standard_font (
+         standard_font::type const font_type
+      ,  int const height
+      )
    {
       NONCLIENTMETRICS non_client_metrics = {0};
       non_client_metrics.cbSize = sizeof (NONCLIENTMETRICS);
@@ -438,13 +441,32 @@ namespace win32
       
       if (system_parameters_info_result)
       {
+         LOGFONT lf = {0};
+
+         switch (font_type)
+         {
+         case standard_font::caption:
+            lf = non_client_metrics.lfCaptionFont;
+         case standard_font::menu:
+            lf = non_client_metrics.lfMenuFont;
+         case standard_font::status:
+            lf = non_client_metrics.lfStatusFont;
+         case standard_font::message:
+            lf = non_client_metrics.lfMessageFont;
+            break;
+         default:
+            FS_ASSERT(false);
+            lf = non_client_metrics.lfMessageFont;
+            break;
+         }
+
          if (height != 0)
          {
-            non_client_metrics.lfMessageFont.lfHeight = height;
+            lf.lfHeight = height;
          }
+
          return gdi_object<HFONT> (
-            CreateFontIndirect (
-               &non_client_metrics.lfMessageFont));
+            CreateFontIndirect (&lf));
       }
       else
       {
@@ -453,9 +475,9 @@ namespace win32
 
    }
 
-   gdi_object<HFONT> const create_standard_message_font ()
+   gdi_object<HFONT> const create_standard_font (standard_font::type const font_type)
    {
-      return create_standard_message_font (0);
+      return create_standard_font (font_type, 0);
    }
    // -------------------------------------------------------------------------
 

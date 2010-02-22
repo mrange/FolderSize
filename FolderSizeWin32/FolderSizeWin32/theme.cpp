@@ -24,14 +24,14 @@ namespace theme
 {
    namespace w = win32;  
 
-   w::tstring const           welcome_string                   = w::load_string_resource (IDC_WELCOME_MSG            , _T("Click Go to start...")  );      
-   w::tstring const           size_string                      = w::load_string_resource (IDC_SIZE_CHOICE            , _T("Size")                  );            
-   w::tstring const           physical_size_string             = w::load_string_resource (IDC_PHYSICAL_SIZE_CHOICE   , _T("Physical")              );            
-   w::tstring const           count_string                     = w::load_string_resource (IDC_COUNT_CHOICE           , _T("Count")                 );            
+   w::tstring const           welcome_string                   = w::load_string_resource  (IDC_WELCOME_MSG            , _T("Click Go to start...") );      
+   w::tstring const           size_string                      = w::load_string_resource  (IDC_SIZE_CHOICE            , _T("Size")                 );            
+   w::tstring const           physical_size_string             = w::load_string_resource  (IDC_PHYSICAL_SIZE_CHOICE   , _T("Physical")             );            
+   w::tstring const           count_string                     = w::load_string_resource  (IDC_COUNT_CHOICE           , _T("Count")                );            
 
-   w::gdi_object<HFONT> const default_font                     = w::create_standard_message_font  (                       );
-   w::gdi_object<HFONT> const default_big_font                 = w::create_standard_message_font  (48                     );
-   w::gdi_object<HFONT> const default_monospace_font           = w::create_font                   (_T ("Courier New"), 18 );
+   w::gdi_object<HFONT> const default_font                     = w::create_standard_font  (w::standard_font::caption  , 20 );
+   w::gdi_object<HFONT> const default_big_font                 = w::create_standard_font  (w::standard_font::caption  , 48  );
+   w::gdi_object<HFONT> const default_monospace_font           = w::create_font           (_T ("Courier New")         , 18  );
 
    COLORREF const background_color                             = RGB (0xDE, 0xDE, 0xDE);
    COLORREF const background_gradient_top_color                = RGB (0xF0, 0xF0, 0xF0);
