@@ -298,8 +298,24 @@ namespace win32
    // -------------------------------------------------------------------------
    gdi_object<HFONT> const create_font (LPCTSTR const font_family, int const height);
    // -------------------------------------------------------------------------
-   gdi_object<HFONT> const create_standard_message_font (int const height);
-   gdi_object<HFONT> const create_standard_message_font ();
+   namespace standard_font
+   {
+      enum type
+      {
+         caption  ,
+         menu     ,
+         status   ,
+         message  ,
+      };
+   }
+   // -------------------------------------------------------------------------
+   gdi_object<HFONT> const create_standard_font (
+         standard_font::type const font_type
+      ,  int const height
+      );
+   gdi_object<HFONT> const create_standard_font (
+         standard_font::type const font_type
+      );
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
