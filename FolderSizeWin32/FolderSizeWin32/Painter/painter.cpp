@@ -617,39 +617,32 @@ namespace painter
                            ,  centre
                            ,  zoom);
 
-                        if (request_ptr->select_property == select_property::physical_size)
+                        auto property_picker = &size_picker;
+
+                        switch (request_ptr->select_property)
                         {
-                           folder_traverser (
-                                 response_ptr->rendered_folders
-                              ,  request_ptr->bitmap_size
-                              ,  current_transform
-                              ,  request_ptr->root
-                              ,  physical_size_picker
-                              ,  painter_
-                              );
+                        case select_property::size:
+                           property_picker = &size_picker;
+                           break;
+                        case select_property::physical_size:
+                           property_picker = &physical_size_picker;
+                           break;
+                        case select_property::count:
+                           property_picker = &count_picker;
+                           break;
+                        default:
+                           FS_ASSERT (false);
+                           break;
                         }
-                        else if (request_ptr->select_property == select_property::count)
-                        {
-                           folder_traverser (
-                                 response_ptr->rendered_folders
-                              ,  request_ptr->bitmap_size
-                              ,  current_transform
-                              ,  request_ptr->root
-                              ,  count_picker
-                              ,  painter_
-                              );
-                        }
-                        else // if (request_ptr->select_property == select_property::size)
-                        {
-                           folder_traverser (
-                                 response_ptr->rendered_folders
-                              ,  request_ptr->bitmap_size
-                              ,  current_transform
-                              ,  request_ptr->root
-                              ,  size_picker
-                              ,  painter_
-                              );
-                        }
+
+                        folder_traverser (
+                              response_ptr->rendered_folders
+                           ,  request_ptr->bitmap_size
+                           ,  current_transform
+                           ,  request_ptr->root
+                           ,  property_picker
+                           ,  painter_
+                           );
 
                         update_response_value.reset (response_ptr.release ());
 

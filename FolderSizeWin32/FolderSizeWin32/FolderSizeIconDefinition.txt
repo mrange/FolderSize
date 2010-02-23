@@ -1,0 +1,46 @@
+	<Grid x:Name="LayoutRoot">
+		<Grid.Background>
+			<!--<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+				<GradientStop Color="#FFBBBBBB" Offset="1"/>
+				<GradientStop Color="White"/>
+			</LinearGradientBrush>-->
+         <SolidColorBrush Color="Black"></SolidColorBrush>
+		</Grid.Background>
+      <Grid Margin="32,32,32,32" Width="128" Height="128">
+		<Rectangle RadiusX="10" RadiusY="10">
+			<Rectangle.Fill>
+				<LinearGradientBrush EndPoint="0,0.6" StartPoint="0,0" MappingMode="RelativeToBoundingBox">
+					<GradientStop Color="#FF7BAAFF" Offset="0"/>
+					<GradientStop Color="#FF38447D" Offset="1"/>
+					<GradientStop Color="#FF4F82F0" Offset="0.5"/>
+					<GradientStop Color="#FF71A1FB" Offset="0.1"/>
+				</LinearGradientBrush>
+			</Rectangle.Fill>
+		</Rectangle>
+      <Rectangle  RadiusX="10" RadiusY="10">
+			<Rectangle.Fill>
+				<RadialGradientBrush 
+               GradientOrigin="-0.6,1" 
+               Center="-0.0,1" 
+               RadiusX="1" 
+               RadiusY="1.5"
+               MappingMode="RelativeToBoundingBox" 
+               >
+					<RadialGradientBrush.RelativeTransform>
+						<TransformGroup>
+							<ScaleTransform CenterX="0.5" CenterY="1" ScaleX="1" ScaleY="1"/>
+							<SkewTransform AngleX="0" AngleY="0" CenterX="0.5" CenterY="1"/>
+							<RotateTransform Angle="90" CenterX="0.5" CenterY="1"/>
+							<TranslateTransform Y="0"/>
+						</TransformGroup>
+					</RadialGradientBrush.RelativeTransform>
+					<GradientStop Offset="0.5"/>
+					<GradientStop Color="White" Offset="0.1"/>
+				</RadialGradientBrush>
+			</Rectangle.Fill></Rectangle>
+         <Rectangle Stroke="#FF006EFF" RadiusX="10" RadiusY="10" StrokeThickness="2">
+         </Rectangle>
+         <!--<TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="Loading..." Foreground="#FF6395F7" FontSize="24"/>-->
+		<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="80" Foreground="White" Text="FS" TextWrapping="Wrap"/>
+      </Grid>
+   </Grid>
