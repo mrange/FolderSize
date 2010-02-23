@@ -550,12 +550,30 @@ namespace win32
       return rect;
    }
 
-   bool const is_inside (RECT const & rect, POINT const & point)
+   bool const is_inside (RECT const & rect, POINT const & point) throw ()
    {
       return 
             rect.left < point.x && rect.right > point.x 
          && rect.top < point.y && rect.bottom > point.y
          ;
+   }
+
+   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) throw ()
+   {
+      RECT result = {0};
+
+      if (IntersectRect (
+            &result
+         ,  &left
+         ,  &right
+         ))
+      {
+         return result;
+      }
+      else
+      {
+         return boost::optional<RECT> ();
+      }
    }
    // -------------------------------------------------------------------------
 
