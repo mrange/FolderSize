@@ -19,6 +19,7 @@
     <None Include="FolderSizeWin32.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="FolderSizeIconDefinition.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="folder.hpp" />
