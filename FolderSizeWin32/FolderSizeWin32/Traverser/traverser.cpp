@@ -121,6 +121,8 @@ namespace traverser
          {
             send_next_update = tick_count + 40; //20ms delay
 
+            WIN32_DEBUG_STRING (_T ("Sending : messages::folder_structure_changed"));
+
             PostMessage (
                   main_hwnd
                ,  messages::folder_structure_changed
@@ -250,7 +252,10 @@ namespace traverser
             processed_folder_count     =  processed_folder_count + 1;
          }
 
-         update_view (true);
+         if (continue_running)
+         {
+            update_view (true);
+         }
 
          return EXIT_SUCCESS;
       }

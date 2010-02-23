@@ -23,6 +23,7 @@
 #include <string>
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 // ----------------------------------------------------------------------------
 #include "utility.hpp"
 // ----------------------------------------------------------------------------
@@ -62,6 +63,12 @@ namespace win32
 
    void debug_string (tstring const & value);
    void debug_string (LPCTSTR const value);
+
+#ifdef _DEBUG
+#  define WIN32_DEBUG_STRING(expr) (::win32::debug_string (expr))
+#else
+#  define WIN32_DEBUG_STRING(expr)
+#endif
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -327,7 +334,8 @@ namespace win32
 
    // -------------------------------------------------------------------------
    RECT const  zero_rect ();
-   bool const is_inside (RECT const & rect, POINT const & point);
+   bool const is_inside (RECT const & rect, POINT const & point) throw ();
+   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) throw ();
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------

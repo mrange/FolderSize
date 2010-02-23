@@ -578,6 +578,37 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      static bool is_message_interesting (UINT const message)
+      {
+         switch (message)
+         {
+         case WM_NOTIFY:
+         case WM_SETCURSOR:
+         case WM_TIMER:
+         case 0x0118:   // WM_SYSTIMER
+         case WM_MOUSEMOVE:
+         case WM_MOUSELEAVE:
+         case WM_NCMOUSELEAVE:
+         case WM_ERASEBKGND:
+         case WM_PAINT:
+         case WM_PRINTCLIENT:
+         case WM_NCHITTEST:
+         case WM_NCPAINT:
+         case WM_CTLCOLORMSGBOX:
+         case WM_CTLCOLOREDIT:
+         case WM_CTLCOLORLISTBOX:
+         case WM_CTLCOLORBTN:
+         case WM_CTLCOLORDLG:
+         case WM_CTLCOLORSCROLLBAR:
+         case WM_CTLCOLORSTATIC:
+            return false;
+         default:
+            return true;
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       LRESULT CALLBACK window_process (
             HWND const     hwnd
          ,  UINT const     message
@@ -585,13 +616,8 @@ namespace main_window
          ,  LPARAM const   l_param
          )
       {
-         switch (message)
+         if (is_message_interesting (message))
          {
-         case WM_TIMER:
-         case WM_MOUSEMOVE:
-         case WM_PAINT:
-            break;
-         default:
             log_windows_message (
                   _T ("MainWindow")
                ,  hwnd
@@ -599,7 +625,6 @@ namespace main_window
                ,  w_param
                ,  l_param
                );
-            break;
          }
 
          auto sz           = get_client_size (hwnd);
@@ -616,9 +641,11 @@ namespace main_window
          switch (message)
          {
          case messages::new_view_available:
+            WIN32_DEBUG_STRING (_T ("Received : messages::new_view_available"));
             invalidate_folder_tree_area (hwnd);
             break;
          case messages::folder_structure_changed:
+            WIN32_DEBUG_STRING (_T ("Received : messages::folder_structure_changed"));
             if (s_state.get ())
             {
                s_state->painter.do_request (
@@ -660,7 +687,7 @@ namespace main_window
                   ,  wm_id
                   ,  wm_event);
 
-               w::debug_string (buffer);
+               WIN32_DEBUG_STRING (buffer);
 
                switch (wm_id)
                {
@@ -763,81 +790,102 @@ namespace main_window
             {
                w::paint_device_context pdc (hwnd);
 
-               if (s_state.get ())
+               RECT clip_box = {0};
+
+               auto get_clipbox_result = GetClipBox (
+                     pdc.hdc
+                  ,  &clip_box
+                  );
+
+               if (
+                     get_clipbox_result == SIMPLEREGION 
+                  || get_clipbox_result == COMPLEXREGION
+                  )
                {
-                  s_state->painter.paint (
-                        s_state->traverser.get_root ()
-                     ,  hwnd
-                     ,  pdc.hdc
-                     ,  s_state->traverser.get_processed_folder_count ()
-                     ,  s_state->traverser.get_unprocessed_folder_count ()
-                     ,  s_select_property
-                     ,  folder_tree_rect
-                     ,  s_state->centre
-                     ,  s_state->zoom
-                     );
+                  if (s_state.get () && w::intersect (clip_box, folder_tree_rect))
+                  {
+                     WIN32_DEBUG_STRING (_T ("WM_PAINT : FolderTree"));
+                     s_state->painter.paint (
+                           s_state->traverser.get_root ()
+                        ,  hwnd
+                        ,  pdc.hdc
+                        ,  s_state->traverser.get_processed_folder_count ()
+                        ,  s_state->traverser.get_unprocessed_folder_count ()
+                        ,  s_select_property
+                        ,  folder_tree_rect
+                        ,  s_state->centre
+                        ,  s_state->zoom
+                        );
 
+                  }
+                  else
+                  {
+                     FillRect (
+                           pdc.hdc
+                        ,  &folder_tree_rect
+                        ,  theme::folder_tree::background_brush.value
+                        );
+
+                     w::select_object select_font (pdc.hdc, theme::default_big_font.value);
+
+                     SetBkColor (
+                           pdc.hdc
+                        ,  theme::folder_tree::background_color
+                        );
+
+                     SetTextColor (
+                           pdc.hdc
+                        ,  theme::folder_tree::folder_background_color
+                        );
+
+                     DrawText (
+                           pdc.hdc
+                        ,  theme::welcome_string.c_str ()
+                        ,  -1
+                        ,  &folder_tree_rect
+                        ,  DT_VCENTER | DT_CENTER | DT_SINGLELINE
+                        );
+
+                  }
+
+                  {
+                     RECT rect = {0};
+                     rect.left      = 0;
+                     rect.top       = 0;
+                     rect.right     = sz.cx;
+                     rect.bottom    = folder_tree_rect.top;
+
+                     if (w::intersect (clip_box, rect))
+                     {
+                        WIN32_DEBUG_STRING (_T ("WM_PAINT : Top Gradient"));
+                        gradient_fill (
+                              pdc.hdc
+                           ,  rect
+                           ,  theme::background_gradient_top_color
+                           ,  theme::background_gradient_bottom_color
+                           );
+                     }
+                  }
+
+                  {
+                     RECT rect = {0};
+                     rect.left      = 0;
+                     rect.top       = folder_tree_rect.bottom;
+                     rect.right     = sz.cx;
+                     rect.bottom    = sz.cy;
+
+                     if (w::intersect (clip_box, rect))
+                     {
+                        WIN32_DEBUG_STRING (_T ("WM_PAINT : Top Gradient"));
+                        gradient_fill (
+                              pdc.hdc
+                           ,  rect
+                           ,  theme::background_gradient_top_color
+                           ,  theme::background_gradient_bottom_color
+                           );
+                     }
+                  }
                }
-               else
-               {
-                  FillRect (
-                        pdc.hdc
-                     ,  &folder_tree_rect
-                     ,  theme::folder_tree::background_brush.value
-                     );
-
-                  w::select_object select_font (pdc.hdc, theme::default_big_font.value);
-
-                  SetBkColor (
-                        pdc.hdc
-                     ,  theme::folder_tree::background_color
-                     );
-
-                  SetTextColor (
-                        pdc.hdc
-                     ,  theme::folder_tree::folder_background_color
-                     );
-
-                  DrawText (
-                        pdc.hdc
-                     ,  theme::welcome_string.c_str ()
-                     ,  -1
-                     ,  &folder_tree_rect
-                     ,  DT_VCENTER | DT_CENTER | DT_SINGLELINE
-                     );
-
-               }
-
-               {
-                  RECT rect = {0};
-                  rect.left      = 0;
-                  rect.top       = 0;
-                  rect.right     = sz.cx;
-                  rect.bottom    = folder_tree_rect.top;
-
-                  gradient_fill (
-                        pdc.hdc
-                     ,  rect
-                     ,  theme::background_gradient_top_color
-                     ,  theme::background_gradient_bottom_color
-                     );
-               }
-
-               {
-                  RECT rect = {0};
-                  rect.left      = 0;
-                  rect.top       = folder_tree_rect.bottom;
-                  rect.right     = sz.cx;
-                  rect.bottom    = sz.cy;
-
-                  gradient_fill (
-                        pdc.hdc
-                     ,  rect
-                     ,  theme::background_gradient_top_color
-                     ,  theme::background_gradient_bottom_color
-                     );
-               }
-
             }
             break;
          case WM_MOUSEMOVE:
@@ -1250,12 +1298,8 @@ namespace main_window
       // Main message loop:
       while (GetMessage (&msg, NULL, 0, 0))
       {
-         switch (msg.message)
+         if (is_message_interesting (msg.message))
          {
-         case WM_TIMER:
-         case WM_MOUSEMOVE:
-            break;
-         default:
             log_windows_message (
                   _T ("main_loop")
                ,  msg.hwnd
@@ -1263,7 +1307,6 @@ namespace main_window
                ,  msg.wParam
                ,  msg.lParam
                );
-            break;
          }
 
          auto process_message = true;

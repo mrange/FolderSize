@@ -154,9 +154,9 @@ namespace painter
       struct background_painter
       {
          background_painter ()
-            :  thread            (_T ("painter"), create_proc ())
-            ,  new_frame_request (w::event_type::auto_reset    )
+            :  new_frame_request (w::event_type::auto_reset    )
             ,  shutdown_request  (w::event_type::manual_reset  )
+            ,  thread            (_T ("painter"), create_proc ())
          {
          }
 
@@ -487,6 +487,7 @@ namespace painter
                case WAIT_OBJECT_0 + 0:
                   while ((request_ptr = update_request_value.reset ()).get ())
                   {
+                     WIN32_DEBUG_STRING (_T ("Received : New view request"));
                      if (request_ptr->root)
                      {
                         auto response_ptr = update_response::ptr (
@@ -646,12 +647,14 @@ namespace painter
 
                         update_response_value.reset (response_ptr.release ());
 
+                        WIN32_DEBUG_STRING (_T ("Sending : messages::new_view_available"));
+
                         auto result = PostMessage (
                               request_ptr->main_hwnd
                            ,  messages::new_view_available
                            ,  0
                            ,  0);
-                        result;
+                        UNUSED_VARIABLE (result);
                      }
                   }
                   continue_loop = true;
@@ -660,9 +663,25 @@ namespace painter
                   continue_loop = true;
                   break;
                case WAIT_OBJECT_0 + 1:
-               case WAIT_ABANDONED:
-               default:
+                  WIN32_DEBUG_STRING (_T ("Received : Terminate painter"));
                   continue_loop = false;
+                  break;
+               case WAIT_ABANDONED:
+                  WIN32_DEBUG_STRING (_T ("Received : Abandon painter"));
+                  continue_loop = false;
+                  break;
+               default:
+                  {
+                  TCHAR buffer[buffer_size] = {0};
+                  _stprintf_s (
+                        buffer
+                     ,  _T ("Received : Unknown request : %X (@err = %X)")
+                     ,  wait_result
+                     ,  GetLastError ()
+                     );
+                  w::trace_string (buffer);
+                  continue_loop = false;
+                  }
                   break;
                }
             }
@@ -671,8 +690,8 @@ namespace painter
             return EXIT_SUCCESS;
          }
 
-         w::thread                                    thread            ;
          w::event                                     shutdown_request  ;
+         w::thread                                    thread            ;
 
       };
    }
@@ -711,6 +730,7 @@ namespace painter
                   ));
 
          background_painter.update_request_value.reset (request.release ());
+         WIN32_DEBUG_STRING (_T ("Sending : New view request"));
          background_painter.new_frame_request.set ();
       }
 
