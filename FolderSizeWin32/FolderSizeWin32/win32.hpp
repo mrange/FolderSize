@@ -64,6 +64,7 @@ namespace win32
    void debug_string (tstring const & value);
    void debug_string (LPCTSTR const value);
 
+#  define WIN32_PRELUDE _T (__FUNCTION__)
 #ifdef _DEBUG
 #  define WIN32_DEBUG_STRING(expr) (::win32::debug_string (expr))
 #else

@@ -422,7 +422,7 @@ namespace main_window
          auto result = InvalidateRect (
                hwnd
             ,  &rect
-            , FALSE
+            ,  FALSE
             );
          UNUSED_VARIABLE (result);
       }
@@ -641,11 +641,11 @@ namespace main_window
          switch (message)
          {
          case messages::new_view_available:
-            WIN32_DEBUG_STRING (_T ("Received : messages::new_view_available"));
+            WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : messages::new_view_available"));
             invalidate_folder_tree_area (hwnd);
             break;
          case messages::folder_structure_changed:
-            WIN32_DEBUG_STRING (_T ("Received : messages::folder_structure_changed"));
+            WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : messages::folder_structure_changed"));
             if (s_state.get ())
             {
                s_state->painter.do_request (
@@ -683,7 +683,7 @@ namespace main_window
                TCHAR buffer[string_buffer_size] = {0};
                _stprintf_s (
                      buffer
-                  ,  _T ("WM_COMMAND: %d, %d")
+                  ,  WIN32_PRELUDE _T (" : WM_COMMAND: %d, %d")
                   ,  wm_id
                   ,  wm_event);
 
@@ -804,7 +804,7 @@ namespace main_window
                {
                   if (s_state.get () && w::intersect (clip_box, folder_tree_rect))
                   {
-                     WIN32_DEBUG_STRING (_T ("WM_PAINT : FolderTree"));
+                     WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : FolderTree"));
                      s_state->painter.paint (
                            s_state->traverser.get_root ()
                         ,  hwnd
@@ -857,7 +857,7 @@ namespace main_window
 
                      if (w::intersect (clip_box, rect))
                      {
-                        WIN32_DEBUG_STRING (_T ("WM_PAINT : Top Gradient"));
+                        WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : Top Gradient"));
                         gradient_fill (
                               pdc.hdc
                            ,  rect
@@ -876,7 +876,7 @@ namespace main_window
 
                      if (w::intersect (clip_box, rect))
                      {
-                        WIN32_DEBUG_STRING (_T ("WM_PAINT : Top Gradient"));
+                        WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : Top Gradient"));
                         gradient_fill (
                               pdc.hdc
                            ,  rect

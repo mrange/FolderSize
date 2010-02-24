@@ -121,7 +121,7 @@ namespace traverser
          {
             send_next_update = tick_count + 40; //20ms delay
 
-            WIN32_DEBUG_STRING (_T ("Sending : messages::folder_structure_changed"));
+            WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Sending : messages::folder_structure_changed"));
 
             PostMessage (
                   main_hwnd
