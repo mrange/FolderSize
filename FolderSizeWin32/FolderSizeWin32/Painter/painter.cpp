@@ -117,7 +117,8 @@ namespace painter
          typedef std::auto_ptr<update_response> ptr;
 
          update_response (
-            update_request    &  update_request_
+               update_request    &  update_request_
+            ,  int                  frame_count_
             )
             :  select_property   (update_request_.select_property    )
             ,  centre            (update_request_.centre             )
@@ -126,7 +127,9 @@ namespace painter
             ,  bitmap            (create_bitmap (
                   update_request_.bitmap_planes
                ,  update_request_.bitmap_bits
-               ,  update_request_.bitmap_size               )  )
+               ,  update_request_.bitmap_size
+               )                                                     )
+            ,  frame_count       (frame_count_                       )
          {
             rendered_folders.reserve (64);
          }
@@ -137,6 +140,7 @@ namespace painter
          dimension const                  bitmap_size       ;
          win32::gdi_object<HBITMAP> const bitmap            ;
          rendered_folders                 rendered_folders  ;
+         int const                        frame_count       ;
       };
 
       struct painter_context
@@ -154,9 +158,10 @@ namespace painter
       struct background_painter
       {
          background_painter ()
-            :  new_frame_request (w::event_type::auto_reset    )
-            ,  shutdown_request  (w::event_type::manual_reset  )
-            ,  thread            (_T ("painter"), create_proc ())
+            :  new_frame_request (w::event_type::auto_reset       )
+            ,  shutdown_request  (w::event_type::manual_reset     )
+            ,  thread            (_T ("painter"), create_proc ()  )
+            ,  frame_count       (0                               )
          {
          }
 
@@ -487,11 +492,26 @@ namespace painter
                case WAIT_OBJECT_0 + 0:
                   while ((request_ptr = update_request_value.reset ()).get ())
                   {
-                     WIN32_DEBUG_STRING (_T ("Received : New view request"));
+
+#ifdef _DEBUG
+                     TCHAR buffer[buffer_size] = {0};
+#endif
+
+                     ++frame_count;
+
+#ifdef _DEBUG
+                     _stprintf_s (
+                           buffer
+                        ,  WIN32_PRELUDE _T (" : Received : New view request: %d")
+                        ,  frame_count
+                        );
+                     WIN32_DEBUG_STRING (buffer);
+#endif
+
                      if (request_ptr->root)
                      {
                         auto response_ptr = update_response::ptr (
-                           new update_response (*request_ptr));
+                           new update_response (*request_ptr, frame_count));
 
                         // TODO: Should be created from a DC compatible with the window
                         w::device_context bitmap_dc (CreateCompatibleDC (NULL));
@@ -645,10 +665,40 @@ namespace painter
                            ,  painter_
                            );
 
+#ifdef _DEBUG
+                        SetBkColor (
+                              bitmap_dc.value
+                           ,  theme::folder_tree::background_color);
+
+                        SetTextColor (
+                              bitmap_dc.value
+                              ,  theme::folder_tree::cfolder_background_color);
+
+                        _stprintf_s (
+                              buffer
+                           ,   _T ("frame_count : %d")
+                           ,  frame_count
+                           );
+
+                        DrawText (
+                              bitmap_dc.value
+                           ,  buffer
+                           ,  -1
+                           ,  &rect
+                           , DT_BOTTOM | DT_SINGLELINE
+                           );
+#endif
+
                         update_response_value.reset (response_ptr.release ());
 
-                        WIN32_DEBUG_STRING (_T ("Sending : messages::new_view_available"));
-
+#ifdef _DEBUG
+                        _stprintf_s (
+                              buffer
+                           ,  WIN32_PRELUDE _T (" : Sending  messages::new_view_available (%d)")
+                           ,  frame_count
+                           );
+                        WIN32_DEBUG_STRING (buffer);
+#endif
                         auto result = PostMessage (
                               request_ptr->main_hwnd
                            ,  messages::new_view_available
@@ -663,11 +713,11 @@ namespace painter
                   continue_loop = true;
                   break;
                case WAIT_OBJECT_0 + 1:
-                  WIN32_DEBUG_STRING (_T ("Received : Terminate painter"));
+                  WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : Terminate painter"));
                   continue_loop = false;
                   break;
                case WAIT_ABANDONED:
-                  WIN32_DEBUG_STRING (_T ("Received : Abandon painter"));
+                  WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : Abandon painter"));
                   continue_loop = false;
                   break;
                default:
@@ -693,6 +743,7 @@ namespace painter
          w::event                                     shutdown_request  ;
          w::thread                                    thread            ;
 
+         int                                          frame_count       ;
       };
    }
    // -------------------------------------------------------------------------
@@ -730,7 +781,7 @@ namespace painter
                   ));
 
          background_painter.update_request_value.reset (request.release ());
-         WIN32_DEBUG_STRING (_T ("Sending : New view request"));
+         WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Sending : New view request"));
          background_painter.new_frame_request.set ();
       }
 
@@ -800,6 +851,17 @@ namespace painter
                ,  IMPLICIT_CAST (update_response->bitmap_size.y ())
                ,  SRCCOPY
                );
+
+#ifdef _DEBUG
+               TCHAR buffer[buffer_size] = {0};
+               _stprintf_s (
+                     buffer
+                  ,  WIN32_PRELUDE _T (" : BitBlt : Painting : %d")
+                  ,  update_response->frame_count
+                  );
+               WIN32_DEBUG_STRING (buffer);
+#endif
+
          }
          else
          {
