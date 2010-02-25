@@ -46,8 +46,8 @@ namespace folder
       ,  tstring const &         name_
       ,  big_size const          size_
       ,  big_size const          physical_size_          
-      ,  std::size_t const       file_count_
-      ,  std::size_t const       folder_count_   
+      ,  big_size const          file_count_
+      ,  big_size const          folder_count_   
       )
       :  parent         (parent_       )
       ,  name           (name_         )          

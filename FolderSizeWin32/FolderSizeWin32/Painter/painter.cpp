@@ -19,7 +19,10 @@
 #undef max
 #undef min
 // ----------------------------------------------------------------------------
+#  include <boost/pool/pool_alloc.hpp>
+// ----------------------------------------------------------------------------
 #include <algorithm>
+#include <functional>
 #include <vector>
 // ----------------------------------------------------------------------------
 #include "../linear.hpp"
@@ -39,7 +42,7 @@ namespace painter
    namespace b    = boost           ;
    namespace f    = folder          ;
    namespace s    = std             ;
-   namespace st   = std::tr1        ;
+   namespace st   = s::tr1          ;
    namespace w    = win32           ;
    namespace l    = linear          ;
    namespace vt   = view_transform  ;
@@ -48,21 +51,21 @@ namespace painter
    // -------------------------------------------------------------------------
    namespace
    {
-      std::size_t const buffer_size    = 256;
+      s::size_t const   buffer_size    = 256;
       double const      cut_off_y      = 10.0;
 
       typedef s::vector<rendered_folder> rendered_folders;
 
       struct update_request : boost::noncopyable
       {
-         typedef std::auto_ptr<update_request> ptr;
+         typedef s::auto_ptr<update_request> ptr;
 
          update_request (
                folder::folder const * const  root_
             ,  HWND const                    main_hwnd_
             ,  HDC const                     hdc_
-            ,  std::size_t const             processed_folder_count_
-            ,  std::size_t const             unprocessed_folder_count_
+            ,  s::size_t const               processed_folder_count_
+            ,  s::size_t const               unprocessed_folder_count_
             ,  select_property::type const   select_property_
             ,  coordinate const &            centre_        
             ,  zoom_factor const &           zoom_          
@@ -84,8 +87,8 @@ namespace painter
          folder::folder const * const  root                    ;
 
          HWND const                    main_hwnd               ;
-         std::size_t const             processed_folder_count  ;
-         std::size_t const             unprocessed_folder_count;
+         s::size_t const               processed_folder_count  ;
+         s::size_t const               unprocessed_folder_count;
          select_property::type const   select_property         ;
          coordinate const              centre                  ;
          zoom_factor const             zoom                    ;
@@ -114,7 +117,7 @@ namespace painter
 
       struct update_response : boost::noncopyable
       {
-         typedef std::auto_ptr<update_response> ptr;
+         typedef s::auto_ptr<update_response> ptr;
 
          update_response (
                update_request    &  update_request_
@@ -143,16 +146,52 @@ namespace painter
          int const                        frame_count       ;
       };
 
-      struct painter_context
+//      typedef st::function<big_size const (f::folder const &)> TPropertyPickerPredicate;
+      typedef big_size const (*TPropertyPickerPredicate)(f::folder const &);
+      big_size const size_picker (
+         f::folder const & f
+         )
       {
-         painter_context (
-               HDC const hdc_
+         return f.get_total_size ();
+      }
+
+      big_size const physical_size_picker (
+         f::folder const & f
+         )
+      {
+         return f.get_total_physical_size ();
+      }
+
+      big_size const count_picker (
+         f::folder const & f
+         )
+      {
+         return f.get_total_file_count ();
+      }
+
+
+      struct folder_traverser_context : b::noncopyable
+      {
+         folder_traverser_context (
+               HDC const                           hdc_
+            ,  rendered_folders &                  rendered_folders_
+            ,  vt::transform const &               transform_
+            ,  dimension const &                   size_
+            ,  TPropertyPickerPredicate const &    property_picker_
             )
-            :  hdc (hdc_)
+            :  hdc               (hdc_             )
+            ,  rendered_folders  (rendered_folders_)
+            ,  transform         (transform_       )
+            ,  size              (size_            )    
+            ,  property_picker   (property_picker_ )
          {
          }
 
-         HDC const            hdc               ;
+         HDC const                        hdc               ;
+         rendered_folders &               rendered_folders  ;
+         vt::transform const              transform         ;
+         dimension const                  size              ;
+         TPropertyPickerPredicate const   property_picker   ;
       };
 
       struct background_painter
@@ -181,78 +220,73 @@ namespace painter
             return st::bind (&background_painter::proc, this);
          }
 
+         enum folder_operation_result
+         {
+            yes_folder_painted   ,
+            no_folder_too_small  ,
+            no_other_reason      ,
+         };
+
          template<
-               typename TPropertyPickerPredicate
-            ,  typename TPainterPredicate>
-         static void folder_traverser_impl (
-               std::size_t                remaining_levels
-            ,  rendered_folders &         rendered_folders
-            ,  vt::transform const &      transform
-            ,  dimension const &          size
+               typename TPaintPredicate
+            >
+         static folder_operation_result const folder_traverser_paint_impl (
+               folder_traverser_context & context
+            ,  s::size_t                  remaining_levels
+            ,  big_size const             property
             ,  double const               x
             ,  double const               y
             ,  double const               x_step_ratio
             ,  double const               y_step_ratio
-            ,  f::folder const * const    folder
-            ,  TPropertyPickerPredicate   property_picker
-            ,  TPainterPredicate          painter
+            ,  TPaintPredicate            paint_predicate
             )
          {
             if (remaining_levels == 0)
             {
-               return;
+               return no_other_reason;
             }
 
-            if (!folder)
-            {
-               return;
-            }
+            auto current_x             = x;
+            auto current_y             = y;
+            auto height                = property * y_step_ratio;
 
-            auto property = property_picker (folder);
-
-            auto current_x = x;
-            auto current_y = y;
-            auto next_x = current_x + x_step_ratio;
-            auto height = property * y_step_ratio;
-
-            auto current_left_top = transform * vt::create_extended_vector (
+            auto current_left_top      = context.transform * vt::create_extended_vector (
                   current_x
                ,  current_y
                );
-            auto current_right_bottom = transform * vt::create_extended_vector (
+            auto current_right_bottom  = context.transform * vt::create_extended_vector (
                   current_x + x_step_ratio
                 , current_y + height
                 );
-
-            auto adjusted_height = current_right_bottom.y () - current_left_top.y ();
+            auto adjusted_height       = current_right_bottom.y () - current_left_top.y ();
 
             if (adjusted_height < cut_off_y)
             {
-               return;
+               return no_folder_too_small;
             }
 
-            if (current_left_top.x () > size.x ())
+            if (current_left_top.x () > context.size.x ())
             {
-               return;
+               return no_other_reason;
             }
 
-            if (current_left_top.y () > size.y ())
+            if (current_left_top.y () > context.size.y ())
             {
-               return;
+               return no_other_reason;
             }
 
             if (
                   current_right_bottom.x () > 0.0
                && current_right_bottom.y () > 0.0
-               && current_left_top.x () < size.x ()
-               && current_left_top.y () < size.y ()
+               && current_left_top.x () < context.size.x ()
+               && current_left_top.y () < context.size.y ()
                )
             {
-               RECT rect         = {0}                      ;
-               rect.left         = IMPLICIT_CAST (current_left_top.x ()       );
-               rect.top          = IMPLICIT_CAST (current_left_top.y ()       );
-               rect.right        = IMPLICIT_CAST (current_right_bottom.x ()   );
-               rect.bottom       = IMPLICIT_CAST (current_right_bottom.y ()   );
+               RECT bitmap_rect  = {0}                      ;
+               bitmap_rect.left         = IMPLICIT_CAST (current_left_top.x ()       );
+               bitmap_rect.top          = IMPLICIT_CAST (current_left_top.y ()       );
+               bitmap_rect.right        = IMPLICIT_CAST (current_right_bottom.x ()   );
+               bitmap_rect.bottom       = IMPLICIT_CAST (current_right_bottom.y ()   );
 
                view_rect view_rect                                            ;
                view_rect.values[0]      = current_x                           ;
@@ -260,72 +294,189 @@ namespace painter
                view_rect.values[2]      = current_x + x_step_ratio            ;
                view_rect.values[3]      = current_y + height                  ;
 
-               rendered_folders.push_back (
-                  rendered_folder (
-                        rect
-                     ,  view_rect
-                     ,  folder
-                     ));
-
-               painter (
-                     property
-                  ,  rect
-                  ,  *folder
+               paint_predicate (
+                     bitmap_rect
+                  ,  view_rect
                   );
             }
-               
-            auto folder_count = folder->folder_count;
 
-            for (std::size_t iter = 0; iter < folder_count; ++iter)
+            return yes_folder_painted;
+         }
+         static folder_operation_result const folder_traverser_impl (
+               folder_traverser_context & context
+            ,  s::size_t const            remaining_levels
+            ,  double const               x
+            ,  double const               y
+            ,  double const               x_step_ratio
+            ,  double const               y_step_ratio
+            ,  f::folder const * const    folder
+            )
+         {
+            if (remaining_levels == 0)
             {
-               auto sub_folder = folder->sub_folders[iter];
+               return no_other_reason;
+            }
+
+            if (!folder)
+            {
+               return no_other_reason;
+            }
+
+            auto property              = context.property_picker (*folder);
+
+            auto folder_painter = [&context, folder, property] (
+                  RECT const &      bitmap_rect
+               ,  view_rect const & view_rect
+               )
+               {
+                  context.rendered_folders.push_back (
+                     rendered_folder (
+                           bitmap_rect
+                        ,  view_rect
+                        ,  folder
+                        ));
+
+                  folder_painter_impl (
+                        context
+                     ,  property
+                     ,  bitmap_rect
+                     ,  *folder
+                     );
+               };
+            auto folder_paint_result = folder_traverser_paint_impl (
+                  context
+               ,  remaining_levels
+               ,  property
+               ,  x
+               ,  y
+               ,  x_step_ratio
+               ,  y_step_ratio
+               ,  folder_painter
+               );
+
+            if (folder_paint_result != yes_folder_painted)
+            {
+               return folder_paint_result;
+            }
+
+            auto folder_count = folder->folder_count;
+   
+            s::vector<
+                     f::folder const *
+                  ,  b::pool_allocator<f::folder const *>
+               > sorted_folders;
+            sorted_folders.resize (static_cast<s::size_t> (folder_count)); 
+
+            s::copy (
+                     folder->sub_folders.get ()
+                  ,  folder->sub_folders.get () + folder_count
+                  ,  sorted_folders.begin ()
+               );
+
+            s::stable_sort (
+                  sorted_folders.begin ()
+               ,  sorted_folders.end ()
+               ,  [&context] (f::folder const * const left, f::folder const * const right) -> bool
+                     {
+                        if (left && right)
+                        {
+                           auto left_property = context.property_picker (*left);
+                           auto right_property = context.property_picker (*right);
+                           return right_property < left_property;
+                        }
+                        else if (!right)
+                        {
+                           return true;
+                        }
+                        else
+                        {
+                           return false;
+                        }
+                     }
+               );
+
+            auto current_x                = x;
+            auto current_y                = y;
+            auto next_x                   = current_x + x_step_ratio;
+            big_size accumulated_property = 0;
+
+            for (s::size_t iter = 0; iter < folder_count; ++iter)
+            {
+               auto sub_folder = sorted_folders[iter];
 
                if (!sub_folder)
                {
                   continue;
                }
 
-               auto sub_property = property_picker (sub_folder);
+               auto sub_property = context.property_picker (*sub_folder);
                auto y_step = y_step_ratio * sub_property;
                auto next_y = current_y + y_step;
 
-               folder_traverser_impl (
-                     remaining_levels - 1
-                  ,  rendered_folders
-                  ,  transform
-                  ,  size
+               auto folder_traverse_result = folder_traverser_impl (
+                     context
+                  ,  remaining_levels - 1
                   ,  next_x
                   ,  current_y
                   ,  x_step_ratio
                   ,  y_step_ratio
                   ,  sub_folder
-                  ,  property_picker 
-                  ,  painter
                   );
 
-               current_y = next_y;
+               if (folder_traverse_result == no_folder_too_small)
+               {
+                  accumulated_property += sub_property;
+               }
+               else
+               {
+                  current_y = next_y;
+               }
             }
+
+            if (accumulated_property > 0)
+            {
+               auto remaining_painter = [&context, accumulated_property] (
+                     RECT const &      bitmap_rect
+                  ,  view_rect const & view_rect
+                  )
+                  {
+                     remaining_folder_painter_impl (
+                           context
+                        ,  accumulated_property
+                        ,  bitmap_rect
+                        );
+                  };
+               folder_traverser_paint_impl (
+                     context
+                  ,  remaining_levels - 1
+                  ,  accumulated_property
+                  ,  next_x
+                  ,  current_y
+                  ,  x_step_ratio
+                  ,  y_step_ratio
+                  ,  remaining_painter
+                  );
+            }
+
+            return yes_folder_painted;
          }
 
-         template<
-               typename TPropertyPickerPredicate
-            ,  typename TPainterPredicate>
          static void folder_traverser (
-               rendered_folders &         rendered_folders
-            ,  dimension const &          size
-            ,  vt::transform const &      transform
+               folder_traverser_context & context
             ,  f::folder const * const    root
-            ,  TPropertyPickerPredicate   property_picker
-            ,  TPainterPredicate          painter
             )
          {
-            if (! (root && size.x () > 0 && size.y () > 0) )
+            if (!root)
+            {
+               return;
+            }
+            if (!(context.size.x () > 0 && context.size.y () > 0))
             {
                return;
             }
 
             auto depth     = root->get_depth ();
-            auto property  = property_picker (root);
+            auto property  = context.property_picker (*root);
 
             if (property > 0 && depth > 0)
             {
@@ -333,49 +484,78 @@ namespace painter
                auto y_step_ratio = 1.0 / property;
 
                folder_traverser_impl (
-                     depth
-                  ,  rendered_folders
-                  ,  transform
-                  ,  size
+                     context
+                  ,  depth
                   ,  -0.5
                   ,  -0.5
                   ,  x_step_ratio
                   ,  y_step_ratio
                   ,  root
-                  ,  property_picker
-                  ,  painter
                   );
             }
          }
 
-         static big_size size_picker (
-            f::folder const * f
+         static void remaining_folder_painter_impl (
+               folder_traverser_context & context
+            ,  big_size const             total_size
+            ,  RECT const &               rect
             )
          {
-            return f->get_total_size ();
+               painter_impl (
+                     context
+                  ,  total_size
+                  ,  rect
+                  ,  theme::folder_tree::rfolder_background_color
+                  ,  theme::folder_tree::rfolder_background_brush.value
+                  ,  _T ("<Remainder>")
+                  );
          }
 
-         static big_size physical_size_picker (
-            f::folder const * f
+         static void folder_painter_impl (
+               folder_traverser_context & context
+            ,  big_size const             total_size
+            ,  RECT const &               rect
+            ,  f::folder const &          folder
             )
          {
-            return f->get_total_physical_size ();
+            if (folder.size > folder.physical_size)
+            {
+               painter_impl (
+                     context
+                  ,  total_size
+                  ,  rect
+                  ,  theme::folder_tree::cfolder_background_color
+                  ,  theme::folder_tree::cfolder_background_brush.value
+                  ,  folder.name.c_str ()
+                  );
+            }
+            else
+            {
+               painter_impl (
+                     context
+                  ,  total_size
+                  ,  rect
+                  ,  theme::folder_tree::folder_background_color
+                  ,  theme::folder_tree::folder_background_brush.value
+                  ,  folder.name.c_str ()
+                  );
+            }
+
          }
 
-         static big_size count_picker (
-            f::folder const * f
+         static void painter_impl (
+               folder_traverser_context & context
+            ,  big_size const             total_size
+            ,  RECT const &               rect
+            ,  COLORREF const             background_color
+            ,  HBRUSH const               background_brush
+            ,  LPCTSTR const              description
             )
          {
-            return f->get_total_file_count ();
-         }
+            FS_ASSERT (description);
+            FS_ASSERT (background_brush);
+            FS_ASSERT (description);
 
-         static void painter (
-               painter_context const & painter_context
-            ,  big_size const          total_size
-            ,  RECT const &            rect
-            ,  f::folder const &       folder
-            )
-         {
             RECT copy_rect = rect;
 
             TCHAR buffer[buffer_size] = {0};
@@ -387,7 +567,7 @@ namespace painter
                cch = _stprintf_s (
                      buffer
                   ,  _T ("%s\r\n%.1fG")
-                  ,  folder.name.c_str ()
+                  ,  description
                   ,  total_size / 1E9
                   );
             }
@@ -396,7 +576,7 @@ namespace painter
                cch = _stprintf_s (
                      buffer
                   ,  _T ("%s\r\n%.1fM")
-                  ,  folder.name.c_str ()
+                  ,  description
                   ,  total_size / 1E6
                   );
             }
@@ -405,7 +585,7 @@ namespace painter
                cch = _stprintf_s (
                      buffer
                   ,  _T ("%s\r\n%.1fk")
-                  ,  folder.name.c_str ()
+                  ,  description
                   ,  total_size / 1E3
                   );
             }
@@ -414,40 +594,24 @@ namespace painter
                cch = _stprintf_s (
                      buffer
                   ,  _T ("%s\r\n%I64d")
-                  ,  folder.name.c_str ()
+                  ,  description
                   ,  total_size
                   );
             }
 
-            COLORREF                      background_color = {0};
-            w::gdi_object<HBRUSH> const * background_brush = NULL;
-
-            if (folder.size > folder.physical_size)
-            {
-               background_color = theme::folder_tree::cfolder_background_color;
-               background_brush = &theme::folder_tree::cfolder_background_brush;
-            }
-            else
-            {
-               background_color = theme::folder_tree::folder_background_color;
-               background_brush = &theme::folder_tree::folder_background_brush;
-            }
-
             SetBkColor (
-                  painter_context.hdc
+                  context.hdc
                ,  background_color
                );
 
-            FS_ASSERT (background_brush);
-
             FillRect (
-                  painter_context.hdc
+                  context.hdc
                ,  &copy_rect
-               ,  background_brush->value
+               ,  background_brush
                );
 
             DrawText (
-                  painter_context.hdc
+                  context.hdc
                ,  buffer
                ,  cch
                ,  &copy_rect
@@ -458,7 +622,7 @@ namespace painter
             copy_rect.bottom  += 1;
 
             FrameRect (
-                  painter_context.hdc
+                  context.hdc
                ,  &copy_rect
                ,  theme::folder_tree::folder_foreground_brush.value
                );
@@ -610,24 +774,6 @@ namespace painter
                               bitmap_dc.value
                            ,  theme::folder_tree::folder_foreground_color);
 
-                        painter_context const painter_context (
-                              bitmap_dc.value
-                           );
-
-                        auto painter_ = [&painter_context] (
-                              __int64 const     total_size
-                           ,  RECT const &      rect
-                           ,  f::folder const & folder
-                           )
-                           {
-                              painter (
-                                    painter_context
-                                 ,  total_size
-                                 ,  rect
-                                 ,  folder
-                                 );
-                           };
-
                         auto bitmap_size  = request_ptr->bitmap_size;
                         auto centre       = request_ptr->centre;
                         auto zoom         = request_ptr->zoom;
@@ -656,13 +802,17 @@ namespace painter
                            break;
                         }
 
-                        folder_traverser (
-                              response_ptr->rendered_folders
-                           ,  request_ptr->bitmap_size
+                        folder_traverser_context folder_traverser_context (
+                              bitmap_dc.value
+                           ,  response_ptr->rendered_folders
                            ,  current_transform
-                           ,  request_ptr->root
+                           ,  request_ptr->bitmap_size
                            ,  property_picker
-                           ,  painter_
+                           );
+
+                        folder_traverser (
+                              folder_traverser_context
+                           ,  request_ptr->root
                            );
 
 #ifdef _DEBUG
@@ -755,8 +905,8 @@ namespace painter
             folder::folder const * const  root
          ,  HWND const                    main_hwnd
          ,  HDC const                     hdc
-         ,  std::size_t const             processed_folder_count
-         ,  std::size_t const             unprocessed_folder_count
+         ,  s::size_t const               processed_folder_count
+         ,  s::size_t const               unprocessed_folder_count
          ,  select_property::type         select_property
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
@@ -789,8 +939,8 @@ namespace painter
             folder::folder const * const  root
          ,  HWND const                    main_hwnd
          ,  HDC const                     hdc
-         ,  std::size_t const             processed_folder_count
-         ,  std::size_t const             unprocessed_folder_count
+         ,  s::size_t const               processed_folder_count
+         ,  s::size_t const               unprocessed_folder_count
          ,  select_property::type         select_property
          ,  RECT const &                  rect   
          ,  coordinate const &            centre
@@ -950,8 +1100,8 @@ namespace painter
    void painter::do_request (
          folder::folder const * const  root
       ,  HWND const                    main_hwnd
-      ,  std::size_t const             processed_folder_count
-      ,  std::size_t const             unprocessed_folder_count
+      ,  s::size_t const               processed_folder_count
+      ,  s::size_t const               unprocessed_folder_count
       ,  select_property::type         select_property
       ,  RECT const &                  rect   
       ,  coordinate const &            centre
@@ -978,8 +1128,8 @@ namespace painter
          folder::folder const * const  root
       ,  HWND const                    main_hwnd
       ,  HDC const                     hdc
-      ,  std::size_t const             processed_folder_count
-      ,  std::size_t const             unprocessed_folder_count
+      ,  s::size_t const               processed_folder_count
+      ,  s::size_t const               unprocessed_folder_count
       ,  select_property::type         select_property
       ,  RECT const &                  rect   
       ,  coordinate const &            centre

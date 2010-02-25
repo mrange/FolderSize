@@ -47,8 +47,8 @@ namespace folder
             ,  tstring const &         name          
             ,  big_size const          size          
             ,  big_size const          physical_size          
-            ,  std::size_t const       file_count
-            ,  std::size_t const       folder_count
+            ,  big_size const          file_count
+            ,  big_size const          folder_count
             );
       };
 

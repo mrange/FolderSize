@@ -47,11 +47,13 @@ namespace theme
       extern COLORREF const                     background_color              ;
       extern COLORREF const                     folder_background_color       ;
       extern COLORREF const                     cfolder_background_color      ;
+      extern COLORREF const                     rfolder_background_color      ;
       extern COLORREF const                     folder_foreground_color       ;
 
       extern win32::gdi_object<HBRUSH> const    background_brush              ;
       extern win32::gdi_object<HBRUSH> const    folder_background_brush       ;
       extern win32::gdi_object<HBRUSH> const    cfolder_background_brush      ;
+      extern win32::gdi_object<HBRUSH> const    rfolder_background_brush      ;
       extern win32::gdi_object<HBRUSH> const    folder_foreground_brush       ;
    }
 }
