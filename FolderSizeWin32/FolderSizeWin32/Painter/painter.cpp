@@ -148,6 +148,7 @@ namespace painter
 
 //      typedef st::function<big_size const (f::folder const &)> TPropertyPickerPredicate;
       typedef big_size const (*TPropertyPickerPredicate)(f::folder const &);
+      
       big_size const size_picker (
          f::folder const & f
          )
@@ -361,37 +362,32 @@ namespace painter
 
             auto folder_count = folder->folder_count;
    
+            typedef std::pair<f::folder const *, big_size> sort_folder;
+
             s::vector<
-                     f::folder const *
-                  ,  b::pool_allocator<f::folder const *>
+                     sort_folder
+                  ,  b::pool_allocator<sort_folder>
                > sorted_folders;
             sorted_folders.resize (static_cast<s::size_t> (folder_count)); 
 
-            s::copy (
-                     folder->sub_folders.get ()
-                  ,  folder->sub_folders.get () + folder_count
-                  ,  sorted_folders.begin ()
+            s::transform (
+                  folder->sub_folders.get ()
+               ,  folder->sub_folders.get () + folder_count
+               ,  sorted_folders.begin ()
+               ,  [&context] (f::folder const * const f)
+                  {
+                     return f
+                        ?  sort_folder (f, context.property_picker (*f))
+                        :  sort_folder (f, std::numeric_limits<big_size>::min ());
+                  }
                );
 
             s::stable_sort (
                   sorted_folders.begin ()
                ,  sorted_folders.end ()
-               ,  [&context] (f::folder const * const left, f::folder const * const right) -> bool
+               ,  [] (sort_folder const & left, sort_folder right)
                      {
-                        if (left && right)
-                        {
-                           auto left_property = context.property_picker (*left);
-                           auto right_property = context.property_picker (*right);
-                           return right_property < left_property;
-                        }
-                        else if (!right)
-                        {
-                           return true;
-                        }
-                        else
-                        {
-                           return false;
-                        }
+                        return right.second < left.second;
                      }
                );
 
@@ -402,18 +398,19 @@ namespace painter
 
             for (s::size_t iter = 0; iter < folder_count; ++iter)
             {
-               auto sub_folder = sorted_folders[iter];
+               sort_folder const & current_sort_folder   = sorted_folders[iter];
+               auto sub_folder                           = current_sort_folder.first;
 
                if (!sub_folder)
                {
                   continue;
                }
 
-               auto sub_property = context.property_picker (*sub_folder);
-               auto y_step = y_step_ratio * sub_property;
-               auto next_y = current_y + y_step;
+               auto sub_property                         = current_sort_folder.second;
+               auto y_step                               = y_step_ratio * sub_property;
+               auto next_y                               = current_y + y_step;
 
-               auto folder_traverse_result = folder_traverser_impl (
+               auto folder_traverse_result   = folder_traverser_impl (
                      context
                   ,  remaining_levels - 1
                   ,  next_x
@@ -507,7 +504,7 @@ namespace painter
                   ,  rect
                   ,  theme::folder_tree::rfolder_background_color
                   ,  theme::folder_tree::rfolder_background_brush.value
-                  ,  _T ("<Remainder>")
+                  ,  _T ("Many folders")
                   );
          }
 
@@ -743,7 +740,7 @@ namespace painter
                            BitBlt (
                                  bitmap_dc.value
                               ,  rect.right - brand_bitmap_size.cx - 8
-                              ,  rect.bottom - brand_bitmap_size.cy - 8
+                              ,  rect.bottom - brand_bitmap_size.cy - 16
                               ,  brand_bitmap_size.cx
                               ,  brand_bitmap_size.cy
                               ,  brand_bitmap_dc.value

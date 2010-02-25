@@ -49,7 +49,7 @@ namespace theme
       COLORREF const background_color                          = RGB (0x29, 0x39, 0x55);
       COLORREF const folder_background_color                   = RGB (0xBC, 0xC7, 0xD8);
       COLORREF const cfolder_background_color                  = RGB (0xD8, 0xC6, 0xBC);
-      COLORREF const rfolder_background_color                  = RGB (0xD2, 0xBC, 0xD6);
+      COLORREF const rfolder_background_color                  = RGB (0xC3, 0xD3, 0xBA);
       COLORREF const folder_foreground_color                   = RGB (0x42, 0x48, 0x51);
 
       w::gdi_object<HBRUSH> const background_brush             (CreateSolidBrush (background_color          ));

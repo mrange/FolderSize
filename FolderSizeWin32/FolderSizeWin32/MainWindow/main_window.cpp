@@ -312,6 +312,55 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      w::tstring const adjust_path (w::tstring const & path)
+      {
+         auto find_last_non_ws = path.find_last_not_of (_T (" "));
+
+         if (find_last_non_ws != w::tstring::npos)
+         {
+            auto path_copy = path;
+
+            path_copy.erase (find_last_non_ws + 1);
+
+            if (path_copy[find_last_non_ws] != '\\')
+            {
+               path_copy += '\\';
+            }
+
+            return path_copy;
+         }
+         else
+         {
+            return w::tstring ();
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      w::tstring const get_user_home ()
+      {
+         TCHAR known_folder_path[MAX_PATH] = {0};
+
+         auto get_folder_hr = SHGetFolderPath (
+               s_main_window
+            ,  CSIDL_PERSONAL
+            ,  NULL
+            ,  SHGFP_TYPE_CURRENT 
+            ,  known_folder_path
+            );
+
+         if (SUCCEEDED (get_folder_hr))
+         {
+            return adjust_path (known_folder_path);
+         }
+         else
+         {
+            return w::load_string_resource (IDM_PATH, _T ("C:\\Windows\\"));
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       SIZE const calculate_size (RECT const & rect)
       {
          SIZE sz = {0};
@@ -340,16 +389,11 @@ namespace main_window
             SIZE const & main_window_size
          ,  child_window const & child_window)
       {
-         auto calculate_coord = [] (int c, int rc) -> int
+         auto calculate_coord = [] (int c, int rc)
          {
-            if ((c & ra) == ra)
-            {
-               return rc - (c & ~ra);
-            }
-            else
-            {
-               return c;
-            }
+            return (c & ra) == ra
+               ?  rc - (c & ~ra)
+               :  c;
          };
 
          auto real_left    = calculate_coord (child_window.left    , main_window_size.cx);
@@ -714,14 +758,20 @@ namespace main_window
 
                      auto path = w::get_window_text (path_hwnd);
 
-                     if (!path.empty ())
-                     {
-                        w::trace_string (_T ("New job started"));
-                        s_state = state::ptr ();
+                     path = adjust_path (path);
 
-                        s_state = state::ptr (new state (hwnd, path));
-                        invalidate_folder_tree_area (hwnd);
+                     if (path.size () == 0)
+                     {
+                        path = get_user_home ();
                      }
+
+                     SetWindowText (path_hwnd, path.c_str ());
+
+                     w::trace_string (_T ("New job started"));
+                     s_state = state::ptr ();
+
+                     s_state = state::ptr (new state (hwnd, path));
+                     invalidate_folder_tree_area (hwnd);
                   }
                   break;
                case IDM_STOP:
@@ -1235,21 +1285,13 @@ namespace main_window
                return iteration_control::continue_;
             });
 
-         TCHAR known_folder_path[MAX_PATH] = {0};
-
-         auto get_folder_hr = SHGetFolderPath (
-               s_main_window
-            ,  CSIDL_PERSONAL
-            ,  NULL
-            ,  SHGFP_TYPE_CURRENT 
-            ,  known_folder_path
-            );
+         auto user_home_path = get_user_home ();
 
          auto path_hwnd = GetDlgItem (s_main_window, IDM_PATH);
 
-         if (SUCCEEDED (get_folder_hr) && path_hwnd)
+         if (user_home_path.size () > 0 && path_hwnd)
          {
-            SetWindowText (path_hwnd, known_folder_path);
+            SetWindowText (path_hwnd, user_home_path.c_str ());
          }
 
          set_ui_state   (UISF_HIDEACCEL);
@@ -1258,7 +1300,7 @@ namespace main_window
          SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::size_string.c_str ()));
          SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::physical_size_string.c_str ()));
          SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::count_string.c_str ()));
-         SendMessage(s_selector.hwnd, CB_SETCURSEL, 0, 0L);
+         SendMessage(s_selector.hwnd, CB_SETCURSEL, 1, 0L);
 
          SetFocus (s_path.hwnd);
 
