@@ -429,7 +429,7 @@ namespace main_window
          SIZE sz = get_client_size (hwnd);
 
          for_all_child_windows (
-            [&sz] (child_window const & wc) -> iteration_control::type
+            [sz] (child_window const & wc) -> iteration_control::type
             {
                auto child_window = wc.hwnd;
                
