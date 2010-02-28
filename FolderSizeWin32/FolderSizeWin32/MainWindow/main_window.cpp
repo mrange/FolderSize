@@ -466,41 +466,6 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      void gradient_fill (
-            HDC const hdc
-         ,  RECT const & rect
-         ,  COLORREF const top_color
-         ,  COLORREF const bottom_color
-         )
-      {
-            TRIVERTEX vertex[2] = {0};
-            vertex[0].x     = rect.left;
-            vertex[0].y     = rect.top;
-            vertex[0].Red   = GetRValue (top_color) << 8;
-            vertex[0].Green = GetGValue (top_color) << 8;
-            vertex[0].Blue  = GetBValue (top_color) << 8;
-            vertex[0].Alpha = 0xFF00;
-
-            vertex[1].x     = rect.right;
-            vertex[1].y     = rect.bottom;
-            vertex[1].Red   = GetRValue (bottom_color) << 8;
-            vertex[1].Green = GetGValue (bottom_color) << 8;
-            vertex[1].Blue  = GetBValue (bottom_color) << 8;
-            vertex[1].Alpha = 0xFF00;
-
-            GRADIENT_RECT gRect = {0};
-            gRect.UpperLeft  = 0;
-            gRect.LowerRight = 1;
-
-            GdiGradientFill (
-                  hdc
-               ,  vertex
-               ,  2
-               ,  &gRect
-               ,  1
-               ,  GRADIENT_FILL_RECT_V
-               );
-      }
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
@@ -901,7 +866,7 @@ namespace main_window
                      if (w::intersect (clip_box, rect))
                      {
                         WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : Top Gradient"));
-                        gradient_fill (
+                        w::gradient_fill (
                               pdc.hdc
                            ,  rect
                            ,  theme::background_gradient_top_color
@@ -920,7 +885,7 @@ namespace main_window
                      if (w::intersect (clip_box, rect))
                      {
                         WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : Top Gradient"));
-                        gradient_fill (
+                        w::gradient_fill (
                               pdc.hdc
                            ,  rect
                            ,  theme::background_gradient_top_color

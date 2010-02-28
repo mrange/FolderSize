@@ -303,17 +303,12 @@ namespace win32
       HGDIOBJ const  previously_selected_object ;
    };
    // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
-   struct set_world_transform : boost::noncopyable 
-   {
-      set_world_transform (HDC const dc, XFORM const * const transform) throw ();
-      set_world_transform (set_world_transform const &&);
-      ~set_world_transform () throw ();
-
-      HDC const      dc                         ;
-      XFORM const    old_transform              ;
-   };
+   void gradient_fill (
+         HDC const hdc
+      ,  RECT const & rect
+      ,  COLORREF const top_color
+      ,  COLORREF const bottom_color
+      );
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------

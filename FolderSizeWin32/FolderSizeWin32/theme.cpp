@@ -58,10 +58,10 @@ namespace theme
             RGB (0xC6, 0xAD, 0xB1)  ,
             RGB (0xBC, 0xC7, 0xD8)  ,
          };
-      COLORREF const          comp_folder_background_color        = RGB (0xD6, 0xBC, 0xD0);
       COLORREF const          merged_folder_background_color      = RGB (0xC3, 0xD3, 0xBA);
       COLORREF const          folder_foreground_color             = RGB (0x42, 0x48, 0x51);
 
+      w::gdi_object<HBRUSH> const   foreground_brush              (CreateSolidBrush (foreground_color                ));
       w::gdi_object<HBRUSH> const   background_brush              (CreateSolidBrush (background_color                ));
       w::gdi_object<HBRUSH> const   folder_background_brush[6]    =
          {
@@ -72,11 +72,10 @@ namespace theme
             w::gdi_object<HBRUSH>                                 (CreateSolidBrush (folder_background_color[4]))   ,
             w::gdi_object<HBRUSH>                                 (CreateSolidBrush (folder_background_color[5]))   ,
          };
-      w::gdi_object<HBRUSH> const   comp_folder_background_brush  (CreateSolidBrush (comp_folder_background_color    ));
       w::gdi_object<HBRUSH> const   merged_folder_background_brush(CreateSolidBrush (merged_folder_background_color  ));
       w::gdi_object<HBRUSH> const   folder_foreground_brush       (CreateSolidBrush (folder_foreground_color         ));
 
-      color_legend color_legends [8]  =
+      color_legend color_legends [7]  =
          {
             {folder_background_brush[0].value      ,  _T ("Activity the last hour") },
             {folder_background_brush[1].value      ,  _T ("Last day")               },
@@ -85,7 +84,6 @@ namespace theme
             {folder_background_brush[4].value      ,  _T ("Last 365 days")          },
             {folder_background_brush[5].value      ,  _T ("No activity")            },
             {merged_folder_background_brush.value  ,  _T ("Many folders")           },
-            {comp_folder_background_brush.value    ,  _T ("Compressed folder")      },
          };
 
 

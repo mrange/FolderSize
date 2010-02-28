@@ -502,14 +502,22 @@ namespace painter
             ,  RECT const &               rect
             )
          {
-               painter_impl (
-                     context
-                  ,  total_size
-                  ,  rect
-                  ,  theme::folder_tree::merged_folder_background_color
+            auto fill_predicate = [] (HDC const hdc, RECT const & rect)
+            {
+               FillRect (
+                     hdc
+                  ,  &rect
                   ,  theme::folder_tree::merged_folder_background_brush.value
-                  ,  theme::folder_tree::merged_folder_string.c_str ()
                   );
+            };
+
+            painter_impl (
+                  context
+               ,  total_size
+               ,  rect
+               ,  fill_predicate
+               ,  theme::folder_tree::merged_folder_string.c_str ()
+               );
          }
 
          static void folder_painter_impl (
@@ -519,61 +527,80 @@ namespace painter
             ,  f::folder const &          folder
             )
          {
+
+            auto use_color = theme::folder_tree::no_activity;
+            auto ticks_since_last_activity = context.current_time - folder.last_activity;
+
+            if (ticks_since_last_activity < w::ticks_per_day / 24)
+            {
+               use_color = theme::folder_tree::last_hour    ;
+            }
+            else if (ticks_since_last_activity < w::ticks_per_day * 1)
+            {
+               use_color = theme::folder_tree::last_day     ;
+            }
+            else if (ticks_since_last_activity < w::ticks_per_day * 7)
+            {
+               use_color = theme::folder_tree::last_7day    ;
+            }
+            else if (ticks_since_last_activity < w::ticks_per_day * 31)
+            {
+               use_color = theme::folder_tree::last_31day   ;
+            }
+            else if (ticks_since_last_activity < w::ticks_per_day * 365)
+            {
+               use_color = theme::folder_tree::last_365day  ;
+            }
+
             if (folder.size > folder.physical_size)
             {
+               auto fill_predicate =
+                  [use_color] (HDC const hdc, RECT const & rect)
+                  {
+                     w::gradient_fill (
+                           hdc
+                        ,  rect
+                        ,  COLORREF (RGB (0xF0, 0xF0, 0xF0))
+                        ,  theme::folder_tree::folder_background_color[use_color]
+                        );
+                  };
+
                painter_impl (
                      context
                   ,  total_size
                   ,  rect
-                  ,  theme::folder_tree::comp_folder_background_color
-                  ,  theme::folder_tree::comp_folder_background_brush.value
+                  ,  fill_predicate
                   ,  folder.name.c_str ()
                   );
             }
             else
             {
-               auto use_color = theme::folder_tree::no_activity;
-               auto ticks_since_last_activity = context.current_time - folder.last_activity;
-
-               if (ticks_since_last_activity < w::ticks_per_day / 24)
-               {
-                  use_color = theme::folder_tree::last_hour    ;
-               }
-               else if (ticks_since_last_activity < w::ticks_per_day * 1)
-               {
-                  use_color = theme::folder_tree::last_day     ;
-               }
-               else if (ticks_since_last_activity < w::ticks_per_day * 7)
-               {
-                  use_color = theme::folder_tree::last_7day    ;
-               }
-               else if (ticks_since_last_activity < w::ticks_per_day * 31)
-               {
-                  use_color = theme::folder_tree::last_31day   ;
-               }
-               else if (ticks_since_last_activity < w::ticks_per_day * 365)
-               {
-                  use_color = theme::folder_tree::last_365day  ;
-               }
+               auto fill_predicate =
+                  [use_color] (HDC const hdc, RECT const & rect)
+                  {
+                     FillRect (
+                           hdc
+                        ,  &rect
+                        ,  theme::folder_tree::folder_background_brush[use_color].value
+                        );
+                  };
 
                painter_impl (
                      context
                   ,  total_size
                   ,  rect
-                  ,  theme::folder_tree::folder_background_color[use_color]
-                  ,  theme::folder_tree::folder_background_brush[use_color].value
+                  ,  fill_predicate
                   ,  folder.name.c_str ()
                   );
             }
-
          }
 
+         template<typename TFillPredicate>
          static void painter_impl (
                folder_traverser_context & context
             ,  big_size const             total_size
             ,  RECT const &               rect
-            ,  COLORREF const             background_color
-            ,  HBRUSH const               background_brush
+            ,  TFillPredicate             fill_predicate
             ,  LPCTSTR const              description
             )
          {
@@ -624,16 +651,12 @@ namespace painter
                   );
             }
 
-            SetBkColor (
+            SetBkMode (
                   context.hdc
-               ,  background_color
+               ,  TRANSPARENT
                );
 
-            FillRect (
-                  context.hdc
-               ,  &copy_rect
-               ,  background_brush
-               );
+            fill_predicate (context.hdc, copy_rect);
 
             DrawText (
                   context.hdc
