@@ -43,17 +43,29 @@ namespace theme
    {
       extern win32::tstring const               progress_string               ;
       extern win32::tstring const               info_string                   ;
+      extern win32::tstring const               merged_folder_string          ;
 
+      enum
+      {
+         last_hour   ,
+         last_day    ,
+         last_7day   ,
+         last_31day  ,
+         last_365day ,
+         no_activity ,
+      };
+
+      extern COLORREF const                     foreground_color              ;
       extern COLORREF const                     background_color              ;
-      extern COLORREF const                     folder_background_color       ;
-      extern COLORREF const                     cfolder_background_color      ;
-      extern COLORREF const                     rfolder_background_color      ;
+      extern COLORREF const                     folder_background_color[6]    ;
+      extern COLORREF const                     comp_folder_background_color  ;
+      extern COLORREF const                     merged_folder_background_color;
       extern COLORREF const                     folder_foreground_color       ;
 
       extern win32::gdi_object<HBRUSH> const    background_brush              ;
-      extern win32::gdi_object<HBRUSH> const    folder_background_brush       ;
-      extern win32::gdi_object<HBRUSH> const    cfolder_background_brush      ;
-      extern win32::gdi_object<HBRUSH> const    rfolder_background_brush      ;
+      extern win32::gdi_object<HBRUSH> const    folder_background_brush[6]    ;
+      extern win32::gdi_object<HBRUSH> const    comp_folder_background_brush  ;
+      extern win32::gdi_object<HBRUSH> const    merged_folder_background_brush;
       extern win32::gdi_object<HBRUSH> const    folder_foreground_brush       ;
    }
 }

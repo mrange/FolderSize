@@ -35,12 +35,6 @@ namespace folder
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   namespace
-   {
-   }
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
    folder::initializer::initializer (
          folder * const          parent_
       ,  tstring const &         name_
@@ -48,6 +42,7 @@ namespace folder
       ,  big_size const          physical_size_          
       ,  big_size const          file_count_
       ,  big_size const          folder_count_   
+      ,  win32::file_time const  last_activity_
       )
       :  parent         (parent_       )
       ,  name           (name_         )          
@@ -55,6 +50,7 @@ namespace folder
       ,  physical_size  (physical_size_)
       ,  file_count     (file_count_   )
       ,  folder_count   (folder_count_ )
+      ,  last_activity  (last_activity_ )
    {
    }
    // -------------------------------------------------------------------------
@@ -67,6 +63,7 @@ namespace folder
       ,  physical_size        (0                         )
       ,  file_count           (0                         )
       ,  folder_count         (0                         )
+      ,  last_activity        (0                         )
       ,  sub_folders          (new f::folder * [0]       )
       ,  depth                (0                         )
       ,  total_size           (0                         )
@@ -86,6 +83,7 @@ namespace folder
       ,  physical_size        (init.physical_size                                      )
       ,  file_count           (init.file_count                                         )
       ,  folder_count         (init.folder_count                                       )
+      ,  last_activity        (init.last_activity                                      )
       ,  sub_folders          (new f::folder * [static_cast<int> (init.folder_count)]  )
       ,  depth                (1                                                       )
       ,  total_size           (init.size                                               )

@@ -885,7 +885,7 @@ namespace main_window
 
                      SetTextColor (
                            pdc.hdc
-                        ,  theme::folder_tree::folder_background_color
+                        ,  theme::folder_tree::foreground_color
                         );
 
                      DrawText (

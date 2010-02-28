@@ -73,7 +73,17 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   typedef unsigned __int64 file_time  ;
+   file_time const ticks_per_day = 24 * 60 * 60 * (1000000000ui64 / 100ui64);
+   // -------------------------------------------------------------------------
+   file_time const to_file_time (FILETIME const ft) throw ();
+   FILETIME const get_current_time () throw ();
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    tstring const get_window_text (HWND const hwnd);
+   // -------------------------------------------------------------------------
+
    // -------------------------------------------------------------------------
    struct handle : boost::noncopyable
    {
@@ -145,15 +155,18 @@ namespace win32
    {
       explicit find_file (tstring const & path);
       find_file (find_file const &&);
-
-      bool const is_valid () const throw ();
-      bool const find_next () throw ();
-      bool const is_directory () const throw ();
-      big_size const get_size () const throw ();
-      DWORD const get_reparse_point_tag () const throw (); 
-      DWORD const get_file_attributes () const throw ();
-      LPCTSTR const get_name () const throw ();
       ~find_file () throw ();
+
+      bool const     is_valid () const throw ();
+      bool const     find_next () throw ();
+      bool const     is_directory () const throw ();
+      big_size const get_size () const throw ();
+      FILETIME const get_creation_time () const throw ();
+      FILETIME const get_last_access_time () const throw ();
+      FILETIME const find_file::get_last_write_time () const throw ();
+      DWORD const    get_reparse_point_tag () const throw (); 
+      DWORD const    get_file_attributes () const throw ();
+      LPCTSTR const  get_name () const throw ();
 
    private:
       WIN32_FIND_DATA   find_data;

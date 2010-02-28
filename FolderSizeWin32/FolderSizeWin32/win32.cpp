@@ -94,7 +94,25 @@ namespace win32
       trace_string (value);
 #endif
    }
+   // -------------------------------------------------------------------------
 
+   // -------------------------------------------------------------------------
+   file_time const to_file_time (FILETIME const ft) throw ()
+   {
+      return (static_cast<file_time> (ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+   }
+
+   FILETIME const get_current_time () throw ()
+   {
+      SYSTEMTIME st  = {0};
+      FILETIME ft    = {0};
+      GetSystemTime(&st);            
+      SystemTimeToFileTime(&st, &ft);
+      return ft;
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    tstring const get_window_text (HWND const hwnd)
    {
       if (!hwnd)
@@ -275,6 +293,21 @@ namespace win32
    big_size const find_file::get_size () const throw ()
    {
       return (static_cast<big_size>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
+   }
+
+   FILETIME const find_file::get_creation_time () const throw ()
+   {
+      return find_data.ftCreationTime;
+   }
+
+   FILETIME const find_file::get_last_access_time () const throw ()
+   {
+      return find_data.ftLastAccessTime;
+   }
+
+   FILETIME const find_file::get_last_write_time () const throw ()
+   {
+      return find_data.ftLastWriteTime;
    }
 
    DWORD const find_file::get_reparse_point_tag () const throw ()
