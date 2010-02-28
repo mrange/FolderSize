@@ -416,28 +416,40 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   namespace
+   void gradient_fill (
+         HDC const hdc
+      ,  RECT const & rect
+      ,  COLORREF const top_color
+      ,  COLORREF const bottom_color
+      )
    {
-      XFORM const get_world_transform (HDC const dc_) throw ()
-      {
-         XFORM xform = {0};
-         // Intentionally ignores result
-         GetWorldTransform (dc_, &xform);
-         return xform;
-      }
-   }
+         TRIVERTEX vertex[2] = {0};
+         vertex[0].x     = rect.left;
+         vertex[0].y     = rect.top;
+         vertex[0].Red   = GetRValue (top_color) << 8;
+         vertex[0].Green = GetGValue (top_color) << 8;
+         vertex[0].Blue  = GetBValue (top_color) << 8;
+         vertex[0].Alpha = 0xFF00;
 
-   set_world_transform::set_world_transform (HDC const dc_, XFORM const * const transform) throw ()
-      :  dc (dc_)
-      ,  old_transform (get_world_transform (dc_))
-   {
-      // Intentionally ignores result
-      SetWorldTransform (dc_, transform);
-   }
+         vertex[1].x     = rect.right;
+         vertex[1].y     = rect.bottom;
+         vertex[1].Red   = GetRValue (bottom_color) << 8;
+         vertex[1].Green = GetGValue (bottom_color) << 8;
+         vertex[1].Blue  = GetBValue (bottom_color) << 8;
+         vertex[1].Alpha = 0xFF00;
 
-   set_world_transform::~set_world_transform () throw ()
-   {
-      SetWorldTransform (dc, &old_transform);
+         GRADIENT_RECT gRect = {0};
+         gRect.UpperLeft  = 0;
+         gRect.LowerRight = 1;
+
+         GdiGradientFill (
+               hdc
+            ,  vertex
+            ,  2
+            ,  &gRect
+            ,  1
+            ,  GRADIENT_FILL_RECT_V
+            );
    }
    // -------------------------------------------------------------------------
 
