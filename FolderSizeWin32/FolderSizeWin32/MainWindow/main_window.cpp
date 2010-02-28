@@ -145,7 +145,7 @@ namespace main_window
       // ----------------------------------------------------------------------
       HINSTANCE                  s_instance                       = NULL;
       HWND                       s_main_window                    = NULL;
-      p::select_property::type   s_select_property                = p::select_property::size;
+      p::select_property::type   s_select_property                = p::select_property::physical_size;
 
       // la = left aligned
       int const                  la                               = 0x00000000;
@@ -760,7 +760,7 @@ namespace main_window
 
                      path = adjust_path (path);
 
-                     if (path.size () == 0)
+                     if (path.empty ())
                      {
                         path = get_user_home ();
                      }
@@ -1171,7 +1171,11 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      bool init_instance (HINSTANCE const instance, int const command_show)
+      bool init_instance (
+            HINSTANCE const   instance
+         ,  LPCTSTR const     command_line
+         ,  int const         command_show
+         )
       {
          INITCOMMONCONTROLSEX InitCtrls = {0};
       	InitCtrls.dwSize = sizeof (InitCtrls);
@@ -1289,7 +1293,7 @@ namespace main_window
 
          auto path_hwnd = GetDlgItem (s_main_window, IDM_PATH);
 
-         if (user_home_path.size () > 0 && path_hwnd)
+         if (!user_home_path.empty () && path_hwnd)
          {
             SetWindowText (path_hwnd, user_home_path.c_str ());
          }
@@ -1303,6 +1307,14 @@ namespace main_window
          SendMessage(s_selector.hwnd, CB_SETCURSEL, 1, 0L);
 
          SetFocus (s_path.hwnd);
+
+         w::tstring cmd_line (command_line);
+
+         if (!cmd_line.empty ())
+         {
+            SetWindowText (s_path.hwnd, cmd_line.c_str ());
+            PostMessage (s_main_window, WM_COMMAND, IDM_GO_PAUSE, 0);
+         }
 
          ShowWindow (s_main_window, command_show);
 
@@ -1318,7 +1330,7 @@ namespace main_window
    int application_main_loop (
          HINSTANCE const instance
       ,  HINSTANCE const previous_instance
-      ,  LPTSTR const    command_line
+      ,  LPCTSTR const   command_line
       ,  int const       command_show)
    {
       auto set_priority_class_result = SetPriorityClass (GetCurrentProcess (), IDLE_PRIORITY_CLASS);
@@ -1329,13 +1341,13 @@ namespace main_window
 
       register_window_class (instance);
 
+      accelerator_table = LoadAccelerators (instance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
+
       // Perform application initialization:
-      if (!init_instance (instance, command_show))
+      if (!init_instance (instance, command_line, command_show))
       {
          return FALSE;
       }
-
-      accelerator_table = LoadAccelerators (instance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
 
       // Main message loop:
       while (GetMessage (&msg, NULL, 0, 0))
