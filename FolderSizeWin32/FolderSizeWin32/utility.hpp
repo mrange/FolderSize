@@ -22,6 +22,7 @@
 // ----------------------------------------------------------------------------
 #define UNUSED_VARIABLE(expr) expr
 #define IMPLICIT_CAST(expr) (utility::implicit_cast (expr))
+#define EXPLICIT_CAST(type,expr) (utility::explicit_cast<type> (expr))
 #define IS_ON utility::is_on
 #define IS_OFF utility::is_off
 #define ANY_IS_ON utility::any_is_on
@@ -95,6 +96,14 @@ namespace utility
    // -------------------------------------------------------------------------
    
    // -------------------------------------------------------------------------
+   template<typename TToValueType, typename TFromValueType>
+   UTILITY_INLINE TToValueType const explicit_cast (
+         TFromValueType const & value
+      )
+   {
+      return explicit_cast_helper<TToValueType, TFromValueType>::cast (value);
+   }
+   // -------------------------------------------------------------------------
    template<typename TValueType>
    UTILITY_INLINE implicit_cast_helper<TValueType> const implicit_cast (
          TValueType const & value
@@ -129,7 +138,11 @@ namespace utility
       return (bits & static_cast<TLeft> (comparand)) != static_cast<TLeft> (comparand);
    }
    // -------------------------------------------------------------------------
-
+   template<typename T>
+   int const size_of_array (T const & a)
+   {
+      return sizeof (a) / sizeof (a[0]);
+   }
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------

@@ -75,6 +75,20 @@ namespace theme
       w::gdi_object<HBRUSH> const   comp_folder_background_brush  (CreateSolidBrush (comp_folder_background_color    ));
       w::gdi_object<HBRUSH> const   merged_folder_background_brush(CreateSolidBrush (merged_folder_background_color  ));
       w::gdi_object<HBRUSH> const   folder_foreground_brush       (CreateSolidBrush (folder_foreground_color         ));
+
+      color_legend color_legends [8]  =
+         {
+            {folder_background_brush[0].value      ,  _T ("Activity the last hour") },
+            {folder_background_brush[1].value      ,  _T ("Last day")               },
+            {folder_background_brush[2].value      ,  _T ("Last 7 days")            },
+            {folder_background_brush[3].value      ,  _T ("Last 31 days")           },
+            {folder_background_brush[4].value      ,  _T ("Last 365 days")          },
+            {folder_background_brush[5].value      ,  _T ("No activity")            },
+            {merged_folder_background_brush.value  ,  _T ("Many folders")           },
+            {comp_folder_background_brush.value    ,  _T ("Compressed folder")      },
+         };
+
+
    }
 }
 // ----------------------------------------------------------------------------

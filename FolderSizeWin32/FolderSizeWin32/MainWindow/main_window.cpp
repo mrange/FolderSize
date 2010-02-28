@@ -59,6 +59,7 @@ namespace main_window
    namespace s    = std             ;
    namespace st   = s::tr1          ;
    namespace t    = traverser       ;
+   namespace u    = utility         ;
    namespace vt   = view_transform  ;
    namespace w    = win32           ;
    // -------------------------------------------------------------------------
@@ -190,18 +191,10 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      template<typename T>
-      int const size_of_array (T const & a)
-      {
-         return sizeof (a) / sizeof (a[0]);
-      }
-      // ----------------------------------------------------------------------
-
-      // ----------------------------------------------------------------------
       template<typename TPredicate>
       void for_all_child_windows (TPredicate const predicate)
       {
-         auto size = size_of_array (s_child_window);
+         auto size = u::size_of_array (s_child_window);
          for (auto iter = 0; iter < size; ++iter)
          {
             child_window & wc = s_child_window[iter];
@@ -221,7 +214,7 @@ namespace main_window
          ,  int const start_index
          ,  TPredicate const predicate)
       {
-         auto size = size_of_array (s_child_window);
+         auto size = u::size_of_array (s_child_window);
          auto increment = forward ? 1 : -1;
 
          auto iter = (start_index + increment + size) % size;
@@ -252,8 +245,8 @@ namespace main_window
       template<typename TPredicate>
       int const find_child_window (TPredicate const predicate)
       {
-         int size = size_of_array (s_child_window);
-         for (int iter = 0; iter < size; ++iter)
+         auto size = u::size_of_array (s_child_window);
+         for (auto iter = 0; iter < size; ++iter)
          {
             child_window & wc = s_child_window[iter];
 

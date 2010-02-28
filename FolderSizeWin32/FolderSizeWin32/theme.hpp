@@ -41,10 +41,6 @@ namespace theme
 
    namespace folder_tree
    {
-      extern win32::tstring const               progress_string               ;
-      extern win32::tstring const               info_string                   ;
-      extern win32::tstring const               merged_folder_string          ;
-
       enum
       {
          last_hour   ,
@@ -54,6 +50,15 @@ namespace theme
          last_365day ,
          no_activity ,
       };
+      struct color_legend
+      {
+         HBRUSH const                           brush                         ;
+         win32::tstring const                   text                          ;
+      };
+
+      extern win32::tstring const               progress_string               ;
+      extern win32::tstring const               info_string                   ;
+      extern win32::tstring const               merged_folder_string          ;
 
       extern COLORREF const                     foreground_color              ;
       extern COLORREF const                     background_color              ;
@@ -67,6 +72,9 @@ namespace theme
       extern win32::gdi_object<HBRUSH> const    comp_folder_background_brush  ;
       extern win32::gdi_object<HBRUSH> const    merged_folder_background_brush;
       extern win32::gdi_object<HBRUSH> const    folder_foreground_brush       ;
+
+      extern color_legend color_legends [8];
+
    }
 }
 // ----------------------------------------------------------------------------

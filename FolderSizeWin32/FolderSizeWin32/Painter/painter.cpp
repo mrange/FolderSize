@@ -45,6 +45,7 @@ namespace painter
    namespace st   = s::tr1          ;
    namespace w    = win32           ;
    namespace l    = linear          ;
+   namespace u    = utility         ;
    namespace vt   = view_transform  ;
    // -------------------------------------------------------------------------
 
@@ -750,6 +751,47 @@ namespace painter
                               );
                         }
 
+                        w::select_object const select_font (
+                              bitmap_dc.value
+                           ,  theme::default_font.value
+                           );
+
+                        {
+                           auto top = 100;
+                           for (auto iter = 0; iter < u::size_of_array (theme::folder_tree::color_legends); ++iter)
+                           {
+                              {
+                                 RECT sub_rect = {0};
+                                 sub_rect.top      = top + 4;
+                                 sub_rect.left     = rect.right - 24;
+                                 sub_rect.bottom   = top + 16 + 4;
+                                 sub_rect.right    = rect.right - 8;
+
+                                 FillRect (
+                                       bitmap_dc.value
+                                    ,  &sub_rect
+                                    ,  theme::folder_tree::color_legends[iter].brush
+                                    );
+                              }
+                              {
+                                 RECT sub_rect = {0};
+                                 sub_rect.top      = top;
+                                 sub_rect.left     = 0;
+                                 sub_rect.right    = rect.right - 32;
+                                 sub_rect.bottom   = top + 24;
+
+                                 DrawText (
+                                       bitmap_dc.value
+                                    ,  theme::folder_tree::color_legends[iter].text.c_str()
+                                    ,  -1
+                                    ,  &sub_rect
+                                    , DT_RIGHT | DT_VCENTER | DT_SINGLELINE
+                                    );
+                              }
+                              top += 24;
+                           }
+                        }
+
                         if (theme::brand_bitmap.is_valid ())
                         {
                            w::device_context brand_bitmap_dc (CreateCompatibleDC (bitmap_dc.value));
@@ -777,11 +819,6 @@ namespace painter
                               );
                         }
 
-
-                        w::select_object const select_font (
-                              bitmap_dc.value
-                           ,  theme::default_font.value
-                           );
 
                         DrawText (
                               bitmap_dc.value
@@ -1013,7 +1050,35 @@ namespace painter
             w::device_context src_dc (CreateCompatibleDC (hdc));
             w::select_object src_select (src_dc.value, update_response->bitmap.value);
 
-            StretchBlt (
+            if (update_response->bitmap_size.x () < screen_size.x ())
+            {
+               RECT sub_rect = {0};
+               sub_rect.left  = rect.left + EXPLICIT_CAST(LONG, update_response->bitmap_size.x ())   ;
+               sub_rect.top   = rect.top  + 0                                                   ;
+               sub_rect.right = rect.left + EXPLICIT_CAST(LONG, screen_size.x ())                    ;
+               sub_rect.bottom= rect.top  + EXPLICIT_CAST(LONG, screen_size.y ())                    ;
+               FillRect (
+                     hdc
+                  ,  &sub_rect
+                  ,  theme::folder_tree::background_brush.value
+                  );
+            }
+
+            if (update_response->bitmap_size.y () < screen_size.y ())
+            {
+               RECT sub_rect = {0};
+               sub_rect.left  = rect.left + 0                                                   ;
+               sub_rect.top   = rect.top  + EXPLICIT_CAST(LONG, update_response->bitmap_size.y ())   ;
+               sub_rect.right = rect.left + EXPLICIT_CAST(LONG, screen_size.x ())                    ;
+               sub_rect.bottom= rect.top  + EXPLICIT_CAST(LONG, screen_size.y ())                    ;
+               FillRect (
+                     hdc
+                  ,  &sub_rect
+                  ,  theme::folder_tree::background_brush.value
+                  );
+            }
+
+            BitBlt (
                   hdc
                ,  rect.left
                ,  rect.top
@@ -1022,11 +1087,22 @@ namespace painter
                ,  src_dc.value
                ,  0
                ,  0
-               ,  IMPLICIT_CAST (update_response->bitmap_size.x ())
-               ,  IMPLICIT_CAST (update_response->bitmap_size.y ())
                ,  SRCCOPY
                );
 
+            //StretchBlt (
+            //      hdc
+            //   ,  rect.left
+            //   ,  rect.top
+            //   ,  IMPLICIT_CAST (screen_size.x ())
+            //   ,  IMPLICIT_CAST (screen_size.y ())
+            //   ,  src_dc.value
+            //   ,  0
+            //   ,  0
+            //   ,  IMPLICIT_CAST (update_response->bitmap_size.x ())
+            //   ,  IMPLICIT_CAST (update_response->bitmap_size.y ())
+            //   ,  SRCCOPY
+            //   );
 #ifdef _DEBUG
                TCHAR buffer[buffer_size] = {0};
                _stprintf_s (
