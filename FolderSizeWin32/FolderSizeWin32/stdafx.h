@@ -17,6 +17,7 @@
 #pragma once
 // ----------------------------------------------------------------------------
 #pragma warning (disable: 4100)   // unreferenced formal parameter
+#pragma warning (disable: 4510)   // default constructor could not be generated
 #pragma warning (disable: 4512)   // assignment operator could not be generated
 // ----------------------------------------------------------------------------
 
