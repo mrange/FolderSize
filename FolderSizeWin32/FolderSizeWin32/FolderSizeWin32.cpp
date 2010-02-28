@@ -23,7 +23,7 @@ namespace main_window
    int application_main_loop (
          HINSTANCE const   hInstance
       ,  HINSTANCE const   hPrevInstance
-      ,  LPTSTR const      lpCmdLine
+      ,  LPCTSTR const      lpCmdLine
       ,  int const         nCmdShow
       );
 }

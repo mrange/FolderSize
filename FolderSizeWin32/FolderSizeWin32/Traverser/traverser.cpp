@@ -147,7 +147,7 @@ namespace traverser
 
       unsigned int proc ()
       {
-         while (continue_running && job_queue.size () > 0)
+         while (continue_running && !job_queue.empty ())
          {
             auto current_job = job_queue.front ();
 
