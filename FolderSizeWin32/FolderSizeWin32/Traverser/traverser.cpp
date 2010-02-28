@@ -33,6 +33,9 @@
 // ----------------------------------------------------------------------------
 #include "traverser.hpp"
 // ----------------------------------------------------------------------------
+#undef max
+#undef min
+// ----------------------------------------------------------------------------
 namespace traverser
 {
    // -------------------------------------------------------------------------
@@ -162,12 +165,23 @@ namespace traverser
                big_size                size           (0);
                big_size                physical_size  (0);
                std::size_t             file_count     (0);
+               w::file_time            last_activity  (0);
 
                folder_names.reserve (1024);
 
+
                do
                {
-                  w::tstring const name = find_file.get_name ();
+                  w::tstring const name   = find_file.get_name ();
+
+                  auto creation_time      = w::to_file_time (find_file.get_creation_time ());
+                  auto last_write_time    = w::to_file_time (find_file.get_creation_time ());
+
+                  last_activity           = std::max (
+                        last_activity
+                     ,  std::max (creation_time, last_write_time)
+                     );
+
 
                   if (find_file.is_directory ())
                   {
@@ -221,7 +235,9 @@ namespace traverser
                      ,  size
                      ,  physical_size
                      ,  file_count
-                     ,  folder_count));
+                     ,  folder_count
+                     ,  last_activity
+                     ));
 
                for (s::size_t iter = 0; continue_running && iter < folder_count; ++iter)
                {

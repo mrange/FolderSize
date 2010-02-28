@@ -23,6 +23,8 @@
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_array.hpp>
 // ----------------------------------------------------------------------------
+#include "win32.hpp"
+// ----------------------------------------------------------------------------
 namespace folder
 {
    // -------------------------------------------------------------------------
@@ -41,6 +43,7 @@ namespace folder
          big_size const          physical_size  ;
          big_size const          file_count     ;
          big_size const          folder_count   ;
+         win32::file_time const  last_activity  ;
 
          initializer (
                folder * const          parent
@@ -49,6 +52,7 @@ namespace folder
             ,  big_size const          physical_size          
             ,  big_size const          file_count
             ,  big_size const          folder_count
+            ,  win32::file_time const  last_activity
             );
       };
 
@@ -68,6 +72,7 @@ namespace folder
       big_size const          physical_size     ;
       big_size const          file_count        ;
       big_size const          folder_count      ;
+      win32::file_time const  last_activity     ;
 
       std::size_t const       get_depth () const throw ();
       big_size const          get_total_size () const throw ();

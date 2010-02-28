@@ -178,12 +178,14 @@ namespace painter
             ,  rendered_folders &                  rendered_folders_
             ,  vt::transform const &               transform_
             ,  dimension const &                   size_
+            ,  w::file_time const                  current_time_
             ,  TPropertyPickerPredicate const &    property_picker_
             )
             :  hdc               (hdc_             )
             ,  rendered_folders  (rendered_folders_)
             ,  transform         (transform_       )
             ,  size              (size_            )    
+            ,  current_time      (current_time_    )
             ,  property_picker   (property_picker_ )
          {
          }
@@ -192,6 +194,7 @@ namespace painter
          rendered_folders &               rendered_folders  ;
          vt::transform const              transform         ;
          dimension const                  size              ;
+         w::file_time const               current_time      ;
          TPropertyPickerPredicate const   property_picker   ;
       };
 
@@ -502,9 +505,9 @@ namespace painter
                      context
                   ,  total_size
                   ,  rect
-                  ,  theme::folder_tree::rfolder_background_color
-                  ,  theme::folder_tree::rfolder_background_brush.value
-                  ,  _T ("Many folders")
+                  ,  theme::folder_tree::merged_folder_background_color
+                  ,  theme::folder_tree::merged_folder_background_brush.value
+                  ,  theme::folder_tree::merged_folder_string.c_str ()
                   );
          }
 
@@ -521,19 +524,43 @@ namespace painter
                      context
                   ,  total_size
                   ,  rect
-                  ,  theme::folder_tree::cfolder_background_color
-                  ,  theme::folder_tree::cfolder_background_brush.value
+                  ,  theme::folder_tree::comp_folder_background_color
+                  ,  theme::folder_tree::comp_folder_background_brush.value
                   ,  folder.name.c_str ()
                   );
             }
             else
             {
+               auto use_color = theme::folder_tree::no_activity;
+               auto ticks_since_last_activity = context.current_time - folder.last_activity;
+
+               if (ticks_since_last_activity < w::ticks_per_day / 24)
+               {
+                  use_color = theme::folder_tree::last_hour    ;
+               }
+               else if (ticks_since_last_activity < w::ticks_per_day * 1)
+               {
+                  use_color = theme::folder_tree::last_day     ;
+               }
+               else if (ticks_since_last_activity < w::ticks_per_day * 7)
+               {
+                  use_color = theme::folder_tree::last_7day    ;
+               }
+               else if (ticks_since_last_activity < w::ticks_per_day * 31)
+               {
+                  use_color = theme::folder_tree::last_31day   ;
+               }
+               else if (ticks_since_last_activity < w::ticks_per_day * 365)
+               {
+                  use_color = theme::folder_tree::last_365day  ;
+               }
+
                painter_impl (
                      context
                   ,  total_size
                   ,  rect
-                  ,  theme::folder_tree::folder_background_color
-                  ,  theme::folder_tree::folder_background_brush.value
+                  ,  theme::folder_tree::folder_background_color[use_color]
+                  ,  theme::folder_tree::folder_background_brush[use_color].value
                   ,  folder.name.c_str ()
                   );
             }
@@ -697,7 +724,7 @@ namespace painter
 
                         SetTextColor (
                               bitmap_dc.value
-                           ,  theme::folder_tree::folder_background_color);
+                           ,  theme::folder_tree::foreground_color);
 
                         {
                            w::select_object const select_font (
@@ -765,7 +792,7 @@ namespace painter
                            );
                         SetBkColor (
                               bitmap_dc.value
-                           ,  theme::folder_tree::folder_background_color);
+                           ,  theme::folder_tree::foreground_color);
 
                         SetTextColor (
                               bitmap_dc.value
@@ -804,6 +831,7 @@ namespace painter
                            ,  response_ptr->rendered_folders
                            ,  current_transform
                            ,  request_ptr->bitmap_size
+                           ,  w::to_file_time (w::get_current_time ())
                            ,  property_picker
                            );
 
@@ -819,7 +847,7 @@ namespace painter
 
                         SetTextColor (
                               bitmap_dc.value
-                              ,  theme::folder_tree::cfolder_background_color);
+                              ,  theme::folder_tree::comp_folder_background_color);
 
                         _stprintf_s (
                               buffer
