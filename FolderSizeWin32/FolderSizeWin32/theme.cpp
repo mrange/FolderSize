@@ -77,14 +77,14 @@ namespace theme
 
       color_legend color_legends [7]  =
          {
-            {folder_background_brush[0].value      ,  _T ("Activity the last hour") },
-            {folder_background_brush[1].value      ,  _T ("Last day")               },
-            {folder_background_brush[2].value      ,  _T ("Last 7 days")            },
-            {folder_background_brush[3].value      ,  _T ("Last 31 days")           },
-            {folder_background_brush[4].value      ,  _T ("Last 365 days")          },
-            {folder_background_brush[5].value      ,  _T ("No activity")            },
-            {merged_folder_background_brush.value  ,  _T ("Many folders")           },
-         };
+            {folder_background_brush[0].value      ,  w::load_string_resource  (IDC_ACTIVITY_LAST_HOUR   , _T ("Activity the last hour")  )},
+            {folder_background_brush[1].value      ,  w::load_string_resource  (IDC_ACTIVITY_LAST_1DAY   , _T ("Last day")                )},
+            {folder_background_brush[2].value      ,  w::load_string_resource  (IDC_ACTIVITY_LAST_7DAY   , _T ("Last 7 days")             )},
+            {folder_background_brush[3].value      ,  w::load_string_resource  (IDC_ACTIVITY_LAST_31DAY  , _T ("Last 31 days")            )},
+            {folder_background_brush[4].value      ,  w::load_string_resource  (IDC_ACTIVITY_LAST_365DAY , _T ("Last 365 days")           )},
+            {folder_background_brush[5].value      ,  w::load_string_resource  (IDC_NO_ACTIVITY          , _T ("No activity")             )},
+            {merged_folder_background_brush.value  ,  w::load_string_resource  (IDC_MANY_FOLDERS         , _T ("Many folders")            )},
+         };                                                  
 
 
    }
