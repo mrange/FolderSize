@@ -557,11 +557,17 @@ namespace painter
                auto fill_predicate =
                   [use_color] (HDC const hdc, RECT const & rect)
                   {
+                     auto top_color    = theme::folder_tree::folder_background_color[use_color];
+                     auto bottom_color = RGB (
+                           (3 * GetRValue (top_color)) / 4
+                        ,  (3 * GetGValue (top_color)) / 4
+                        ,  (3 * GetBValue (top_color)) / 4
+                        );
                      w::gradient_fill (
                            hdc
                         ,  rect
-                        ,  COLORREF (RGB (0xF0, 0xF0, 0xF0))
-                        ,  theme::folder_tree::folder_background_color[use_color]
+                        ,  top_color
+                        ,  bottom_color
                         );
                   };
 
