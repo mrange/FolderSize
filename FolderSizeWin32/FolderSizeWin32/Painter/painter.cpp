@@ -26,7 +26,6 @@
 #include <vector>
 // ----------------------------------------------------------------------------
 #include "../linear.hpp"
-#include "../messages.hpp"
 #include "../utility.hpp"
 #include "../theme.hpp"
 #include "../view_transform.hpp"
@@ -108,12 +107,25 @@ namespace painter
          auto cx = bitmap_size.x ();
          auto cy = bitmap_size.y ();
 
+#ifdef _DEBUG
+         TCHAR buffer[buffer_size] = {0};
+         _stprintf_s (
+               buffer
+            ,  WIN32_PRELUDE _T ("Creating bitmap %f, %f, %d, %d")
+            , cx
+            , cy
+            , bitmap_bits
+            , bitmap_planes
+         );
+         WIN32_DEBUG_STRING (buffer);
+#endif
+
          return 
             CreateBitmap (
                   IMPLICIT_CAST (cx)
                ,  IMPLICIT_CAST (cy)
-               ,  bitmap_bits
                ,  bitmap_planes
+               ,  bitmap_bits
                ,  NULL);
       }
 
@@ -612,8 +624,6 @@ namespace painter
             )
          {
             FS_ASSERT (description);
-            FS_ASSERT (background_brush);
-            FS_ASSERT (description);
 
             RECT copy_rect = rect;
 
@@ -913,7 +923,7 @@ namespace painter
 
                         SetTextColor (
                               bitmap_dc.value
-                              ,  theme::folder_tree::comp_folder_background_color);
+                              ,  theme::folder_tree::foreground_color);
 
                         _stprintf_s (
                               buffer

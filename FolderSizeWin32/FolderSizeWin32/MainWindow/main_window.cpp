@@ -30,7 +30,6 @@
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
 // ----------------------------------------------------------------------------
-#include "../messages.hpp"
 #include "../Painter/painter.hpp"
 #include "../theme.hpp"
 #include "../Traverser/traverser.hpp"
