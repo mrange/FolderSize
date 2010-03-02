@@ -72,17 +72,17 @@ namespace traverser
          f::folder **         replacement_folder   ;
       };
 
-      HWND                       main_hwnd                  ;
-      b::object_pool<f::folder>  folder_pool                ;
-      s::deque<job>              job_queue                  ;
-      w::tstring const           root_path                  ;
-      f::folder *                root                       ;
-      bool volatile              continue_running           ;
-      w::thread const            thread                     ;     
-      std::size_t volatile       processed_folder_count     ;
-      std::size_t volatile       unprocessed_folder_count   ;
+      folder_state_changed_callback const  folder_state_changed       ;
+      b::object_pool<f::folder>            folder_pool                ;
+      s::deque<job>                        job_queue                  ;
+      w::tstring const                     root_path                  ;
+      f::folder *                          root                       ;
+      bool volatile                        continue_running           ;
+      w::thread const                      thread                     ;     
+      std::size_t volatile                 processed_folder_count     ;
+      std::size_t volatile                 unprocessed_folder_count   ;
 
-      boost::optional<DWORD>     send_next_update           ;
+      boost::optional<DWORD>               send_next_update           ;
 
       s::deque<job> const     create_initial_queue (job const & initial_job)
       {
@@ -92,17 +92,17 @@ namespace traverser
       }
 
       impl (
-            HWND const main_hwnd_
-         ,  w::tstring const & path
+            folder_state_changed_callback const &  folder_state_changed_
+         ,  w::tstring const &                     path
          )
-         :  main_hwnd                  (main_hwnd_)
+         :  folder_state_changed       (folder_state_changed_                                   )
          ,  job_queue                  (create_initial_queue (job (path, _T ("."), NULL, &root)))
-         ,  root_path                  (path)
-         ,  root                       (folder_pool.construct ())
-         ,  continue_running           (true)
-         ,  thread                     (_T ("traverser"), create_proc ())
-         ,  processed_folder_count     (0)       
-         ,  unprocessed_folder_count   (0)
+         ,  root_path                  (path                                                    )
+         ,  root                       (folder_pool.construct ()                                )
+         ,  continue_running           (true                                                    )
+         ,  thread                     (_T ("traverser"), create_proc ()                        )
+         ,  processed_folder_count     (0                                                       )       
+         ,  unprocessed_folder_count   (0                                                       )
       {
       }
 
@@ -113,7 +113,12 @@ namespace traverser
          thread.join (10000);
       }
 
-      void update_view (bool force_update = false)
+      void update_view (
+         folder::folder const *  root_folder
+         ,  std::size_t const    unprocessed_folder_count
+         ,  std::size_t const    processed_folder_count
+         ,  bool const           force_update = false
+         )
       {
          auto tick_count = GetTickCount ();
 
@@ -124,13 +129,14 @@ namespace traverser
          {
             send_next_update = tick_count + 40; //20ms delay
 
-            WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Sending : messages::folder_structure_changed"));
-
-            PostMessage (
-                  main_hwnd
-               ,  messages::folder_structure_changed
-               ,  0
-               ,  0);
+            if (folder_state_changed)
+            {
+               folder_state_changed (
+                     root_folder
+                  ,  unprocessed_folder_count
+                  ,  processed_folder_count
+                  );
+            }
          }
       }
 
@@ -258,7 +264,11 @@ namespace traverser
                   *(current_job.replacement_folder) = new_folder;
                }
 
-               update_view ();
+               update_view (
+                     root
+                  ,  unprocessed_folder_count
+                  ,  processed_folder_count
+                  );
 
             }
 
@@ -270,7 +280,12 @@ namespace traverser
 
          if (continue_running)
          {
-            update_view (true);
+            update_view (
+                  root
+               ,  unprocessed_folder_count
+               ,  processed_folder_count
+               ,  true
+               );
          }
 
          return EXIT_SUCCESS;
@@ -285,10 +300,10 @@ namespace traverser
 
    // -------------------------------------------------------------------------
    traverser::traverser (
-         HWND const main_hwnd
-      ,  w::tstring const & path
+         folder_state_changed_callback const &  folder_state_changed
+      ,  w::tstring const &                     path
       )
-      :  m_impl (new impl (main_hwnd, path))
+      :  m_impl (new impl (folder_state_changed, path))
    {
    }
    // -------------------------------------------------------------------------

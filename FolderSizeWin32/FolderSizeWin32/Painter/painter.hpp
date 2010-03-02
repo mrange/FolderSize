@@ -19,6 +19,7 @@
 #include <tchar.h>
 #include <windows.h>
 // ----------------------------------------------------------------------------
+#include <functional>
 #include <memory>
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
@@ -63,32 +64,38 @@ namespace painter
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   typedef std::tr1::function<
+      void ()
+      > new_frame_available_callback;
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct painter : boost::noncopyable
    {
       painter ();
       ~painter () throw ();
 
       void do_request (
-            folder::folder const * const  root
-         ,  HWND const                    main_hwnd
-         ,  std::size_t const             processed_folder_count
-         ,  std::size_t const             unprocessed_folder_count
-         ,  select_property::type         select_property
-         ,  RECT const &                  rect   
-         ,  coordinate const &            centre
-         ,  zoom_factor const &           zoom
+            folder::folder const * const            root
+         ,  new_frame_available_callback const &    new_frame_available
+         ,  std::size_t const                       processed_folder_count
+         ,  std::size_t const                       unprocessed_folder_count
+         ,  select_property::type                   select_property
+         ,  RECT const &                            rect   
+         ,  coordinate const &                      centre
+         ,  zoom_factor const &                     zoom
          );
 
       void paint (
-            folder::folder const * const  root
-         ,  HWND const                    main_hwnd
-         ,  HDC const                     hdc
-         ,  std::size_t const             processed_folder_count
-         ,  std::size_t const             unprocessed_folder_count
-         ,  select_property::type         select_property
-         ,  RECT const &                  rect   
-         ,  coordinate const &            centre
-         ,  zoom_factor const &           zoom
+            folder::folder const * const           root
+         ,  new_frame_available_callback const &   new_frame_available
+         ,  HDC const                              hdc
+         ,  std::size_t const                      processed_folder_count
+         ,  std::size_t const                      unprocessed_folder_count
+         ,  select_property::type                  select_property
+         ,  RECT const &                           rect   
+         ,  coordinate const &                     centre
+         ,  zoom_factor const &                    zoom
          );
 
       rendered_folder const hit_test (
