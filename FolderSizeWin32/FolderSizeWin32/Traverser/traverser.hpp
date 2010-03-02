@@ -18,6 +18,7 @@
 // ----------------------------------------------------------------------------
 #include <tchar.h>
 // ----------------------------------------------------------------------------
+#include <functional>
 #include <string>
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
@@ -30,11 +31,17 @@ namespace traverser
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   typedef std::tr1::function<
+      void (folder::folder const *, std::size_t, std::size_t)
+      > folder_state_changed_callback;
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
    struct traverser : boost::noncopyable
    {
       traverser (
-            HWND const main_hwnd
-         ,  win32::tstring const & path
+            folder_state_changed_callback const &  folder_state_changed
+         ,  win32::tstring const &                 path
          );
       ~traverser () throw ();
 

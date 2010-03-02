@@ -62,45 +62,46 @@ namespace painter
          typedef s::auto_ptr<update_request> ptr;
 
          update_request (
-               folder::folder const * const  root_
-            ,  HWND const                    main_hwnd_
-            ,  HDC const                     hdc_
-            ,  s::size_t const               processed_folder_count_
-            ,  s::size_t const               unprocessed_folder_count_
-            ,  select_property::type const   select_property_
-            ,  coordinate const &            centre_        
-            ,  zoom_factor const &           zoom_          
-            ,  dimension const &             screen_size_   
+               folder::folder const * const           root_
+            ,  new_frame_available_callback const &   new_frame_available_
+            ,  s::size_t const                        processed_folder_count_
+            ,  s::size_t const                        unprocessed_folder_count_
+            ,  select_property::type const            select_property_
+            ,  coordinate const &                     centre_        
+            ,  zoom_factor const &                    zoom_          
+            ,  dimension const &                      screen_size_   
+            ,  int const                              bitmap_bits_
+            ,  int const                              bitmap_planes_
             )
-            :  root                       (root_                           )  
-            ,  main_hwnd                  (main_hwnd_                      )
-            ,  processed_folder_count     (processed_folder_count_         )
-            ,  unprocessed_folder_count   (unprocessed_folder_count_       )
-            ,  select_property            (select_property_                )
-            ,  centre                     (centre_                         )
-            ,  zoom                       (zoom_                           )
-            ,  bitmap_size                (screen_size_                    )
-            ,  bitmap_planes              (GetDeviceCaps (hdc_, BITSPIXEL) )
-            ,  bitmap_bits                (GetDeviceCaps (hdc_, PLANES)    )
+            :  root                          (root_                           )  
+            ,  new_frame_available           (new_frame_available_            )
+            ,  processed_folder_count        (processed_folder_count_         )
+            ,  unprocessed_folder_count      (unprocessed_folder_count_       )
+            ,  select_property               (select_property_                )
+            ,  centre                        (centre_                         )
+            ,  zoom                          (zoom_                           )
+            ,  bitmap_size                   (screen_size_                    )
+            ,  bitmap_bits                   (bitmap_bits_                    )
+            ,  bitmap_planes                 (bitmap_planes_                  )
          {                                
          }
 
-         folder::folder const * const  root                    ;
+         folder::folder const * const  root                                ;
 
-         HWND const                    main_hwnd               ;
-         s::size_t const               processed_folder_count  ;
-         s::size_t const               unprocessed_folder_count;
-         select_property::type const   select_property         ;
-         coordinate const              centre                  ;
-         zoom_factor const             zoom                    ;
-         dimension const               bitmap_size             ;
-         int const                     bitmap_planes           ;
-         int const                     bitmap_bits             ;
+         new_frame_available_callback const  new_frame_available           ;
+         s::size_t const                     processed_folder_count        ;
+         s::size_t const                     unprocessed_folder_count      ;
+         select_property::type const         select_property               ;
+         coordinate const                    centre                        ;
+         zoom_factor const                   zoom                          ;
+         dimension const                     bitmap_size                   ;
+         int const                           bitmap_bits                   ;
+         int const                           bitmap_planes                 ;
       };
 
       HBITMAP const create_bitmap (
-            int const bitmap_planes
-         ,  int const bitmap_bits
+            int const bitmap_bits
+         ,  int const bitmap_planes
          ,  dimension const & bitmap_size
          )
       {
@@ -111,8 +112,8 @@ namespace painter
             CreateBitmap (
                   IMPLICIT_CAST (cx)
                ,  IMPLICIT_CAST (cy)
-               ,  bitmap_planes
                ,  bitmap_bits
+               ,  bitmap_planes
                ,  NULL);
       }
 
@@ -129,8 +130,8 @@ namespace painter
             ,  zoom              (update_request_.zoom               )
             ,  bitmap_size       (update_request_.bitmap_size        )
             ,  bitmap            (create_bitmap (
-                  update_request_.bitmap_planes
-               ,  update_request_.bitmap_bits
+                  update_request_.bitmap_bits
+               ,  update_request_.bitmap_planes
                ,  update_request_.bitmap_size
                )                                                     )
             ,  frame_count       (frame_count_                       )
@@ -720,7 +721,7 @@ namespace painter
 #ifdef _DEBUG
                      _stprintf_s (
                            buffer
-                        ,  WIN32_PRELUDE _T (" : Received : New view request: %d")
+                        ,  WIN32_PRELUDE _T ("Received : New view request: %d")
                         ,  frame_count
                         );
                      WIN32_DEBUG_STRING (buffer);
@@ -731,7 +732,6 @@ namespace painter
                         auto response_ptr = update_response::ptr (
                            new update_response (*request_ptr, frame_count));
 
-                        // TODO: Should be created from a DC compatible with the window
                         w::device_context bitmap_dc (CreateCompatibleDC (NULL));
                         w::select_object const select_bitmap (
                               bitmap_dc.value
@@ -935,17 +935,16 @@ namespace painter
 #ifdef _DEBUG
                         _stprintf_s (
                               buffer
-                           ,  WIN32_PRELUDE _T (" : Sending  messages::new_view_available (%d)")
+                           ,  WIN32_PRELUDE _T ("Sending  messages::new_view_available (%d)")
                            ,  frame_count
                            );
                         WIN32_DEBUG_STRING (buffer);
 #endif
-                        auto result = PostMessage (
-                              request_ptr->main_hwnd
-                           ,  messages::new_view_available
-                           ,  0
-                           ,  0);
-                        UNUSED_VARIABLE (result);
+
+                        if (request_ptr->new_frame_available)
+                        {
+                           request_ptr->new_frame_available ();
+                        }
                      }
                   }
                   continue_loop = true;
@@ -954,11 +953,11 @@ namespace painter
                   continue_loop = true;
                   break;
                case WAIT_OBJECT_0 + 1:
-                  WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : Terminate painter"));
+                  WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("Received : Terminate painter"));
                   continue_loop = false;
                   break;
                case WAIT_ABANDONED:
-                  WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : Abandon painter"));
+                  WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("Received : Abandon painter"));
                   continue_loop = false;
                   break;
                default:
@@ -993,15 +992,16 @@ namespace painter
    struct painter::impl
    {
       void do_request (
-            folder::folder const * const  root
-         ,  HWND const                    main_hwnd
-         ,  HDC const                     hdc
-         ,  s::size_t const               processed_folder_count
-         ,  s::size_t const               unprocessed_folder_count
-         ,  select_property::type         select_property
-         ,  RECT const &                  rect   
-         ,  coordinate const &            centre
-         ,  zoom_factor const &           zoom
+            folder::folder const * const           root
+         ,  new_frame_available_callback const &   new_frame_available
+         ,  s::size_t const                        processed_folder_count
+         ,  s::size_t const                        unprocessed_folder_count
+         ,  select_property::type                  select_property
+         ,  RECT const &                           rect   
+         ,  int const                              bitmap_bits
+         ,  int const                              bitmap_planes
+         ,  coordinate const &                     centre
+         ,  zoom_factor const &                    zoom
          )
       {
          dimension screen_size;
@@ -1011,31 +1011,32 @@ namespace painter
          auto request = update_request::ptr (
                new update_request (
                      root
-                  ,  main_hwnd
-                  ,  hdc
+                  ,  new_frame_available
                   ,  processed_folder_count
                   ,  unprocessed_folder_count
                   ,  select_property
                   ,  centre
                   ,  zoom
                   ,  screen_size
+                  ,  bitmap_bits
+                  ,  bitmap_planes
                   ));
 
          background_painter.update_request_value.reset (request.release ());
-         WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Sending : New view request"));
+         WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("Sending : New view request"));
          background_painter.new_frame_request.set ();
       }
 
       void paint (
-            folder::folder const * const  root
-         ,  HWND const                    main_hwnd
-         ,  HDC const                     hdc
-         ,  s::size_t const               processed_folder_count
-         ,  s::size_t const               unprocessed_folder_count
-         ,  select_property::type         select_property
-         ,  RECT const &                  rect   
-         ,  coordinate const &            centre
-         ,  zoom_factor const &           zoom
+            folder::folder const * const           root
+         ,  new_frame_available_callback const &   new_frame_available
+         ,  HDC const                              hdc
+         ,  s::size_t const                        processed_folder_count
+         ,  s::size_t const                        unprocessed_folder_count
+         ,  select_property::type                  select_property
+         ,  RECT const &                           rect   
+         ,  coordinate const &                     centre
+         ,  zoom_factor const &                    zoom
          )
       {
          {
@@ -1063,12 +1064,13 @@ namespace painter
          {
             do_request (
                   root
-               ,  main_hwnd
-               ,  hdc
+               ,  new_frame_available
                ,  processed_folder_count
                ,  unprocessed_folder_count
                ,  select_property
                ,  rect
+               ,  GetDeviceCaps (hdc   , BITSPIXEL )
+               ,  GetDeviceCaps (hdc   , PLANES    )
                ,  centre
                ,  zoom
                );
@@ -1076,8 +1078,8 @@ namespace painter
 
          if (update_response.get ())
          {
-            w::device_context src_dc (CreateCompatibleDC (hdc));
-            w::select_object src_select (src_dc.value, update_response->bitmap.value);
+            w::device_context src_dc      (CreateCompatibleDC (hdc)                    );
+            w::select_object  src_select  (src_dc.value, update_response->bitmap.value );
 
             if (update_response->bitmap_size.x () < screen_size.x ())
             {
@@ -1136,7 +1138,7 @@ namespace painter
                TCHAR buffer[buffer_size] = {0};
                _stprintf_s (
                      buffer
-                  ,  WIN32_PRELUDE _T (" : BitBlt : Painting : %d")
+                  ,  WIN32_PRELUDE _T ("BitBlt : Painting : %d")
                   ,  update_response->frame_count
                   );
                WIN32_DEBUG_STRING (buffer);
@@ -1228,25 +1230,26 @@ namespace painter
 
    // -------------------------------------------------------------------------
    void painter::do_request (
-         folder::folder const * const  root
-      ,  HWND const                    main_hwnd
-      ,  s::size_t const               processed_folder_count
-      ,  s::size_t const               unprocessed_folder_count
-      ,  select_property::type         select_property
-      ,  RECT const &                  rect   
-      ,  coordinate const &            centre
-      ,  zoom_factor const &           zoom
+         folder::folder const * const           root
+      ,  new_frame_available_callback const &   new_frame_available
+      ,  s::size_t const                        processed_folder_count
+      ,  s::size_t const                        unprocessed_folder_count
+      ,  select_property::type                  select_property
+      ,  RECT const &                           rect   
+      ,  coordinate const &                     centre
+      ,  zoom_factor const &                    zoom
       )
    {
-      w::window_device_context window_dc (main_hwnd);
+      w::device_context dc (CreateCompatibleDC (NULL));
       m_impl->do_request (
             root
-         ,  main_hwnd
-         ,  window_dc.hdc
+         ,  new_frame_available
          ,  processed_folder_count
          ,  unprocessed_folder_count
          ,  select_property
-         ,  rect   
+         ,  rect
+         ,  GetDeviceCaps (dc.value , BITSPIXEL )
+         ,  GetDeviceCaps (dc.value , PLANES    )
          ,  centre
          ,  zoom
          );
@@ -1255,20 +1258,20 @@ namespace painter
 
    // -------------------------------------------------------------------------
    void painter::paint (
-         folder::folder const * const  root
-      ,  HWND const                    main_hwnd
-      ,  HDC const                     hdc
-      ,  s::size_t const               processed_folder_count
-      ,  s::size_t const               unprocessed_folder_count
-      ,  select_property::type         select_property
-      ,  RECT const &                  rect   
-      ,  coordinate const &            centre
-      ,  zoom_factor const &           zoom
+         folder::folder const * const           root
+      ,  new_frame_available_callback const &   new_frame_available
+      ,  HDC const                              hdc
+      ,  s::size_t const                        processed_folder_count
+      ,  s::size_t const                        unprocessed_folder_count
+      ,  select_property::type                  select_property
+      ,  RECT const &                           rect   
+      ,  coordinate const &                     centre
+      ,  zoom_factor const &                    zoom
       )
    {
       m_impl->paint (
             root
-         ,  main_hwnd
+         ,  new_frame_available
          ,  hdc
          ,  processed_folder_count
          ,  unprocessed_folder_count

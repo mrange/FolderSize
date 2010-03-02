@@ -119,6 +119,48 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      namespace messages
+      {
+         int const new_view_available        =  WM_USER + 0x1;
+         int const folder_structure_changed  =  WM_USER + 0x2;
+      }
+      // ----------------------------------------------------------------------
+      extern HWND                s_main_window                          ;
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      void new_frame_available ()
+      {
+         // This function may be executed in a another thread than the main thread
+         WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("Sending : messages::new_view_available"));
+
+         auto result = PostMessage (
+               s_main_window
+            ,  messages::new_view_available
+            ,  0
+            ,  0
+            );
+         UNUSED_VARIABLE (result);
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      void folder_state_changed (folder::folder const *, std::size_t, std::size_t)
+      {
+         // This function may be executed in a another thread than the main thread
+         WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("Sending : messages::folder_structure_changed"));
+
+         auto result = PostMessage (
+               s_main_window
+            ,  messages::folder_structure_changed
+            ,  0
+            ,  0
+            );
+         UNUSED_VARIABLE (result);
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       struct state
       {
          typedef s::auto_ptr<state> ptr               ;
@@ -135,9 +177,9 @@ namespace main_window
                HWND const           main_hwnd
             ,  w::tstring const &   path
             )
-            :  centre         (start_centre      )
-            ,  zoom           (start_zoom        )
-            ,  traverser      (main_hwnd  , path   )
+            :  centre         (start_centre                 )
+            ,  zoom           (start_zoom                   )
+            ,  traverser      (folder_state_changed   , path)
          {
          }
       };
@@ -643,16 +685,16 @@ namespace main_window
          switch (message)
          {
          case messages::new_view_available:
-            WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : messages::new_view_available"));
+            WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("Received : messages::new_view_available"));
             invalidate_folder_tree_area (hwnd);
             break;
          case messages::folder_structure_changed:
-            WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : Received : messages::folder_structure_changed"));
+            WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("Received : messages::folder_structure_changed"));
             if (s_state.get ())
             {
                s_state->painter.do_request (
                      s_state->traverser.get_root ()
-                  ,  hwnd
+                  ,  new_frame_available
                   ,  s_state->traverser.get_processed_folder_count ()
                   ,  s_state->traverser.get_unprocessed_folder_count ()
                   ,  s_select_property
@@ -685,7 +727,7 @@ namespace main_window
                TCHAR buffer[string_buffer_size] = {0};
                _stprintf_s (
                      buffer
-                  ,  WIN32_PRELUDE _T (" : WM_COMMAND: %d, %d")
+                  ,  WIN32_PRELUDE _T ("WM_COMMAND: %d, %d")
                   ,  wm_id
                   ,  wm_event);
 
@@ -812,10 +854,10 @@ namespace main_window
                {
                   if (s_state.get () && w::intersect (clip_box, folder_tree_rect))
                   {
-                     WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : FolderTree"));
+                     WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("WM_PAINT : FolderTree"));
                      s_state->painter.paint (
                            s_state->traverser.get_root ()
-                        ,  hwnd
+                        ,  new_frame_available
                         ,  pdc.hdc
                         ,  s_state->traverser.get_processed_folder_count ()
                         ,  s_state->traverser.get_unprocessed_folder_count ()
@@ -865,7 +907,7 @@ namespace main_window
 
                      if (w::intersect (clip_box, rect))
                      {
-                        WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : Top Gradient"));
+                        WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("WM_PAINT : Top Gradient"));
                         w::gradient_fill (
                               pdc.hdc
                            ,  rect
@@ -884,7 +926,7 @@ namespace main_window
 
                      if (w::intersect (clip_box, rect))
                      {
-                        WIN32_DEBUG_STRING (WIN32_PRELUDE _T (" : WM_PAINT : Top Gradient"));
+                        WIN32_DEBUG_STRING (WIN32_PRELUDE _T ("WM_PAINT : Top Gradient"));
                         w::gradient_fill (
                               pdc.hdc
                            ,  rect
