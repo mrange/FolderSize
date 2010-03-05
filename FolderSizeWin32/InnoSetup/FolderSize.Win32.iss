@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{0F26618D-6F7B-4216-A7C8-3AF00EBB3AD9}
 AppName=FolderSize.Win32
-AppVerName=FolderSize.Win32 1.0.6.0
+AppVerName=FolderSize.Win32 1.0.7.0
 AppPublisher=Mårten Rånge
 AppPublisherURL=http://foldersize.codeplex.com
 AppSupportURL=http://foldersize.codeplex.com

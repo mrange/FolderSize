@@ -135,29 +135,31 @@ namespace painter
 
          update_response (
                update_request    &  update_request_
-            ,  int                  frame_count_
+            ,  s::size_t const      frame_count_
             )
-            :  select_property   (update_request_.select_property    )
-            ,  centre            (update_request_.centre             )
-            ,  zoom              (update_request_.zoom               )
-            ,  bitmap_size       (update_request_.bitmap_size        )
-            ,  bitmap            (create_bitmap (
+            :  select_property         (update_request_.select_property       )
+            ,  centre                  (update_request_.centre                )
+            ,  zoom                    (update_request_.zoom                  )
+            ,  bitmap_size             (update_request_.bitmap_size           )
+            ,  bitmap                  (create_bitmap (                       
                   update_request_.bitmap_bits
                ,  update_request_.bitmap_planes
                ,  update_request_.bitmap_size
-               )                                                     )
-            ,  frame_count       (frame_count_                       )
+               )                                                              )
+            ,  processed_folder_count  (update_request_.processed_folder_count)
+            ,  frame_count             (frame_count_                          )
          {
             rendered_folders.reserve (64);
          }
 
-         select_property::type const      select_property   ;
-         coordinate const                 centre            ;
-         zoom_factor const                zoom              ;
-         dimension const                  bitmap_size       ;
-         win32::gdi_object<HBITMAP> const bitmap            ;
-         rendered_folders                 rendered_folders  ;
-         int const                        frame_count       ;
+         select_property::type const      select_property         ;
+         coordinate const                 centre                  ;
+         zoom_factor const                zoom                    ;
+         dimension const                  bitmap_size             ;
+         win32::gdi_object<HBITMAP> const bitmap                  ;
+         rendered_folders                 rendered_folders        ;
+         s::size_t const                  processed_folder_count  ;
+         s::size_t const                  frame_count             ;
       };
 
 //      typedef st::function<big_size const (f::folder const &)> TPropertyPickerPredicate;
@@ -668,11 +670,6 @@ namespace painter
                   );
             }
 
-            SetBkMode (
-                  context.hdc
-               ,  TRANSPARENT
-               );
-
             fill_predicate (context.hdc, copy_rect);
 
             DrawText (
@@ -742,204 +739,203 @@ namespace painter
                         auto response_ptr = update_response::ptr (
                            new update_response (*request_ptr, frame_count));
 
-                        w::device_context bitmap_dc (CreateCompatibleDC (NULL));
-                        w::select_object const select_bitmap (
-                              bitmap_dc.value
-                           ,  response_ptr->bitmap.value
-                           );
-
-                        RECT rect   = {0};
-                        rect.right  = IMPLICIT_CAST (request_ptr->bitmap_size.x ());
-                        rect.bottom = IMPLICIT_CAST (request_ptr->bitmap_size.y ());
-
-                        FillRect (
-                              bitmap_dc.value
-                           ,  &rect
-                           ,  theme::folder_tree::background_brush.value
-                           );
-
-                        SetBkColor (
-                              bitmap_dc.value
-                           ,  theme::folder_tree::background_color);
-
-                        SetTextColor (
-                              bitmap_dc.value
-                           ,  theme::folder_tree::foreground_color);
-
                         {
-                           w::select_object const select_font (
+                           w::device_context bitmap_dc (CreateCompatibleDC (NULL));
+                           w::select_object const select_bitmap (
                                  bitmap_dc.value
-                                 ,  theme::default_monospace_font.value
+                              ,  response_ptr->bitmap.value
                               );
 
-                           TCHAR buffer [buffer_size * 8] = {0};
-                           auto cch = _stprintf_s (
+                           SetBkMode (
+                                 bitmap_dc.value
+                              ,  TRANSPARENT
+                              );
+
+                           RECT rect   = {0};
+                           rect.right  = IMPLICIT_CAST (request_ptr->bitmap_size.x ());
+                           rect.bottom = IMPLICIT_CAST (request_ptr->bitmap_size.y ());
+
+                           FillRect (
+                                 bitmap_dc.value
+                              ,  &rect
+                              ,  theme::folder_tree::background_brush.value
+                              );
+
+                           SetBkColor (
+                                 bitmap_dc.value
+                              ,  theme::folder_tree::background_color);
+
+                           SetTextColor (
+                                 bitmap_dc.value
+                              ,  theme::folder_tree::foreground_color);
+
+                           {
+                              w::select_object const select_font (
+                                    bitmap_dc.value
+                                    ,  theme::default_monospace_font.value
+                                 );
+
+                              TCHAR buffer [buffer_size * 8] = {0};
+                              auto cch = _stprintf_s (
+                                    buffer
+                                 ,  theme::folder_tree::progress_string.c_str ()
+                                 ,  request_ptr->unprocessed_folder_count
+                                 ,  request_ptr->processed_folder_count
+                                 ,  request_ptr->root->get_depth ()
+                                 );
+
+                              DrawText (
+                                    bitmap_dc.value
+                                 ,  buffer
+                                 ,  cch
+                                 ,  &rect
+                                 , DT_RIGHT
+                                 );
+                           }
+
+                           w::select_object const select_font (
+                                 bitmap_dc.value
+                              ,  theme::default_font.value
+                              );
+
+                           {
+                              auto top = 100;
+                              for (auto iter = 0; iter < u::size_of_array (theme::folder_tree::color_legends); ++iter)
+                              {
+                                 {
+                                    RECT sub_rect = {0};
+                                    sub_rect.top      = top + 4;
+                                    sub_rect.left     = rect.right - 24;
+                                    sub_rect.bottom   = top + 16 + 4;
+                                    sub_rect.right    = rect.right - 8;
+
+                                    FillRect (
+                                          bitmap_dc.value
+                                       ,  &sub_rect
+                                       ,  theme::folder_tree::color_legends[iter].brush
+                                       );
+                                 }
+                                 {
+                                    RECT sub_rect = {0};
+                                    sub_rect.top      = top;
+                                    sub_rect.left     = 0;
+                                    sub_rect.right    = rect.right - 32;
+                                    sub_rect.bottom   = top + 24;
+
+                                    DrawText (
+                                          bitmap_dc.value
+                                       ,  theme::folder_tree::color_legends[iter].text.c_str()
+                                       ,  -1
+                                       ,  &sub_rect
+                                       , DT_RIGHT | DT_VCENTER | DT_SINGLELINE
+                                       );
+                                 }
+                                 top += 24;
+                              }
+                           }
+
+                           if (theme::brand_bitmap.is_valid ())
+                           {
+                              w::device_context brand_bitmap_dc (CreateCompatibleDC (bitmap_dc.value));
+
+                              w::select_object select_bitmap (
+                                    brand_bitmap_dc.value
+                                    ,  theme::brand_bitmap.value
+                                    );
+
+                              auto brand_bitmap_size = w::get_bitmap_size (
+                                    bitmap_dc.value
+                                 ,  theme::brand_bitmap.value
+                                 );
+
+                              BitBlt (
+                                    bitmap_dc.value
+                                 ,  rect.right - brand_bitmap_size.cx - 8
+                                 ,  rect.bottom - brand_bitmap_size.cy - 16
+                                 ,  brand_bitmap_size.cx
+                                 ,  brand_bitmap_size.cy
+                                 ,  brand_bitmap_dc.value
+                                 ,  0
+                                 ,  0
+                                 ,  SRCCOPY
+                                 );
+                           }
+
+
+                           DrawText (
+                                 bitmap_dc.value
+                              ,  theme::folder_tree::info_string.c_str ()
+                              ,  -1
+                              ,  &rect
+                              , DT_RIGHT | DT_BOTTOM | DT_SINGLELINE
+                              );
+
+                           SetTextColor (
+                                 bitmap_dc.value
+                              ,  theme::folder_tree::folder_foreground_color);
+
+                           auto bitmap_size  = request_ptr->bitmap_size;
+                           auto centre       = request_ptr->centre;
+                           auto zoom         = request_ptr->zoom;
+
+                           auto current_transform = vt::view_to_screen (
+                                 vt::transform_direction::forward
+                              ,  bitmap_size
+                              ,  centre
+                              ,  zoom);
+
+                           auto property_picker = &size_picker;
+
+                           switch (request_ptr->select_property)
+                           {
+                           case select_property::size:
+                              property_picker = &size_picker;
+                              break;
+                           case select_property::physical_size:
+                              property_picker = &physical_size_picker;
+                              break;
+                           case select_property::count:
+                              property_picker = &count_picker;
+                              break;
+                           default:
+                              FS_ASSERT (false);
+                              break;
+                           }
+
+                           folder_traverser_context folder_traverser_context (
+                                 bitmap_dc.value
+                              ,  response_ptr->rendered_folders
+                              ,  current_transform
+                              ,  request_ptr->bitmap_size
+                              ,  w::to_file_time (w::get_current_time ())
+                              ,  property_picker
+                              );
+
+                           folder_traverser (
+                                 folder_traverser_context
+                              ,  request_ptr->root
+                              );
+
+#ifdef _DEBUG
+                           SetTextColor (
+                                 bitmap_dc.value
+                                 ,  theme::folder_tree::foreground_color);
+
+                           _stprintf_s (
                                  buffer
-                              ,  theme::folder_tree::progress_string.c_str ()
-                              ,  request_ptr->unprocessed_folder_count
-                              ,  request_ptr->processed_folder_count
-                              ,  request_ptr->root->get_depth ()
+                              ,   _T ("frame_count : %d")
+                              ,  frame_count
                               );
 
                            DrawText (
                                  bitmap_dc.value
                               ,  buffer
-                              ,  cch
+                              ,  -1
                               ,  &rect
-                              , DT_RIGHT
+                              , DT_BOTTOM | DT_SINGLELINE
                               );
-                        }
-
-                        w::select_object const select_font (
-                              bitmap_dc.value
-                           ,  theme::default_font.value
-                           );
-
-                        {
-                           auto top = 100;
-                           for (auto iter = 0; iter < u::size_of_array (theme::folder_tree::color_legends); ++iter)
-                           {
-                              {
-                                 RECT sub_rect = {0};
-                                 sub_rect.top      = top + 4;
-                                 sub_rect.left     = rect.right - 24;
-                                 sub_rect.bottom   = top + 16 + 4;
-                                 sub_rect.right    = rect.right - 8;
-
-                                 FillRect (
-                                       bitmap_dc.value
-                                    ,  &sub_rect
-                                    ,  theme::folder_tree::color_legends[iter].brush
-                                    );
-                              }
-                              {
-                                 RECT sub_rect = {0};
-                                 sub_rect.top      = top;
-                                 sub_rect.left     = 0;
-                                 sub_rect.right    = rect.right - 32;
-                                 sub_rect.bottom   = top + 24;
-
-                                 DrawText (
-                                       bitmap_dc.value
-                                    ,  theme::folder_tree::color_legends[iter].text.c_str()
-                                    ,  -1
-                                    ,  &sub_rect
-                                    , DT_RIGHT | DT_VCENTER | DT_SINGLELINE
-                                    );
-                              }
-                              top += 24;
-                           }
-                        }
-
-                        if (theme::brand_bitmap.is_valid ())
-                        {
-                           w::device_context brand_bitmap_dc (CreateCompatibleDC (bitmap_dc.value));
-
-                           w::select_object select_bitmap (
-                                 brand_bitmap_dc.value
-                                 ,  theme::brand_bitmap.value
-                                 );
-
-                           auto brand_bitmap_size = w::get_bitmap_size (
-                                 bitmap_dc.value
-                              ,  theme::brand_bitmap.value
-                              );
-
-                           BitBlt (
-                                 bitmap_dc.value
-                              ,  rect.right - brand_bitmap_size.cx - 8
-                              ,  rect.bottom - brand_bitmap_size.cy - 16
-                              ,  brand_bitmap_size.cx
-                              ,  brand_bitmap_size.cy
-                              ,  brand_bitmap_dc.value
-                              ,  0
-                              ,  0
-                              ,  SRCCOPY
-                              );
-                        }
-
-
-                        DrawText (
-                              bitmap_dc.value
-                           ,  theme::folder_tree::info_string.c_str ()
-                           ,  -1
-                           ,  &rect
-                           , DT_RIGHT | DT_BOTTOM | DT_SINGLELINE
-                           );
-                        SetBkColor (
-                              bitmap_dc.value
-                           ,  theme::folder_tree::foreground_color);
-
-                        SetTextColor (
-                              bitmap_dc.value
-                           ,  theme::folder_tree::folder_foreground_color);
-
-                        auto bitmap_size  = request_ptr->bitmap_size;
-                        auto centre       = request_ptr->centre;
-                        auto zoom         = request_ptr->zoom;
-
-                        auto current_transform = vt::view_to_screen (
-                              vt::transform_direction::forward
-                           ,  bitmap_size
-                           ,  centre
-                           ,  zoom);
-
-                        auto property_picker = &size_picker;
-
-                        switch (request_ptr->select_property)
-                        {
-                        case select_property::size:
-                           property_picker = &size_picker;
-                           break;
-                        case select_property::physical_size:
-                           property_picker = &physical_size_picker;
-                           break;
-                        case select_property::count:
-                           property_picker = &count_picker;
-                           break;
-                        default:
-                           FS_ASSERT (false);
-                           break;
-                        }
-
-                        folder_traverser_context folder_traverser_context (
-                              bitmap_dc.value
-                           ,  response_ptr->rendered_folders
-                           ,  current_transform
-                           ,  request_ptr->bitmap_size
-                           ,  w::to_file_time (w::get_current_time ())
-                           ,  property_picker
-                           );
-
-                        folder_traverser (
-                              folder_traverser_context
-                           ,  request_ptr->root
-                           );
-
-#ifdef _DEBUG
-                        SetBkColor (
-                              bitmap_dc.value
-                           ,  theme::folder_tree::background_color);
-
-                        SetTextColor (
-                              bitmap_dc.value
-                              ,  theme::folder_tree::foreground_color);
-
-                        _stprintf_s (
-                              buffer
-                           ,   _T ("frame_count : %d")
-                           ,  frame_count
-                           );
-
-                        DrawText (
-                              bitmap_dc.value
-                           ,  buffer
-                           ,  -1
-                           ,  &rect
-                           , DT_BOTTOM | DT_SINGLELINE
-                           );
 #endif
-
+                        }
                         update_response_value.reset (response_ptr.release ());
 
 #ifdef _DEBUG
@@ -1063,10 +1059,11 @@ namespace painter
 
          if (
                update_response.get ()
-            && update_response->select_property == select_property
-            && update_response->centre          == centre
-            && update_response->zoom            == zoom
-            && update_response->bitmap_size     == screen_size
+            && update_response->select_property          == select_property
+            && update_response->centre                   == centre
+            && update_response->zoom                     == zoom
+            && update_response->bitmap_size              == screen_size
+            && update_response->processed_folder_count   == processed_folder_count
             )
          {
          }
@@ -1130,20 +1127,6 @@ namespace painter
                ,  0
                ,  SRCCOPY
                );
-
-            //StretchBlt (
-            //      hdc
-            //   ,  rect.left
-            //   ,  rect.top
-            //   ,  IMPLICIT_CAST (screen_size.x ())
-            //   ,  IMPLICIT_CAST (screen_size.y ())
-            //   ,  src_dc.value
-            //   ,  0
-            //   ,  0
-            //   ,  IMPLICIT_CAST (update_response->bitmap_size.x ())
-            //   ,  IMPLICIT_CAST (update_response->bitmap_size.y ())
-            //   ,  SRCCOPY
-            //   );
 #ifdef _DEBUG
                TCHAR buffer[buffer_size] = {0};
                _stprintf_s (
