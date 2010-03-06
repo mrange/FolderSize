@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Imported From FolderSizeWin32">
+      <UniqueIdentifier>{4885bbc5-9361-46e9-9286-f7c2a102f040}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Imported From FolderSizeWin32\traverser">
+      <UniqueIdentifier>{e164129c-d9b0-4067-9c6e-a8e7b0395d24}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="..\FolderSizeWin32\folder.hpp">
+      <Filter>Imported From FolderSizeWin32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FolderSizeWin32\Traverser\traverser.hpp">
+      <Filter>Imported From FolderSizeWin32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FolderSizeWin32\win32.hpp">
+      <Filter>Imported From FolderSizeWin32</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FolderSize.Console.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="..\FolderSizeWin32\folder.cpp">
+      <Filter>Imported From FolderSizeWin32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FolderSizeWin32\Traverser\traverser.cpp">
+      <Filter>Imported From FolderSizeWin32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FolderSizeWin32\win32.cpp">
+      <Filter>Imported From FolderSizeWin32</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

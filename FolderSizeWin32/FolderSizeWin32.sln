@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		ReleaseNotes.txt = ReleaseNotes.txt
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FolderSize.Console", "FolderSize.Console\FolderSize.Console.vcxproj", "{C043297E-5705-437F-976B-B2A712A769E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -45,6 +47,16 @@ Global
 		{EF6D2438-1950-49BD-9A22-CCDDD2A30BC1}.Release|Win32.ActiveCfg = Release|x86
 		{EF6D2438-1950-49BD-9A22-CCDDD2A30BC1}.Release|x86.ActiveCfg = Release|x86
 		{EF6D2438-1950-49BD-9A22-CCDDD2A30BC1}.Release|x86.Build.0 = Release|x86
+		{C043297E-5705-437F-976B-B2A712A769E0}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Debug|Win32.Build.0 = Debug|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Debug|x86.ActiveCfg = Debug|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Release|Win32.ActiveCfg = Release|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Release|Win32.Build.0 = Release|Win32
+		{C043297E-5705-437F-976B-B2A712A769E0}.Release|x86.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
