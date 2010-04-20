@@ -1014,6 +1014,7 @@ namespace main_window
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
+                  SetFocus (s_main_window);
                   s_state->mouse_current_coord = mouse_coord;
                }
             }
