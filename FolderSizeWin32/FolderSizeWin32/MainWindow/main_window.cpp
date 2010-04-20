@@ -1072,7 +1072,7 @@ namespace main_window
             break;
          case WM_MOUSEWHEEL:
             {
-               auto scroll = static_cast<short> (HIWORD (w_param)) / WHEEL_DELTA;
+               auto scroll = static_cast<double> (static_cast<short> (HIWORD (w_param))) / WHEEL_DELTA;
                auto mouse_coord = w::get_client_mouse_coordinate (hwnd, l_param);
 
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
