@@ -26,6 +26,7 @@ namespace theme
    extern win32::tstring const               size_string                      ;      
    extern win32::tstring const               physical_size_string             ;      
    extern win32::tstring const               count_string                     ;      
+   extern win32::tstring const               inaccessible_string              ;      
 
    extern win32::gdi_object<HFONT> const     default_font                     ;
    extern win32::gdi_object<HFONT> const     default_big_font                 ;
@@ -49,7 +50,9 @@ namespace theme
          last_31day  ,
          last_365day ,
          no_activity ,
+         enum_count  ,
       };
+
       struct color_legend
       {
          HBRUSH const                           brush                         ;

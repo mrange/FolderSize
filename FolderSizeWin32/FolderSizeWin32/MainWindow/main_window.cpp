@@ -42,7 +42,7 @@
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-#pragma comment(lib, "comctl32.lib")
+#pragma comment (lib, "comctl32.lib")
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
@@ -92,6 +92,7 @@ namespace main_window
             button         ,
             edit           ,
             combo          ,
+            enum_count     ,
          };
       }
 
@@ -199,8 +200,8 @@ namespace main_window
          {  IDM_GO_PAUSE   , la | 8    , la | 8    , la | 8 + 104    , la | 8 + 32  , window_type::button   , BS_DEFPUSHBUTTON                  ,  0  },
          {  IDM_STOP       , la | 120  , la | 8    , la | 120 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
          {  IDM_BROWSE     , la | 210  , la | 8    , la | 210 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
-         {  IDM_PATH       , la | 300  , la | 10   , ra | 108        , la | 10 + 28 , window_type::edit     , ES_AUTOHSCROLL                    ,  WS_EX_CLIENTEDGE  },
-         {  IDM_SELECTOR   , ra | 100  , la | 10   , ra | 8          , la | 10 + 29 , window_type::combo    , CBS_DROPDOWNLIST | CBS_HASSTRINGS ,  0  },
+         {  IDM_PATH       , la | 300  , la | 10   , ra | 128        , la | 10 + 28 , window_type::edit     , ES_AUTOHSCROLL                    ,  WS_EX_CLIENTEDGE  },
+         {  IDM_SELECTOR   , ra | 120  , la | 10   , ra | 8          , la | 10 + 29 , window_type::combo    , CBS_DROPDOWNLIST | CBS_HASSTRINGS ,  0  },
          {  IDM_FOLDERTREE , la | 0    , la | 48   , ra | 0          , ra | 22      , window_type::nowindow , 0                                 ,  0  },
          {  IDM_INFO       , la | 8    , ra | 22   , ra | 8          , ra | 0       , window_type::static_  , SS_CENTER                         ,  0  },
       };
@@ -227,6 +228,7 @@ namespace main_window
          {
             continue_   ,
             break_      ,
+            enum_count  ,
          };
       }
       // ----------------------------------------------------------------------
@@ -591,6 +593,8 @@ namespace main_window
             return p::select_property::physical_size;
          case 2:
             return p::select_property::count;
+         case 3:
+            return p::select_property::inaccessible;
          default:
             FS_ASSERT (false);
             return p::select_property::size;
@@ -613,9 +617,9 @@ namespace main_window
       // ----------------------------------------------------------------------
       static void change_select_property (int const increment)
       {
-         auto index = SendMessage(s_selector.hwnd, CB_GETCURSEL, 0, 0L);
-         auto new_index = (index + increment + 3) % 3;
-         SendMessage(s_selector.hwnd, CB_SETCURSEL, new_index, 0L);
+         auto index = SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0L);
+         auto new_index = (index + increment + p::select_property::enum_count) % p::select_property::enum_count;
+         SendMessage (s_selector.hwnd, CB_SETCURSEL, new_index, 0L);
          s_select_property = calculate_select_property_from_index (new_index);
       }
       // ----------------------------------------------------------------------
@@ -1187,7 +1191,7 @@ namespace main_window
          s_main_window = CreateWindowEx (
                WS_EX_APPWINDOW | WS_EX_COMPOSITED /*| WS_EX_LAYERED*/
             ,  window_class
-            ,  w::load_string_resource (IDC_FOLDERSIZEWIN32, window_class).c_str()
+            ,  w::load_string_resource (IDC_FOLDERSIZEWIN32, window_class).c_str ()
             ,     WS_OVERLAPPEDWINDOW
                |  WS_VISIBLE
                |  WS_TABSTOP
@@ -1264,7 +1268,7 @@ namespace main_window
                   wc.hwnd = CreateWindowEx (
                      wc.extended_style
                   ,  window_class
-                  ,  w::load_string_resource (wc.id).c_str()
+                  ,  w::load_string_resource (wc.id).c_str ()
                   ,     wc.style 
                      |  WS_CHILD 
                      |  WS_VISIBLE
@@ -1301,10 +1305,11 @@ namespace main_window
          set_ui_state   (UISF_HIDEACCEL);
          clear_ui_state (UISF_HIDEFOCUS);
 
-         SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::size_string.c_str ()));
-         SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::physical_size_string.c_str ()));
-         SendMessage(s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::count_string.c_str ()));
-         SendMessage(s_selector.hwnd, CB_SETCURSEL, 1, 0L);
+         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::size_string.c_str ()           ));
+         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::physical_size_string.c_str ()  ));
+         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::count_string.c_str ()          ));
+         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::inaccessible_string.c_str ()   ));
+         SendMessage (s_selector.hwnd, CB_SETCURSEL, 1, 0L);
 
          SetFocus (s_path.hwnd);
 

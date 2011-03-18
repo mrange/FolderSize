@@ -45,6 +45,7 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 // ----------------------------------------------------------------------------
 
@@ -61,7 +62,6 @@ typedef unsigned __int64 big_size   ;
 #  include <boost/pool/pool.hpp>
 #  include <boost/pool/pool_alloc.hpp>
 #  include <boost/scoped_array.hpp>
-#  include <boost/static_assert.hpp>
 #pragma warning (pop)
 // ----------------------------------------------------------------------------
 #define FS_ASSERT BOOST_ASSERT
@@ -79,3 +79,4 @@ typedef unsigned __int64 big_size   ;
 #  endif
 #endif
 // ----------------------------------------------------------------------------
+

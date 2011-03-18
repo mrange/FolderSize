@@ -187,6 +187,14 @@ namespace painter
       }
 
 
+      big_size const inaccessible_picker (
+         f::folder const & f
+         )
+      {
+         return f.get_total_inaccessible_folder_count ();
+      }
+
+
       struct folder_traverser_context : b::noncopyable
       {
          folder_traverser_context (
@@ -245,6 +253,7 @@ namespace painter
             yes_folder_painted   ,
             no_folder_too_small  ,
             no_other_reason      ,
+            enum_count           ,
          };
 
          template<
@@ -824,7 +833,7 @@ namespace painter
 
                                     DrawText (
                                           bitmap_dc.value
-                                       ,  theme::folder_tree::color_legends[iter].text.c_str()
+                                       ,  theme::folder_tree::color_legends[iter].text.c_str ()
                                        ,  -1
                                        ,  &sub_rect
                                        , DT_RIGHT | DT_VCENTER | DT_SINGLELINE
@@ -896,6 +905,9 @@ namespace painter
                               break;
                            case select_property::count:
                               property_picker = &count_picker;
+                              break;
+                           case select_property::inaccessible:
+                              property_picker = &inaccessible_picker;
                               break;
                            default:
                               FS_ASSERT (false);
@@ -1091,10 +1103,10 @@ namespace painter
             if (update_response->bitmap_size.x () < screen_size.x ())
             {
                RECT sub_rect = {0};
-               sub_rect.left  = rect.left + EXPLICIT_CAST(LONG, update_response->bitmap_size.x ())   ;
+               sub_rect.left  = rect.left + EXPLICIT_CAST (LONG, update_response->bitmap_size.x ())   ;
                sub_rect.top   = rect.top  + 0                                                   ;
-               sub_rect.right = rect.left + EXPLICIT_CAST(LONG, screen_size.x ())                    ;
-               sub_rect.bottom= rect.top  + EXPLICIT_CAST(LONG, screen_size.y ())                    ;
+               sub_rect.right = rect.left + EXPLICIT_CAST (LONG, screen_size.x ())                    ;
+               sub_rect.bottom= rect.top  + EXPLICIT_CAST (LONG, screen_size.y ())                    ;
                FillRect (
                      hdc
                   ,  &sub_rect
@@ -1106,9 +1118,9 @@ namespace painter
             {
                RECT sub_rect = {0};
                sub_rect.left  = rect.left + 0                                                   ;
-               sub_rect.top   = rect.top  + EXPLICIT_CAST(LONG, update_response->bitmap_size.y ())   ;
-               sub_rect.right = rect.left + EXPLICIT_CAST(LONG, screen_size.x ())                    ;
-               sub_rect.bottom= rect.top  + EXPLICIT_CAST(LONG, screen_size.y ())                    ;
+               sub_rect.top   = rect.top  + EXPLICIT_CAST (LONG, update_response->bitmap_size.y ())   ;
+               sub_rect.right = rect.left + EXPLICIT_CAST (LONG, screen_size.x ())                    ;
+               sub_rect.bottom= rect.top  + EXPLICIT_CAST (LONG, screen_size.y ())                    ;
                FillRect (
                      hdc
                   ,  &sub_rect

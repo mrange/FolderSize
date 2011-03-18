@@ -31,7 +31,7 @@ namespace
    // -------------------------------------------------------------------------
    void print_status (f::folder const *, s::size_t unproc, s::size_t proc)
    {
-      _ftprintf_s(stderr, _T ("Unprocessed %d, Processed %d\r\n"), unproc, proc);
+      _ftprintf_s (stderr, _T ("Unprocessed %d, Processed %d\r\n"), unproc, proc);
    }
    // -------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ namespace
             ,  f->get_total_physical_size ()
             );
 
-         for(big_size iter = 0; iter < f->folder_count; ++iter)
+         for (big_size iter = 0; iter < f->folder_count; ++iter)
          {
             sub_next_id = recursive_print (
                   sub_next_id
@@ -80,7 +80,7 @@ namespace
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------
-int _tmain(int argc, _TCHAR* argv[])
+int _tmain (int argc, _TCHAR* argv[])
 {
 
    {

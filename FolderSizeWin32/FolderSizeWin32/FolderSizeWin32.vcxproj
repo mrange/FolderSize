@@ -38,12 +38,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)Output\$(Configuration)\</OutDir>
-    <IncludePath>..\External\boost_1_42_0;$(IncludePath)</IncludePath>
+    <IncludePath>..\External\boost_1_46_1;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Output\$(Configuration)\</OutDir>
-    <IncludePath>..\External\boost_1_42_0;$(IncludePath)</IncludePath>
+    <IncludePath>..\External\boost_1_46_1;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

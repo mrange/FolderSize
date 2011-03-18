@@ -106,8 +106,8 @@ namespace win32
    {
       SYSTEMTIME st  = {0};
       FILETIME ft    = {0};
-      GetSystemTime(&st);            
-      SystemTimeToFileTime(&st, &ft);
+      GetSystemTime (&st);            
+      SystemTimeToFileTime (&st, &ft);
       return ft;
    }
    // -------------------------------------------------------------------------
@@ -500,7 +500,7 @@ namespace win32
             lf = non_client_metrics.lfMessageFont;
             break;
          default:
-            FS_ASSERT(false);
+            FS_ASSERT (false);
             lf = non_client_metrics.lfMessageFont;
             break;
          }
@@ -568,7 +568,7 @@ namespace win32
       if (hdc && bitmap)
       {
          BITMAPINFO bmi = {0};
-         bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+         bmi.bmiHeader.biSize = sizeof (bmi.bmiHeader);
          auto get_bits_result = GetDIBits (
                hdc
             ,  bitmap
@@ -643,8 +643,6 @@ namespace win32
 
       return p;
    }
-   // -------------------------------------------------------------------------
-
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------
