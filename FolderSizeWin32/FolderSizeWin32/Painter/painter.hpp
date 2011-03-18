@@ -41,6 +41,8 @@ namespace painter
          size           ,
          physical_size  ,
          count          ,
+         inaccessible   ,
+         enum_count     ,
       };
    }
    // -------------------------------------------------------------------------

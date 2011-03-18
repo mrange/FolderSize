@@ -161,7 +161,26 @@ namespace traverser
 
             w::find_file find_file (current_job.path + _T ("\\*.*"));
 
-            if (continue_running && find_file.is_valid ())
+            if (!find_file.is_valid ())
+            {
+               auto new_folder = folder_pool.construct (
+                  f::folder::initializer (
+                        current_job.parent_folder
+                     ,  current_job.name
+                     ,  0
+                     ,  0
+                     ,  0
+                     ,  0
+                     ,  w::to_file_time (w::get_current_time ())
+                     ,  true
+                     ));
+
+               if (current_job.replacement_folder)
+               {
+                  *(current_job.replacement_folder) = new_folder;
+               }
+            }
+            else if (continue_running)
             {
                s::vector <
                      w::tstring
@@ -242,6 +261,7 @@ namespace traverser
                      ,  file_count
                      ,  folder_count
                      ,  last_activity
+                     ,  false
                      ));
 
                for (s::size_t iter = 0; continue_running && iter < folder_count; ++iter)

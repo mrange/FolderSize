@@ -21,11 +21,14 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
 // ----------------------------------------------------------------------------
 #include "utility.hpp"
+// ----------------------------------------------------------------------------
+#define WIN32_INLINE inline
 // ----------------------------------------------------------------------------
 namespace win32
 {
@@ -212,6 +215,7 @@ namespace win32
       {
          auto_reset     ,
          manual_reset   ,
+         enum_count     ,
       };
    }
    // -------------------------------------------------------------------------
@@ -318,10 +322,11 @@ namespace win32
    {
       enum type
       {
-         caption  ,
-         menu     ,
-         status   ,
-         message  ,
+         caption     ,
+         menu        ,
+         status      ,
+         message     ,
+         enum_count  ,
       };
    }
    // -------------------------------------------------------------------------
@@ -352,6 +357,200 @@ namespace win32
    POINT const get_mouse_coordinate (LPARAM const lParam);
    // -------------------------------------------------------------------------
 
+   // -------------------------------------------------------------------------
+   namespace detail
+   {
+      template<typename TValue, int size>
+      struct atomic_impl;
+
+
+      template<typename TValue>
+      struct atomic_impl<TValue, 8>
+      {
+         static_assert (
+            std::tr1::is_pod<TValue>::value,
+            "TValue must be pod-type"
+            );
+
+         static_assert (
+            sizeof (long long) == 8,
+            "sizeof (long long) must be 8"
+            );
+
+         atomic_impl () throw ()
+            :  m_value (0)
+         {
+         }
+
+         atomic_impl (TValue const value) throw ()
+            :  m_value ((long long)value)
+         {
+         }
+
+         WIN32_INLINE TValue const get () const throw ()
+         {
+            return (TValue) (
+               _InterlockedCompareExchange64 (
+                     const_cast<long long volatile*>(&m_value)
+                  ,  0
+                  ,  0
+                  ));
+         }
+
+         WIN32_INLINE bool const compare_and_exchange (
+            TValue const new_value,
+            TValue const compare_value
+            ) throw ()
+         {
+            auto new_value_      = (long long)new_value;
+            auto compare_value_  = (long long)compare_value;
+            return 
+               _InterlockedCompareExchange64 (
+                     &m_value
+                  ,  new_value_
+                  ,  compare_value_
+                  )
+               == compare_value_;
+         }
+
+      private:
+         __declspec (align (8))
+         volatile long long m_value;
+      };
+
+
+      template<typename TValue>
+      struct atomic_impl<TValue, 4>
+      {
+         static_assert (
+            std::tr1::is_pod<TValue>::value,
+            "TValue must be pod-type"
+            );
+
+         static_assert (
+            sizeof (long) == 4,
+            "sizeof (long) must be 4"
+            );
+
+         atomic_impl () throw ()
+            :  m_value (0)
+         {
+         }
+
+         explicit atomic_impl (TValue const value) throw ()
+            :  m_value ((long)value)
+         {
+         }
+
+         WIN32_INLINE TValue const get () const throw ()
+         {
+            // No interlocked needed on 32bit as memory bus is 32 bit and m_value is aligned 
+            // Also VS2005+ puts in a memory barrier implicitly on volatile 
+            // (even though it's not mandated by the standard)
+            return (TValue) m_value;
+         }
+
+         WIN32_INLINE bool const compare_and_exchange (
+            TValue const new_value,
+            TValue const compare_value
+            ) throw ()
+         {
+            auto new_value_      = (long)new_value;
+            auto compare_value_  = (long)compare_value;
+            return 
+               _InterlockedCompareExchange (
+                     &m_value
+                  ,  new_value_
+                  ,  compare_value_
+                  )
+               == compare_value_;
+         }
+
+      private:
+         __declspec (align (4))
+         volatile long m_value;
+      };
+   }
+   // -------------------------------------------------------------------------
+
+   // -------------------------------------------------------------------------
+   template<typename TValue>
+   struct atomic
+   {
+      static_assert (
+         std::tr1::is_pod<TValue>::value,
+         "TValue must be pod-type"
+         );
+
+      atomic () throw ()
+      {
+      }
+
+      explicit atomic (TValue const value) throw ()
+         :  m_value (value)
+      {
+      }
+
+      WIN32_INLINE TValue const get () const throw ()
+      {
+         return m_value.get ();
+      }
+
+      WIN32_INLINE bool const compare_and_exchange (
+         TValue const new_value,
+         TValue const compare_value
+         ) throw ()
+      {
+         return m_value.compare_and_exchange (
+            new_value,
+            compare_value
+            );
+      }
+
+      template<typename TFunctor>
+      WIN32_INLINE TValue const update (TFunctor const functor) throw ()
+      {
+         auto current_value   = TValue ();
+         auto new_value       = TValue ();
+         do
+         {
+            current_value = m_value.get ();
+            new_value = functor (current_value);
+         }
+         while (!m_value.compare_and_exchange (new_value, current_value));
+
+         return new_value;
+      }
+
+      WIN32_INLINE TValue const inplace_add (TValue const value) throw ()
+      {
+         return update ([=] (TValue const v) { return value + v; });
+      }
+
+      WIN32_INLINE TValue const inplace_max (TValue const value) throw ()
+      {
+         return update ([=] (TValue const v) { return max_impl (value, v); });
+      }
+
+      WIN32_INLINE TValue const inplace_min (TValue const value) throw ()
+      {
+         return update ([=] (TValue const v) { return min_impl (value, v); });
+      }
+
+   private:
+
+      WIN32_INLINE static TValue max_impl (TValue const left, TValue const right) throw ()
+      {
+         return left < right ? right : left;
+      }
+
+      WIN32_INLINE static TValue min_impl (TValue const left, TValue const right) throw ()
+      {
+         return left < right ? left : right;
+      }
+
+      detail::atomic_impl<TValue, sizeof (TValue)> m_value;
+   };
    // -------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------

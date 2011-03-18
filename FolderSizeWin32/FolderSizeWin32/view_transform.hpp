@@ -30,8 +30,9 @@ namespace view_transform
    {
       enum type
       {
-         forward  ,
-         reverse  ,
+         forward     ,
+         reverse     ,
+         enum_count  ,
       };
    }
 

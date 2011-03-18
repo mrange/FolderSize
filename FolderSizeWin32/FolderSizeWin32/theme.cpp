@@ -24,10 +24,11 @@ namespace theme
 {
    namespace w = win32;  
 
-   w::tstring const           welcome_string                      = w::load_string_resource  (IDC_WELCOME_MSG            , _T("Click Go to start...") );      
-   w::tstring const           size_string                         = w::load_string_resource  (IDC_SIZE_CHOICE            , _T("Size")                 );            
-   w::tstring const           physical_size_string                = w::load_string_resource  (IDC_PHYSICAL_SIZE_CHOICE   , _T("Physical")             );            
-   w::tstring const           count_string                        = w::load_string_resource  (IDC_COUNT_CHOICE           , _T("Count")                );            
+   w::tstring const           welcome_string                      = w::load_string_resource  (IDC_WELCOME_MSG            , _T ("Click Go to start...") );      
+   w::tstring const           size_string                         = w::load_string_resource  (IDC_SIZE_CHOICE            , _T ("Size")                 );            
+   w::tstring const           physical_size_string                = w::load_string_resource  (IDC_PHYSICAL_SIZE_CHOICE   , _T ("Physical")             );            
+   w::tstring const           count_string                        = w::load_string_resource  (IDC_COUNT_CHOICE           , _T ("Count")                );            
+   w::tstring const           inaccessible_string                 = w::load_string_resource  (IDC_INACCESSIBLE_CHOICE    , _T ("Inaccessible")         );            
 
    w::gdi_object<HFONT> const default_font                        = w::create_standard_font  (w::standard_font::caption  , 20 );
    w::gdi_object<HFONT> const default_big_font                    = w::create_standard_font  (w::standard_font::caption  , 48  );
@@ -72,7 +73,7 @@ namespace theme
             w::gdi_object<HBRUSH>                                 (CreateSolidBrush (folder_background_color[4]))   ,
             w::gdi_object<HBRUSH>                                 (CreateSolidBrush (folder_background_color[5]))   ,
          };
-      w::gdi_object<HBRUSH> const   merged_folder_background_brush(CreateSolidBrush (merged_folder_background_color  ));
+      w::gdi_object<HBRUSH> const   merged_folder_background_brush (CreateSolidBrush (merged_folder_background_color  ));
       w::gdi_object<HBRUSH> const   folder_foreground_brush       (CreateSolidBrush (folder_foreground_color         ));
 
       color_legend color_legends [7]  =

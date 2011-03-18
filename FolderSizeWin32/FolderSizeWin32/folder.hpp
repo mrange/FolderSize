@@ -37,13 +37,14 @@ namespace folder
 
       struct initializer
       {
-         folder * const          parent         ;
-         tstring const &         name           ;
-         big_size const          size           ;
-         big_size const          physical_size  ;
-         big_size const          file_count     ;
-         big_size const          folder_count   ;
-         win32::file_time const  last_activity  ;
+         folder * const          parent                  ;
+         tstring const &         name                    ;
+         big_size const          size                    ;
+         big_size const          physical_size           ;
+         big_size const          file_count              ;
+         big_size const          folder_count            ;
+         win32::file_time const  last_activity           ;
+         bool const              is_inaccessible         ;
 
          initializer (
                folder * const          parent
@@ -53,6 +54,7 @@ namespace folder
             ,  big_size const          file_count
             ,  big_size const          folder_count
             ,  win32::file_time const  last_activity
+            ,  bool const              is_inaccessible
             );
       };
 
@@ -62,42 +64,45 @@ namespace folder
          initializer const & init
          );
 
-      folder * const          parent            ;
+      folder * const          parent                  ;
 
-      tstring const           name              ;
+      tstring const           name                    ;
 
-      folder_array const      sub_folders       ;
+      folder_array const      sub_folders             ;
 
-      big_size const          size              ;
-      big_size const          physical_size     ;
-      big_size const          file_count        ;
-      big_size const          folder_count      ;
-      win32::file_time const  last_activity     ;
+      big_size const          size                    ;
+      big_size const          physical_size           ;
+      big_size const          file_count              ;
+      big_size const          folder_count            ;
+      win32::file_time const  last_activity           ;
+      bool const              is_inaccessible         ;
 
       std::size_t const       get_depth () const throw ();
       big_size const          get_total_size () const throw ();
       big_size const          get_total_physical_size () const throw ();
       big_size const          get_total_file_count () const throw ();
       big_size const          get_total_folder_count () const throw ();
+      big_size const          get_total_inaccessible_folder_count () const throw ();
 
       static folder const  empty;
 
 
    private:
       void                    recursive_update  (
-                                    std::size_t const child_depth
-                                 ,  big_size const size         
-                                 ,  big_size const physical_size         
-                                 ,  big_size const file_count   
-                                 ,  big_size const folder_count 
+                                    std::size_t const    child_depth
+                                 ,  big_size const       size         
+                                 ,  big_size const       physical_size         
+                                 ,  big_size const       file_count   
+                                 ,  big_size const       folder_count 
+                                 ,  bool const           folder_is_inaccessible        
                                  );
-      __declspec (align (4))
-      std::size_t volatile    depth                ;
-      __declspec (align (8))
-      big_size volatile       total_size           ;
-      big_size volatile       total_physical_size  ;
-      big_size volatile       total_file_count     ;
-      big_size volatile       total_folder_count   ;
+
+      win32::atomic<std::size_t> depth                            ;
+      win32::atomic<big_size>    total_size                       ;
+      win32::atomic<big_size>    total_physical_size              ;
+      win32::atomic<big_size>    total_file_count                 ;
+      win32::atomic<big_size>    total_folder_count               ;
+      win32::atomic<big_size>    total_inaccessible_folder_count  ;
    };
    // -------------------------------------------------------------------------
 

@@ -1,0 +1,18 @@
+syntax: regexp
+^FolderSizeWin32/_ReSharper\.FolderSizeWin32/
+syntax: regexp
+^FolderSizeWin32/External/boost_1_46_1
+syntax: regexp
+/Debug/
+syntax: regexp
+/Release/
+syntax: regexp
+\.suo$
+syntax: regexp
+\.user$
+syntax: regexp
+\.ipch$
+syntax: regexp
+\.sdf$
+syntax: regexp
+\.opensdf$
