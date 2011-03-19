@@ -126,7 +126,7 @@ namespace painter
                ,  IMPLICIT_CAST (cy)
                ,  bitmap_planes
                ,  bitmap_bits
-               ,  NULL);
+               ,  nullptr);
       }
 
       struct update_response : boost::noncopyable
@@ -749,7 +749,7 @@ namespace painter
                            new update_response (*request_ptr, frame_count));
 
                         {
-                           w::device_context bitmap_dc (CreateCompatibleDC (NULL));
+                           w::device_context bitmap_dc (CreateCompatibleDC (nullptr));
                            w::select_object const select_bitmap (
                                  bitmap_dc.value
                               ,  response_ptr->bitmap.value
@@ -1197,7 +1197,7 @@ namespace painter
    // -------------------------------------------------------------------------
    rendered_folder::rendered_folder ()
       :  render_rect (w::zero_rect ()  )
-      ,  folder      (NULL             )
+      ,  folder      (nullptr          )
    {
    }
 
@@ -1245,7 +1245,7 @@ namespace painter
       ,  zoom_factor const &                    zoom
       )
    {
-      w::device_context dc (CreateCompatibleDC (NULL));
+      w::device_context dc (CreateCompatibleDC (nullptr));
       m_impl->do_request (
             root
          ,  new_frame_available

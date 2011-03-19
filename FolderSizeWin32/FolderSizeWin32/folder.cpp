@@ -59,7 +59,7 @@ namespace folder
 
    // -------------------------------------------------------------------------
    folder::folder ()
-      :  parent                           (NULL                      )
+      :  parent                           (nullptr             )
 
       ,  name                             (_T ("")             )
 

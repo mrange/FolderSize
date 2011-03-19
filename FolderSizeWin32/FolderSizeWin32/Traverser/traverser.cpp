@@ -94,14 +94,14 @@ namespace traverser
             folder_state_changed_callback const &  folder_state_changed_
          ,  w::tstring const &                     path
          )
-         :  folder_state_changed       (folder_state_changed_                                   )
-         ,  job_queue                  (create_initial_queue (job (path, _T ("."), NULL, &root)))
-         ,  root_path                  (path                                                    )
-         ,  root                       (folder_pool.construct ()                                )
-         ,  continue_running           (true                                                    )
-         ,  thread                     (_T ("traverser"), create_proc ()                        )
-         ,  processed_folder_count     (0                                                       )       
-         ,  unprocessed_folder_count   (0                                                       )
+         :  folder_state_changed       (folder_state_changed_                                      )
+         ,  job_queue                  (create_initial_queue (job (path, _T ("."), nullptr, &root)))
+         ,  root_path                  (path                                                       )
+         ,  root                       (folder_pool.construct ()                                   )
+         ,  continue_running           (true                                                       )
+         ,  thread                     (_T ("traverser"), create_proc ()                           )
+         ,  processed_folder_count     (0                                                          )
+         ,  unprocessed_folder_count   (0                                                          )
       {
       }
 

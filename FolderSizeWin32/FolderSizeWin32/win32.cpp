@@ -176,7 +176,7 @@ namespace win32
 
    bool const dll::is_valid () const throw ()
    {
-      return value != NULL;
+      return value != nullptr;
    }
    // -------------------------------------------------------------------------
 
@@ -268,7 +268,7 @@ namespace win32
             ,  get_windows7_dependent_value (FindExInfoBasic, FindExInfoStandard)
             ,  &find_data
             ,  FindExSearchNameMatch
-            ,  NULL
+            ,  nullptr
             ,  get_windows7_dependent_value (FIND_FIRST_EX_LARGE_FETCH, 0)
             ))
    {
@@ -348,7 +348,7 @@ namespace win32
 
    // -------------------------------------------------------------------------
    event::event (event_type::type const event_type)
-      :  value (CreateEvent (NULL, event_type == event_type::manual_reset ? TRUE : FALSE, FALSE, NULL))
+      :  value (CreateEvent (nullptr, event_type == event_type::manual_reset ? TRUE : FALSE, FALSE, nullptr))
    {
    }
 
@@ -458,7 +458,7 @@ namespace win32
    {
       if (!font_family)
       {
-         return gdi_object<HFONT> (NULL);
+         return gdi_object<HFONT> (nullptr);
       }
 
       LOGFONT lf = {0};
@@ -515,7 +515,7 @@ namespace win32
       }
       else
       {
-         return gdi_object<HFONT> (NULL);
+         return gdi_object<HFONT> (nullptr);
       }
 
    }
@@ -534,9 +534,9 @@ namespace win32
 
    tstring const load_string_resource (int const resource_id, LPCTSTR const default_value)
    {
-      LPCTSTR value = NULL;
+      LPCTSTR value = nullptr;
       auto load_string_result = LoadString (
-            GetModuleHandle (NULL)
+            GetModuleHandle (nullptr)
          ,  resource_id
          ,  reinterpret_cast<LPTSTR> (&value)
          ,  0);
@@ -558,7 +558,7 @@ namespace win32
    {
       return gdi_object<HBITMAP> (
          LoadBitmap (
-               GetModuleHandle (NULL)
+               GetModuleHandle (nullptr)
             ,  MAKEINTRESOURCE (resource_id)));
    }
 
@@ -574,7 +574,7 @@ namespace win32
             ,  bitmap
             ,  0
             ,  0
-            ,  NULL
+            ,  nullptr
             ,  &bmi
             ,  DIB_RGB_COLORS
             );

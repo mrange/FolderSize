@@ -196,8 +196,8 @@ namespace main_window
       );
       // ----------------------------------------------------------------------
 
-      HINSTANCE                  s_instance                       = NULL;
-      HWND                       s_main_window                    = NULL;
+      HINSTANCE                  s_instance                       = nullptr;
+      HWND                       s_main_window                    = nullptr;
       p::select_property::type   s_select_property                = p::select_property::physical_size;
 
       // la = left aligned
@@ -390,7 +390,7 @@ namespace main_window
          auto get_folder_hr = SHGetFolderPath (
                s_main_window
             ,  CSIDL_PERSONAL
-            ,  NULL
+            ,  nullptr
             ,  SHGFP_TYPE_CURRENT 
             ,  known_folder_path
             );
@@ -488,7 +488,7 @@ namespace main_window
 
                   SetWindowPos (
                         child_window
-                     ,  NULL
+                     ,  nullptr
                      ,  rect.left
                      ,  rect.top
                      ,  rect.right     - rect.left
@@ -864,11 +864,11 @@ namespace main_window
                      if (!path.empty ())
                      {
                         ShellExecute (
-                              NULL
+                              nullptr
                            ,  _T ("explore")
                            ,  path.c_str ()
-                           ,  NULL
-                           ,  NULL
+                           ,  nullptr
+                           ,  nullptr
                            ,  SW_SHOWNORMAL);
                      }
                   }
@@ -1235,9 +1235,9 @@ namespace main_window
          wcex.cbWndExtra      = 0;
          wcex.hInstance       = instance;
          wcex.hIcon           = LoadIcon (instance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
-         wcex.hCursor         = LoadCursor (NULL, IDC_ARROW);
-         wcex.hbrBackground   = NULL;
-         wcex.lpszMenuName    = NULL;
+         wcex.hCursor         = LoadCursor (nullptr, IDC_ARROW);
+         wcex.hbrBackground   = nullptr;
+         wcex.lpszMenuName    = nullptr;
          wcex.lpszClassName   = window_class;
          wcex.hIconSm         = LoadIcon (wcex.hInstance, MAKEINTRESOURCE (IDC_FOLDERSIZEWIN32));
 
@@ -1270,10 +1270,10 @@ namespace main_window
             ,  0
             ,  CW_USEDEFAULT
             ,  0
-            ,  NULL
-            ,  NULL
+            ,  nullptr
+            ,  nullptr
             ,  instance
-            ,  NULL
+            ,  nullptr
             );
 
          if (!s_main_window)
@@ -1307,7 +1307,7 @@ namespace main_window
          for_all_child_windows (
             [instance, sz] (child_window & wc) -> iteration_control::type
             {
-               LPCTSTR window_class = NULL;
+               LPCTSTR window_class = nullptr;
 
                switch (wc.window_type)
                {
@@ -1351,7 +1351,7 @@ namespace main_window
                   ,  s_main_window
                   ,  reinterpret_cast<HMENU> (wc.id)
                   ,  instance
-                  ,  NULL
+                  ,  nullptr
                   );
 
                   if (wc.wndproc)
@@ -1438,7 +1438,7 @@ namespace main_window
       }
 
       // Main message loop:
-      while (GetMessage (&msg, NULL, 0, 0))
+      while (GetMessage (&msg, nullptr, 0, 0))
       {
          if (is_message_interesting (msg.message))
          {
