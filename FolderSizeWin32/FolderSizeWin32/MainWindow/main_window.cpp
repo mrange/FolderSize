@@ -615,11 +615,44 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      static int get_selected_index ()
+      {
+         if (s_selector.hwnd)
+         {
+            return SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0L);
+         }
+         else
+         {
+            return -1;
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      static void set_selected_index (int const new_index)
+      {
+         if (s_selector.hwnd)
+         {
+            SendMessage (s_selector.hwnd, CB_SETCURSEL, new_index, 0L);
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      static void add_selector_string (w::tstring const & str)
+      {
+         if (s_selector.hwnd)
+         {
+            SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> (str.c_str ()));
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
       static void change_select_property (int const increment)
       {
-         auto index = SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0L);
+         auto index = get_selected_index ();
          auto new_index = (index + increment + p::select_property::enum_count) % p::select_property::enum_count;
-         SendMessage (s_selector.hwnd, CB_SETCURSEL, new_index, 0L);
+         set_selected_index (new_index);
          s_select_property = calculate_select_property_from_index (new_index);
       }
       // ----------------------------------------------------------------------
@@ -821,7 +854,7 @@ namespace main_window
                      //case CBN_SELCHANGE:
                      //case CBN_SELENDCANCEL:
                         {
-                           auto selection = calculate_select_property_from_index (SendMessage (s_selector.hwnd, CB_GETCURSEL, 0, 0));
+                           auto selection = calculate_select_property_from_index (get_selected_index ());
 
                            if (selection != s_select_property)
                            {
@@ -1305,11 +1338,11 @@ namespace main_window
          set_ui_state   (UISF_HIDEACCEL);
          clear_ui_state (UISF_HIDEFOCUS);
 
-         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::size_string.c_str ()           ));
-         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::physical_size_string.c_str ()  ));
-         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::count_string.c_str ()          ));
-         SendMessage (s_selector.hwnd, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ( theme::inaccessible_string.c_str ()   ));
-         SendMessage (s_selector.hwnd, CB_SETCURSEL, 1, 0L);
+         add_selector_string (theme::size_string            );
+         add_selector_string (theme::physical_size_string   );
+         add_selector_string (theme::count_string           );
+         add_selector_string (theme::inaccessible_string    );
+         set_selected_index (1);
 
          SetFocus (s_path.hwnd);
 
