@@ -106,8 +106,10 @@ namespace main_window
          window_type::type    window_type;
          DWORD                style;
          DWORD                extended_style;
+         WNDPROC              wndproc;
 
          HWND                 hwnd;
+         WNDPROC              original_wndproc;
       };
       // ----------------------------------------------------------------------
 
@@ -186,6 +188,14 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
+      LRESULT CALLBACK combo_wndproc (
+        HWND hwnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam
+      );
+      // ----------------------------------------------------------------------
+
       HINSTANCE                  s_instance                       = NULL;
       HWND                       s_main_window                    = NULL;
       p::select_property::type   s_select_property                = p::select_property::physical_size;
@@ -197,13 +207,13 @@ namespace main_window
 
       child_window               s_child_window    []             =
       {
-         {  IDM_GO_PAUSE   , la | 8    , la | 8    , la | 8 + 104    , la | 8 + 32  , window_type::button   , BS_DEFPUSHBUTTON                  ,  0  },
-         {  IDM_STOP       , la | 120  , la | 8    , la | 120 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
-         {  IDM_BROWSE     , la | 210  , la | 8    , la | 210 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0  },
-         {  IDM_PATH       , la | 300  , la | 10   , ra | 128        , la | 10 + 28 , window_type::edit     , ES_AUTOHSCROLL                    ,  WS_EX_CLIENTEDGE  },
-         {  IDM_SELECTOR   , ra | 120  , la | 10   , ra | 8          , la | 10 + 29 , window_type::combo    , CBS_DROPDOWNLIST | CBS_HASSTRINGS ,  0  },
-         {  IDM_FOLDERTREE , la | 0    , la | 48   , ra | 0          , ra | 22      , window_type::nowindow , 0                                 ,  0  },
-         {  IDM_INFO       , la | 8    , ra | 22   , ra | 8          , ra | 0       , window_type::static_  , SS_CENTER                         ,  0  },
+         {  IDM_GO_PAUSE   , la | 8    , la | 8    , la | 8 + 104    , la | 8 + 32  , window_type::button   , BS_DEFPUSHBUTTON                  ,  0                 ,  nullptr        },
+         {  IDM_STOP       , la | 120  , la | 8    , la | 120 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0                 ,  nullptr        },
+         {  IDM_BROWSE     , la | 210  , la | 8    , la | 210 + 82   , la | 8 + 32  , window_type::button   , BS_PUSHBUTTON                     ,  0                 ,  nullptr        },
+         {  IDM_PATH       , la | 300  , la | 10   , ra | 128        , la | 10 + 28 , window_type::edit     , ES_AUTOHSCROLL                    ,  WS_EX_CLIENTEDGE  ,  nullptr        },
+         {  IDM_SELECTOR   , ra | 120  , la | 10   , ra | 8          , la | 10 + 29 , window_type::combo    , CBS_DROPDOWNLIST | CBS_HASSTRINGS ,  0                 ,  combo_wndproc  },
+         {  IDM_FOLDERTREE , la | 0    , la | 48   , ra | 0          , ra | 22      , window_type::nowindow , 0                                 ,  0                 ,  nullptr        },
+         {  IDM_INFO       , la | 8    , ra | 22   , ra | 8          , ra | 0       , window_type::static_  , SS_CENTER                         ,  0                 ,  nullptr        },
       };
 
       child_window &             s_path                           = s_child_window[3];
@@ -689,7 +699,35 @@ namespace main_window
       // ----------------------------------------------------------------------
 
       // ----------------------------------------------------------------------
-      LRESULT CALLBACK window_process (
+      LRESULT CALLBACK combo_wndproc (
+        HWND hwnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam
+      )
+      {
+         switch (uMsg)
+         {
+            case WM_MOUSEWHEEL:
+               // In order to suppress mouse wheel for combobox
+               // (It's confusing as one uses mouse wheel to some the folder tree)
+               return DefWindowProc (hwnd, uMsg, wParam, lParam);
+            default:
+               FS_ASSERT (s_selector.original_wndproc);
+               if (s_selector.original_wndproc)
+               {
+                  return s_selector.original_wndproc (hwnd, uMsg, wParam, lParam);
+               }
+               else
+               {
+                  return 0;
+               }
+         }
+      }
+      // ----------------------------------------------------------------------
+
+      // ----------------------------------------------------------------------
+      LRESULT CALLBACK main_window_wndproc (
             HWND const     hwnd
          ,  UINT const     message
          ,  WPARAM const   w_param
@@ -1192,7 +1230,7 @@ namespace main_window
          wcex.cbSize          = sizeof (WNDCLASSEX);
 
          wcex.style           = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-         wcex.lpfnWndProc     = window_process;
+         wcex.lpfnWndProc     = main_window_wndproc;
          wcex.cbClsExtra      = 0;
          wcex.cbWndExtra      = 0;
          wcex.hInstance       = instance;
@@ -1316,11 +1354,23 @@ namespace main_window
                   ,  NULL
                   );
 
-               SendMessage (
-                     wc.hwnd
-                  ,  WM_SETFONT
-                  ,  reinterpret_cast<WPARAM> (theme::default_font.value)
-                  ,  FALSE);
+                  if (wc.wndproc)
+                  {
+                     wc.original_wndproc = reinterpret_cast<WNDPROC> (GetWindowLong (wc.hwnd, GWL_WNDPROC));
+
+                     SetWindowLong (
+                        wc.hwnd,
+                        GWL_WNDPROC,
+                        reinterpret_cast<LONG> (wc.wndproc)
+                        );
+                  }
+
+                  SendMessage (
+                        wc.hwnd
+                     ,  WM_SETFONT
+                     ,  reinterpret_cast<WPARAM> (theme::default_font.value)
+                     ,  FALSE);
+
                }
 
                return iteration_control::continue_;
