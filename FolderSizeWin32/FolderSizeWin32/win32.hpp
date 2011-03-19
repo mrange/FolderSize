@@ -123,7 +123,7 @@ namespace win32
 
       bool const is_valid () const throw ()
       {
-         return value != NULL;
+         return value != nullptr;
       }
 
       TFunctionPtr const value;
@@ -181,12 +181,12 @@ namespace win32
    template<typename ValueType>
    struct thread_safe_scoped_ptr
    {
-      explicit thread_safe_scoped_ptr (ValueType * const ptr = NULL) throw ()
+      explicit thread_safe_scoped_ptr (ValueType * const ptr = nullptr) throw ()
          :  m_ptr (ptr)
       {
       }
 
-      std::auto_ptr<ValueType> reset (ValueType * const ptr = NULL) throw ()
+      std::auto_ptr<ValueType> reset (ValueType * const ptr = nullptr) throw ()
       {
          auto pointer = m_ptr;
 
@@ -280,7 +280,7 @@ namespace win32
 
       bool const is_valid () const throw ()
       {
-         return value != NULL;
+         return value != nullptr;
       }
 
       ~gdi_object () throw ()
