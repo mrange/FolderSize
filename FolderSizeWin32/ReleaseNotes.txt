@@ -1,11 +1,2 @@
-﻿Release Notes: 
- * Added an installer for those users that prefer that too zip files
- * Added a context menu choice to Windows Explorer : 'Estimate with FolderSize.Win32' 
-   which lanches FolderSize.Win32 from that folder
-
-Known issues: 
- * Fails to load on Windows 2K (It's certainly possible to make it work on Windows 2K if 
-   there's a demand for it) 
- * Sometimes misses the last update to the foldertree on virtual machines / remote 
-   desktops. Workaround: Drag the foldertree or click another window, this should force 
-   a refresh. I'm working on it
+﻿1.1.0.0 - 
+   . Added Show Inaccessible files
