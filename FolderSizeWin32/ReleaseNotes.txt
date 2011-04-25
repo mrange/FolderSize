@@ -1,2 +1,7 @@
 ﻿1.1.0.0 - 
-   . Added Show Inaccessible files
+   . Added show Inaccessible files.
+        Shows only folders which contains files or folders that couldn't be read.
+   . Fixed bug that prevented zoom to work when combobox has focus.
+
+Facebook users:
+   Please use http://www.facebook.com/groups/foldersize for feedback.

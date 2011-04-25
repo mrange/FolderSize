@@ -7,16 +7,16 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{0F26618D-6F7B-4216-A7C8-3AF00EBB3AD9}
 AppName=FolderSize.Win32
-AppVerName=FolderSize.Win32 1.0.7.0
+AppVerName=FolderSize.Win32 1.1.0.0
 AppPublisher=Mårten Rånge
 AppPublisherURL=http://foldersize.codeplex.com
-AppSupportURL=http://foldersize.codeplex.com
+AppSupportURL=http://www.facebook.com/groups/foldersize
 AppUpdatesURL=http://foldersize.codeplex.com
 DefaultDirName={pf}\FolderSize.Win32
 DefaultGroupName=FolderSize.Win32
 AllowNoIcons=yes
-LicenseFile=F:\Projects\fs\FolderSizeWin32\License.txt
-InfoAfterFile=F:\Projects\fs\FolderSizeWin32\ReleaseNotes.txt
+LicenseFile=F:\Projects\foldersize.release\FolderSizeWin32\License.txt
+InfoAfterFile=F:\Projects\foldersize.release\FolderSizeWin32\ReleaseNotes.txt
 OutputBaseFilename=FolderSize.Win32.Setup
 Compression=lzma
 SolidCompression=yes
@@ -30,7 +30,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "F:\Projects\fs\FolderSizeWin32\Output\Release\FolderSizeWin32.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "F:\Projects\foldersize.release\FolderSizeWin32\Output\Release\FolderSizeWin32.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
