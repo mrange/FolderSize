@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -22,13 +22,13 @@
 // ----------------------------------------------------------------------------
 namespace theme
 {
-   namespace w = win32;  
+   namespace w = win32;
 
-   w::tstring const           welcome_string                      = w::load_string_resource  (IDC_WELCOME_MSG            , _T ("Click Go to start...") );      
-   w::tstring const           size_string                         = w::load_string_resource  (IDC_SIZE_CHOICE            , _T ("Size")                 );            
-   w::tstring const           physical_size_string                = w::load_string_resource  (IDC_PHYSICAL_SIZE_CHOICE   , _T ("Physical")             );            
-   w::tstring const           count_string                        = w::load_string_resource  (IDC_COUNT_CHOICE           , _T ("Count")                );            
-   w::tstring const           inaccessible_string                 = w::load_string_resource  (IDC_INACCESSIBLE_CHOICE    , _T ("Inaccessible")         );            
+   w::tstring const           welcome_string                      = w::load_string_resource  (IDC_WELCOME_MSG            , _T ("Click Go to start...") );
+   w::tstring const           size_string                         = w::load_string_resource  (IDC_SIZE_CHOICE            , _T ("Size")                 );
+   w::tstring const           physical_size_string                = w::load_string_resource  (IDC_PHYSICAL_SIZE_CHOICE   , _T ("Physical")             );
+   w::tstring const           count_string                        = w::load_string_resource  (IDC_COUNT_CHOICE           , _T ("Count")                );
+   w::tstring const           inaccessible_string                 = w::load_string_resource  (IDC_INACCESSIBLE_CHOICE    , _T ("Inaccessible")         );
 
    w::gdi_object<HFONT> const default_font                        = w::create_standard_font  (w::standard_font::caption  , 20 );
    w::gdi_object<HFONT> const default_big_font                    = w::create_standard_font  (w::standard_font::caption  , 48  );
@@ -44,9 +44,9 @@ namespace theme
 
    namespace folder_tree
    {
-      w::tstring const        progress_string                     = w::load_string_resource (IDC_FOLDERTREE_PROGRESS , _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nMax folder depth:%8d  "));            
-      w::tstring const        info_string                         = w::load_string_resource (IDC_FOLDERTREE_INFO     , _T ("Use mouse wheel to zoom, left button to move, right button resets  "));            
-      w::tstring const        merged_folder_string                = w::load_string_resource (IDC_FOLDERTREE_MERGED   , _T ("Many folders"));            
+      w::tstring const        progress_string                     = w::load_string_resource (IDC_FOLDERTREE_PROGRESS , _T ("Unprocessed folders:%8d  \r\nProcessed folders:%8d  \r\n\r\nMax folder depth:%8d  "));
+      w::tstring const        info_string                         = w::load_string_resource (IDC_FOLDERTREE_INFO     , _T ("Use mouse wheel to zoom, left button to move, right button resets  "));
+      w::tstring const        merged_folder_string                = w::load_string_resource (IDC_FOLDERTREE_MERGED   , _T ("Many folders"));
 
       COLORREF const          foreground_color                    = RGB (0xBC, 0xC7, 0xD8);
       COLORREF const          background_color                    = RGB (0x29, 0x39, 0x55);
@@ -85,7 +85,7 @@ namespace theme
             {folder_background_brush[4].value      ,  w::load_string_resource  (IDC_ACTIVITY_LAST_365DAY , _T ("Last 365 days")           )},
             {folder_background_brush[5].value      ,  w::load_string_resource  (IDC_NO_ACTIVITY          , _T ("No activity")             )},
             {merged_folder_background_brush.value  ,  w::load_string_resource  (IDC_MANY_FOLDERS         , _T ("Many folders")            )},
-         };                                                  
+         };
 
 
    }

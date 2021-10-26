@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -79,8 +79,8 @@ namespace win32
    typedef unsigned __int64 file_time  ;
    file_time const ticks_per_day = 24 * 60 * 60 * (1000000000ui64 / 100ui64);
    // -------------------------------------------------------------------------
-   file_time const to_file_time (FILETIME const ft) throw ();
-   FILETIME const get_current_time () throw ();
+   file_time const to_file_time (FILETIME const ft) noexcept;
+   FILETIME const get_current_time () noexcept;
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -90,10 +90,10 @@ namespace win32
    // -------------------------------------------------------------------------
    struct handle : boost::noncopyable
    {
-      explicit handle (HANDLE const hnd) throw ();
+      explicit handle (HANDLE const hnd) noexcept;
       handle (handle const &&);
-      ~handle () throw ();
-      bool const is_valid () const throw ();
+      ~handle () noexcept;
+      bool const is_valid () const noexcept;
 
       HANDLE const value;
    };
@@ -102,10 +102,10 @@ namespace win32
    // -------------------------------------------------------------------------
    struct dll : boost::noncopyable
    {
-      explicit dll (LPCTSTR const dll_name) throw ();
+      explicit dll (LPCTSTR const dll_name) noexcept;
       dll (const dll &&);
-      ~dll () throw ();
-      bool const is_valid () const throw ();
+      ~dll () noexcept;
+      bool const is_valid () const noexcept;
 
       HMODULE const value;
    };
@@ -121,7 +121,7 @@ namespace win32
       }
       function_pointer (function_pointer const &&);
 
-      bool const is_valid () const throw ()
+      bool const is_valid () const noexcept
       {
          return value != nullptr;
       }
@@ -133,17 +133,17 @@ namespace win32
    // -------------------------------------------------------------------------
    struct thread : boost::noncopyable
    {
-      typedef std::tr1::function<unsigned int ()> proc;
+      typedef std::function<unsigned int ()> proc;
       thread (
             tstring const & thread_name
          ,  proc const del);
       thread (thread const &&);
 
-      bool const join (unsigned int const ms) const throw ();
-      bool const is_terminated () const throw ();
+      bool const join (unsigned int const ms) const noexcept;
+      bool const is_terminated () const noexcept;
 
    private:
-      static void raw_proc (void * ptr) throw ();
+      static void raw_proc (void * ptr) noexcept;
 
       tstring const        thread_name;
       bool volatile        terminated;
@@ -158,18 +158,18 @@ namespace win32
    {
       explicit find_file (tstring const & path);
       find_file (find_file const &&);
-      ~find_file () throw ();
+      ~find_file () noexcept;
 
-      bool const     is_valid () const throw ();
-      bool const     find_next () throw ();
-      bool const     is_directory () const throw ();
-      big_size const get_size () const throw ();
-      FILETIME const get_creation_time () const throw ();
-      FILETIME const get_last_access_time () const throw ();
-      FILETIME const find_file::get_last_write_time () const throw ();
-      DWORD const    get_reparse_point_tag () const throw (); 
-      DWORD const    get_file_attributes () const throw ();
-      LPCTSTR const  get_name () const throw ();
+      bool const     is_valid () const noexcept;
+      bool const     find_next () noexcept;
+      bool const     is_directory () const noexcept;
+      big_size const get_size () const noexcept;
+      FILETIME const get_creation_time () const noexcept;
+      FILETIME const get_last_access_time () const noexcept;
+      FILETIME const find_file::get_last_write_time () const noexcept;
+      DWORD const    get_reparse_point_tag () const noexcept;
+      DWORD const    get_file_attributes () const noexcept;
+      LPCTSTR const  get_name () const noexcept;
 
    private:
       WIN32_FIND_DATA   find_data;
@@ -181,12 +181,12 @@ namespace win32
    template<typename ValueType>
    struct thread_safe_scoped_ptr
    {
-      explicit thread_safe_scoped_ptr (ValueType * const ptr = nullptr) throw ()
+      explicit thread_safe_scoped_ptr (ValueType * const ptr = nullptr) noexcept
          :  m_ptr (ptr)
       {
       }
 
-      std::auto_ptr<ValueType> reset (ValueType * const ptr = nullptr) throw ()
+      std::auto_ptr<ValueType> reset (ValueType * const ptr = nullptr) noexcept
       {
          auto pointer = m_ptr;
 
@@ -226,7 +226,7 @@ namespace win32
       explicit event (event_type::type const event_type);
       event (event const &&);
 
-      void set () throw ();
+      void set () noexcept;
 
       handle const value;
    };
@@ -235,9 +235,9 @@ namespace win32
    // -------------------------------------------------------------------------
    struct paint_device_context : boost::noncopyable
    {
-      explicit paint_device_context (HWND const hwnd) throw ();
+      explicit paint_device_context (HWND const hwnd) noexcept;
       paint_device_context (paint_device_context const &&);
-      ~paint_device_context () throw ();
+      ~paint_device_context () noexcept;
 
       PAINTSTRUCT const paint_struct   ;
       HWND const        hwnd           ;
@@ -248,9 +248,9 @@ namespace win32
    // -------------------------------------------------------------------------
    struct window_device_context : boost::noncopyable
    {
-      explicit window_device_context (HWND const hwnd) throw ();
+      explicit window_device_context (HWND const hwnd) noexcept;
       window_device_context (window_device_context const &&);
-      ~window_device_context () throw ();
+      ~window_device_context () noexcept;
 
       HWND const  hwnd;
       HDC const   hdc;
@@ -260,9 +260,9 @@ namespace win32
    // -------------------------------------------------------------------------
    struct device_context : boost::noncopyable
    {
-      explicit device_context (HDC const dc) throw ();
+      explicit device_context (HDC const dc) noexcept;
       device_context (device_context const &&);
-      ~device_context () throw ();
+      ~device_context () noexcept;
 
       HDC const value;
    };
@@ -272,18 +272,18 @@ namespace win32
    template<typename TGdiObject>
    struct gdi_object : boost::noncopyable
    {
-      explicit gdi_object (TGdiObject const obj) throw ()
+      explicit gdi_object (TGdiObject const obj) noexcept
          :  value (obj)
       {
       }
       gdi_object (gdi_object const &&);
 
-      bool const is_valid () const throw ()
+      bool const is_valid () const noexcept
       {
          return value != nullptr;
       }
 
-      ~gdi_object () throw ()
+      ~gdi_object () noexcept
       {
          if (value)
          {
@@ -299,9 +299,9 @@ namespace win32
    // -------------------------------------------------------------------------
    struct select_object : boost::noncopyable
    {
-      select_object (HDC const dc, HGDIOBJ obj) throw ();
+      select_object (HDC const dc, HGDIOBJ obj) noexcept;
       select_object (select_object const &&);
-      ~select_object () throw ();
+      ~select_object () noexcept;
 
       HDC const      dc                         ;
       HGDIOBJ const  previously_selected_object ;
@@ -348,8 +348,8 @@ namespace win32
 
    // -------------------------------------------------------------------------
    RECT const  zero_rect ();
-   bool const is_inside (RECT const & rect, POINT const & point) throw ();
-   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) throw ();
+   bool const is_inside (RECT const & rect, POINT const & point) noexcept;
+   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) noexcept;
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -368,7 +368,7 @@ namespace win32
       struct atomic_impl<TValue, 8>
       {
          static_assert (
-            std::tr1::is_pod<TValue>::value,
+            std::is_pod<TValue>::value,
             "TValue must be pod-type"
             );
 
@@ -377,17 +377,17 @@ namespace win32
             "sizeof (long long) must be 8"
             );
 
-         atomic_impl () throw ()
+         atomic_impl () noexcept
             :  m_value (0)
          {
          }
 
-         atomic_impl (TValue const value) throw ()
+         atomic_impl (TValue const value) noexcept
             :  m_value ((long long)value)
          {
          }
 
-         WIN32_INLINE TValue const get () const throw ()
+         WIN32_INLINE TValue const get () const noexcept
          {
             return (TValue) (
                _InterlockedCompareExchange64 (
@@ -400,11 +400,11 @@ namespace win32
          WIN32_INLINE bool const compare_and_exchange (
             TValue const new_value,
             TValue const compare_value
-            ) throw ()
+            ) noexcept
          {
             auto new_value_      = (long long)new_value;
             auto compare_value_  = (long long)compare_value;
-            return 
+            return
                _InterlockedCompareExchange64 (
                      &m_value
                   ,  new_value_
@@ -423,7 +423,7 @@ namespace win32
       struct atomic_impl<TValue, 4>
       {
          static_assert (
-            std::tr1::is_pod<TValue>::value,
+            std::is_pod<TValue>::value,
             "TValue must be pod-type"
             );
 
@@ -432,20 +432,20 @@ namespace win32
             "sizeof (long) must be 4"
             );
 
-         atomic_impl () throw ()
+         atomic_impl () noexcept
             :  m_value (0)
          {
          }
 
-         explicit atomic_impl (TValue const value) throw ()
+         explicit atomic_impl (TValue const value) noexcept
             :  m_value ((long)value)
          {
          }
 
-         WIN32_INLINE TValue const get () const throw ()
+         WIN32_INLINE TValue const get () const noexcept
          {
-            // No interlocked needed on 32bit as memory bus is 32 bit and m_value is aligned 
-            // Also VS2005+ puts in a memory barrier implicitly on volatile 
+            // No interlocked needed on 32bit as memory bus is 32 bit and m_value is aligned
+            // Also VS2005+ puts in a memory barrier implicitly on volatile
             // (even though it's not mandated by the standard)
             return (TValue) m_value;
          }
@@ -453,11 +453,11 @@ namespace win32
          WIN32_INLINE bool const compare_and_exchange (
             TValue const new_value,
             TValue const compare_value
-            ) throw ()
+            ) noexcept
          {
             auto new_value_      = (long)new_value;
             auto compare_value_  = (long)compare_value;
-            return 
+            return
                _InterlockedCompareExchange (
                      &m_value
                   ,  new_value_
@@ -478,20 +478,20 @@ namespace win32
    struct atomic
    {
       static_assert (
-         std::tr1::is_pod<TValue>::value,
+         std::is_pod<TValue>::value,
          "TValue must be pod-type"
          );
 
-      atomic () throw ()
+      atomic () noexcept
       {
       }
 
-      explicit atomic (TValue const value) throw ()
+      explicit atomic (TValue const value) noexcept
          :  m_value (value)
       {
       }
 
-      WIN32_INLINE TValue const get () const throw ()
+      WIN32_INLINE TValue const get () const noexcept
       {
          return m_value.get ();
       }
@@ -499,7 +499,7 @@ namespace win32
       WIN32_INLINE bool const compare_and_exchange (
          TValue const new_value,
          TValue const compare_value
-         ) throw ()
+         ) noexcept
       {
          return m_value.compare_and_exchange (
             new_value,
@@ -508,7 +508,7 @@ namespace win32
       }
 
       template<typename TFunctor>
-      WIN32_INLINE TValue const update (TFunctor const functor) throw ()
+      WIN32_INLINE TValue const update (TFunctor const functor) noexcept
       {
          auto current_value   = TValue ();
          auto new_value       = TValue ();
@@ -522,29 +522,29 @@ namespace win32
          return new_value;
       }
 
-      WIN32_INLINE TValue const inplace_add (TValue const value) throw ()
+      WIN32_INLINE TValue const inplace_add (TValue const value) noexcept
       {
          return update ([=] (TValue const v) { return value + v; });
       }
 
-      WIN32_INLINE TValue const inplace_max (TValue const value) throw ()
+      WIN32_INLINE TValue const inplace_max (TValue const value) noexcept
       {
          return update ([=] (TValue const v) { return max_impl (value, v); });
       }
 
-      WIN32_INLINE TValue const inplace_min (TValue const value) throw ()
+      WIN32_INLINE TValue const inplace_min (TValue const value) noexcept
       {
          return update ([=] (TValue const v) { return min_impl (value, v); });
       }
 
    private:
 
-      WIN32_INLINE static TValue max_impl (TValue const left, TValue const right) throw ()
+      WIN32_INLINE static TValue max_impl (TValue const left, TValue const right) noexcept
       {
          return left < right ? right : left;
       }
 
-      WIN32_INLINE static TValue min_impl (TValue const left, TValue const right) throw ()
+      WIN32_INLINE static TValue min_impl (TValue const left, TValue const right) noexcept
       {
          return left < right ? left : right;
       }

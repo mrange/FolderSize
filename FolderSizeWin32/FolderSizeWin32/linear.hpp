@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -47,7 +47,7 @@ namespace linear
       };
 
       FS_STATIC_ASSERT (rows > 0);
-      FS_STATIC_ASSERT (std::tr1::is_pod<value_type>::value);
+      FS_STATIC_ASSERT (std::is_pod<value_type>::value);
 
       typedef vector<value_type, rows> type;
 
@@ -60,50 +60,50 @@ namespace linear
       {
       }
 
-      LINEAR_INLINE value_type const operator () (std::size_t const row) const throw ()
+      LINEAR_INLINE value_type const operator () (std::size_t const row) const noexcept
       {
          FS_ASSERT (row < no_of_values);
          return values[row];
       }
 
-      LINEAR_INLINE value_type const x () const throw ()
+      LINEAR_INLINE value_type const x () const noexcept
       {
          FS_STATIC_ASSERT (0 < no_of_values);
          return values[0];
       }
 
-      LINEAR_INLINE value_type const y () const throw ()
+      LINEAR_INLINE value_type const y () const noexcept
       {
          FS_STATIC_ASSERT (1 < no_of_values);
          return values[1];
       }
 
-      LINEAR_INLINE value_type const z () const throw ()
+      LINEAR_INLINE value_type const z () const noexcept
       {
          FS_STATIC_ASSERT (2 < no_of_values);
          return values[2];
       }
 
-      LINEAR_INLINE void x (value_type const x_) throw ()
+      LINEAR_INLINE void x (value_type const x_) noexcept
       {
          FS_STATIC_ASSERT (0 < no_of_values);
          values[0] = x_;
       }
 
-      LINEAR_INLINE void y (value_type const y_) throw ()
+      LINEAR_INLINE void y (value_type const y_) noexcept
       {
          FS_STATIC_ASSERT (1 < no_of_values);
          values[1] = y_;
       }
 
-      LINEAR_INLINE void z (value_type const z_) throw ()
+      LINEAR_INLINE void z (value_type const z_) noexcept
       {
          FS_STATIC_ASSERT (2 < no_of_values);
          values[2] = z_;
       }
 
 
-      LINEAR_INLINE vector const operator- () const throw ()
+      LINEAR_INLINE vector const operator- () const noexcept
       {
          vector result (no_initialize::value);
          for (auto iter = 0; iter < no_of_values; ++iter)
@@ -257,7 +257,7 @@ namespace linear
 
       FS_STATIC_ASSERT (columns  > 0);
       FS_STATIC_ASSERT (rows     > 0);
-      FS_STATIC_ASSERT (std::tr1::is_pod<value_type>::value);
+      FS_STATIC_ASSERT (std::is_pod<value_type>::value);
 
       typedef matrix<value_type, rows, columns> type;
 
@@ -270,7 +270,7 @@ namespace linear
       {
       }
 
-      LINEAR_INLINE value_type const operator () (std::size_t const row, std::size_t const column) const throw ()
+      LINEAR_INLINE value_type const operator () (std::size_t const row, std::size_t const column) const noexcept
       {
          FS_ASSERT (column + columns * row < no_of_values);
          return values[column + columns * row];
@@ -284,7 +284,7 @@ namespace linear
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, columns_, rows_> const transpose_matrix (
          matrix<value_type_, rows_, columns_> const & value
-      ) throw ()
+      ) noexcept
    {
       matrix<value_type_, columns_, rows_> result (no_initialize::value);
 

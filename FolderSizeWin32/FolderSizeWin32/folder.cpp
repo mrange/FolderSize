@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -29,7 +29,6 @@ namespace folder
 
    // -------------------------------------------------------------------------
    namespace s    = std          ;
-   namespace st   = s::tr1       ;
    namespace b    = boost        ;
    namespace f    = folder       ;
    // -------------------------------------------------------------------------
@@ -39,14 +38,14 @@ namespace folder
          folder * const          parent_
       ,  tstring const &         name_
       ,  big_size const          size_
-      ,  big_size const          physical_size_          
+      ,  big_size const          physical_size_
       ,  big_size const          file_count_
-      ,  big_size const          folder_count_   
+      ,  big_size const          folder_count_
       ,  win32::file_time const  last_activity_
       ,  bool const              is_inaccessible_
       )
       :  parent                  (parent_       )
-      ,  name                    (name_         )          
+      ,  name                    (name_         )
       ,  size                    (size_         )
       ,  physical_size           (physical_size_)
       ,  file_count              (file_count_   )
@@ -125,42 +124,42 @@ namespace folder
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   std::size_t const folder::get_depth () const throw ()
+   std::size_t const folder::get_depth () const noexcept
    {
       return depth.get ();
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   big_size const folder::get_total_size () const throw ()
+   big_size const folder::get_total_size () const noexcept
    {
       return total_size.get ();
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   big_size const folder::get_total_physical_size () const throw ()
+   big_size const folder::get_total_physical_size () const noexcept
    {
       return total_physical_size.get ();
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   big_size const folder::get_total_file_count () const throw ()
+   big_size const folder::get_total_file_count () const noexcept
    {
       return total_file_count.get ();
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   big_size const folder::get_total_folder_count () const throw ()
+   big_size const folder::get_total_folder_count () const noexcept
    {
       return total_folder_count.get ();
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   big_size const folder::get_total_inaccessible_folder_count () const throw ()
+   big_size const folder::get_total_inaccessible_folder_count () const noexcept
    {
       return total_inaccessible_folder_count.get ();
    }
@@ -169,11 +168,11 @@ namespace folder
    // -------------------------------------------------------------------------
    void folder::recursive_update  (
          std::size_t const    child_depth
-      ,  big_size const       size         
-      ,  big_size const       physical_size         
-      ,  big_size const       file_count   
-      ,  big_size const       folder_count 
-      ,  bool const           folder_is_inaccessible        
+      ,  big_size const       size
+      ,  big_size const       physical_size
+      ,  big_size const       file_count
+      ,  big_size const       folder_count
+      ,  bool const           folder_is_inaccessible
       )
    {
       depth.inplace_max                            (child_depth + 1                 );

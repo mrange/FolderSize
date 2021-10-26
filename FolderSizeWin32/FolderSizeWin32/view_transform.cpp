@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -23,7 +23,6 @@
 namespace view_transform
 {
    namespace   s  = std       ;
-   namespace   st = s::tr1    ;
    namespace   l  = linear    ;
 
    extended_vector const create_extended_vector (double const x, double const y)
@@ -66,14 +65,14 @@ namespace view_transform
          vector const &                   zoom;
       };
 
-      typedef st::function<transform const (transform_state const & state)> 
+      typedef s::function<transform const (transform_state const & state)>
          transform_functor;
 
       transform_functor const translate (
-            st::function<vector const (transform_state const & state)> const predicate
+            s::function<vector const (transform_state const & state)> const predicate
          )
       {
-         return [predicate] (transform_state const & state) -> transform const       
+         return [predicate] (transform_state const & state) -> transform const
          {
             auto v = predicate (state);
             switch (state.direction)
@@ -90,10 +89,10 @@ namespace view_transform
       }
 
       transform_functor const scale (
-            st::function<vector const (transform_state const & state)> const predicate
+            s::function<vector const (transform_state const & state)> const predicate
          )
       {
-         return [predicate] (transform_state const & state) -> transform const       
+         return [predicate] (transform_state const & state) -> transform const
          {
             auto v = predicate (state);
             switch (state.direction)
@@ -133,13 +132,13 @@ namespace view_transform
 
          if (count < 1)
          {
-            return [] (transform_state const & state) -> transform const       
+            return [] (transform_state const & state) -> transform const
             {
                return linear::identity_matrix<double, 3> ();
             };
          }
 
-            return [count, configuration] (transform_state const & state) -> transform const       
+            return [count, configuration] (transform_state const & state) -> transform const
             {
                auto result = linear::identity_matrix<double, 3> ();
                switch (state.direction)

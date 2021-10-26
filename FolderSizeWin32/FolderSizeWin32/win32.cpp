@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -29,7 +29,6 @@ namespace win32
 
    // -------------------------------------------------------------------------
    namespace s    = std          ;
-   namespace st   = s::tr1       ;
    namespace b    = boost        ;
    // -------------------------------------------------------------------------
 
@@ -45,8 +44,8 @@ namespace win32
             );
          if (get_version_ex_result)
          {
-            return 
-               st::make_tuple (6u, 1u) <= st::make_tuple (
+            return
+               s::make_tuple (6u, 1u) <= s::make_tuple (
                      os_version_info.dwMajorVersion
                   ,  os_version_info.dwMinorVersion
                   );
@@ -58,7 +57,7 @@ namespace win32
       }
    }
    // -------------------------------------------------------------------------
-   bool const windows7_or_later                    = is_windows7_or_later ();              
+   bool const windows7_or_later                    = is_windows7_or_later ();
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -71,7 +70,7 @@ namespace win32
    {
       if (value)
       {
-         // FYI: Thanks to C++0x of r-value ref this only creates one copy of 
+         // FYI: Thanks to C++0x of r-value ref this only creates one copy of
          // tstring and appends to it. In C++98 the code below would've created
          // 2 additional tstrings
          auto output = tstring (_T ("FolderSize.Win32 : ")) + value + _T ("\r\n");
@@ -97,16 +96,16 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   file_time const to_file_time (FILETIME const ft) throw ()
+   file_time const to_file_time (FILETIME const ft) noexcept
    {
       return (static_cast<file_time> (ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
    }
 
-   FILETIME const get_current_time () throw ()
+   FILETIME const get_current_time () noexcept
    {
       SYSTEMTIME st  = {0};
       FILETIME ft    = {0};
-      GetSystemTime (&st);            
+      GetSystemTime (&st);
       SystemTimeToFileTime (&st, &ft);
       return ft;
    }
@@ -139,12 +138,12 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   handle::handle (HANDLE const hnd) throw ()
+   handle::handle (HANDLE const hnd) noexcept
       :  value (hnd)
    {
    }
 
-   handle::~handle () throw ()
+   handle::~handle () noexcept
    {
       if (is_valid ())
       {
@@ -153,19 +152,19 @@ namespace win32
       }
    }
 
-   bool const handle::is_valid () const throw ()
+   bool const handle::is_valid () const noexcept
    {
       return value != INVALID_HANDLE_VALUE;
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   dll::dll (LPCTSTR const dll_name) throw ()
+   dll::dll (LPCTSTR const dll_name) noexcept
       :  value (LoadLibrary (dll_name))
    {
    }
 
-   dll::~dll () throw ()
+   dll::~dll () noexcept
    {
       if (is_valid ())
       {
@@ -174,7 +173,7 @@ namespace win32
       }
    }
 
-   bool const dll::is_valid () const throw ()
+   bool const dll::is_valid () const noexcept
    {
       return value != nullptr;
    }
@@ -191,7 +190,7 @@ namespace win32
    {
    }
 
-   bool const thread::join (unsigned int const ms) const throw ()
+   bool const thread::join (unsigned int const ms) const noexcept
    {
       if (value.is_valid ())
       {
@@ -215,12 +214,12 @@ namespace win32
       }
    }
 
-   bool const thread::is_terminated () const throw ()
+   bool const thread::is_terminated () const noexcept
    {
       return terminated;
    }
 
-   void thread::raw_proc (void * const ptr) throw ()
+   void thread::raw_proc (void * const ptr) noexcept
    {
       auto state = static_cast<thread *> (ptr);
 
@@ -272,45 +271,45 @@ namespace win32
             ,  get_windows7_dependent_value (FIND_FIRST_EX_LARGE_FETCH, 0)
             ))
    {
-      
+
    }
 
-   bool const find_file::is_valid () const throw ()
+   bool const find_file::is_valid () const noexcept
    {
       return find_file_handle != INVALID_HANDLE_VALUE;
    }
 
-   bool const find_file::find_next () throw ()
+   bool const find_file::find_next () noexcept
    {
       return IMPLICIT_CAST (FindNextFile (find_file_handle, &find_data));
    }
 
-   bool const find_file::is_directory () const throw ()
+   bool const find_file::is_directory () const noexcept
    {
       return (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
    }
 
-   big_size const find_file::get_size () const throw ()
+   big_size const find_file::get_size () const noexcept
    {
       return (static_cast<big_size>(find_data.nFileSizeHigh) << 32) | find_data.nFileSizeLow;
    }
 
-   FILETIME const find_file::get_creation_time () const throw ()
+   FILETIME const find_file::get_creation_time () const noexcept
    {
       return find_data.ftCreationTime;
    }
 
-   FILETIME const find_file::get_last_access_time () const throw ()
+   FILETIME const find_file::get_last_access_time () const noexcept
    {
       return find_data.ftLastAccessTime;
    }
 
-   FILETIME const find_file::get_last_write_time () const throw ()
+   FILETIME const find_file::get_last_write_time () const noexcept
    {
       return find_data.ftLastWriteTime;
    }
 
-   DWORD const find_file::get_reparse_point_tag () const throw ()
+   DWORD const find_file::get_reparse_point_tag () const noexcept
    {
       if (IS_ON (find_data.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
       {
@@ -322,12 +321,12 @@ namespace win32
       }
    }
 
-   DWORD const find_file::get_file_attributes () const throw ()
+   DWORD const find_file::get_file_attributes () const noexcept
    {
       return find_data.dwFileAttributes;
    }
 
-   LPCTSTR const find_file::get_name () const throw ()
+   LPCTSTR const find_file::get_name () const noexcept
    {
       if (is_valid ())
       {
@@ -339,7 +338,7 @@ namespace win32
       }
    }
 
-   find_file::~find_file () throw ()
+   find_file::~find_file () noexcept
    {
       BOOL const close_result = FindClose (find_file_handle);
       UNUSED_VARIABLE (close_result);
@@ -352,7 +351,7 @@ namespace win32
    {
    }
 
-   void event::set () throw ()
+   void event::set () noexcept
    {
       if (value.is_valid ())
       {
@@ -362,13 +361,13 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   paint_device_context::paint_device_context (HWND const hwnd_) throw ()
+   paint_device_context::paint_device_context (HWND const hwnd_) noexcept
       :  hwnd  (hwnd_)
       ,  hdc   (BeginPaint (hwnd_, const_cast<LPPAINTSTRUCT> (&paint_struct)))
    {
    }
 
-   paint_device_context::~paint_device_context () throw ()
+   paint_device_context::~paint_device_context () noexcept
    {
       auto result = EndPaint (hwnd, &paint_struct);
       UNUSED_VARIABLE (result);
@@ -376,13 +375,13 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   window_device_context::window_device_context (HWND const hwnd_) throw ()
+   window_device_context::window_device_context (HWND const hwnd_) noexcept
       :  hwnd  (hwnd_)
       ,  hdc   (GetWindowDC (hwnd_))
    {
    }
 
-   window_device_context::~window_device_context () throw ()
+   window_device_context::~window_device_context () noexcept
    {
       auto result = ReleaseDC (hwnd, hdc);
       UNUSED_VARIABLE (result);
@@ -390,12 +389,12 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   device_context::device_context (HDC const dc) throw ()
+   device_context::device_context (HDC const dc) noexcept
       :  value (dc)
    {
    }
 
-   device_context::~device_context () throw ()
+   device_context::~device_context () noexcept
    {
       auto deleted_result = DeleteDC (value);
       UNUSED_VARIABLE (deleted_result);
@@ -403,13 +402,13 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   select_object::select_object (HDC const dc_, HGDIOBJ const obj_) throw ()
+   select_object::select_object (HDC const dc_, HGDIOBJ const obj_) noexcept
       :  dc                         (dc_)
       ,  previously_selected_object (SelectObject (dc_, obj_))
    {
    }
 
-   select_object::~select_object () throw ()
+   select_object::~select_object () noexcept
    {
       SelectObject (dc, previously_selected_object);
    }
@@ -483,7 +482,7 @@ namespace win32
          ,  sizeof (NONCLIENTMETRICS)
          ,  &non_client_metrics
          ,  0);
-      
+
       if (system_parameters_info_result)
       {
          LOGFONT lf = {0};
@@ -595,15 +594,15 @@ namespace win32
       return rect;
    }
 
-   bool const is_inside (RECT const & rect, POINT const & point) throw ()
+   bool const is_inside (RECT const & rect, POINT const & point) noexcept
    {
-      return 
-            rect.left < point.x && rect.right > point.x 
+      return
+            rect.left < point.x && rect.right > point.x
          && rect.top < point.y && rect.bottom > point.y
          ;
    }
 
-   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) throw ()
+   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) noexcept
    {
       RECT result = {0};
 

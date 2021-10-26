@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -41,7 +41,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<int ,double>
    {
-      UTILITY_INLINE static int const cast (double const &value) throw ()
+      UTILITY_INLINE static int const cast (double const &value) noexcept
       {
          return static_cast<int> (value + 0.5);
       }
@@ -50,7 +50,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<LONG, double>
    {
-      UTILITY_INLINE static LONG const cast (double const &value) throw ()
+      UTILITY_INLINE static LONG const cast (double const &value) noexcept
       {
          return static_cast<LONG> (value + 0.5);
       }
@@ -59,7 +59,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<FLOAT, double>
    {
-      UTILITY_INLINE static FLOAT const cast (double const &value) throw ()
+      UTILITY_INLINE static FLOAT const cast (double const &value) noexcept
       {
          return static_cast<FLOAT> (value);
       }
@@ -68,7 +68,7 @@ namespace utility
    template<>
    struct explicit_cast_helper<bool, BOOL>
    {
-      UTILITY_INLINE static bool const cast (BOOL const value) throw ()
+      UTILITY_INLINE static bool const cast (BOOL const value) noexcept
       {
          return value != FALSE;
       }
@@ -94,7 +94,7 @@ namespace utility
       TValueType const & value;
    };
    // -------------------------------------------------------------------------
-   
+
    // -------------------------------------------------------------------------
    template<typename TToValueType, typename TFromValueType>
    UTILITY_INLINE TToValueType const explicit_cast (

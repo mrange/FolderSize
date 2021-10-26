@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -22,11 +22,11 @@
 // ----------------------------------------------------------------------------
 namespace theme
 {
-   extern win32::tstring const               welcome_string                   ;      
-   extern win32::tstring const               size_string                      ;      
-   extern win32::tstring const               physical_size_string             ;      
-   extern win32::tstring const               count_string                     ;      
-   extern win32::tstring const               inaccessible_string              ;      
+   extern win32::tstring const               welcome_string                   ;
+   extern win32::tstring const               size_string                      ;
+   extern win32::tstring const               physical_size_string             ;
+   extern win32::tstring const               count_string                     ;
+   extern win32::tstring const               inaccessible_string              ;
 
    extern win32::gdi_object<HFONT> const     default_font                     ;
    extern win32::gdi_object<HFONT> const     default_big_font                 ;

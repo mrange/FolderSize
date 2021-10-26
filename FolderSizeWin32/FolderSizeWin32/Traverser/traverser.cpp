@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -43,7 +43,6 @@ namespace traverser
    namespace b    = boost        ;
    namespace f    = folder       ;
    namespace s    = std          ;
-   namespace st   = s::tr1       ;
    namespace w    = win32        ;
    // -------------------------------------------------------------------------
 
@@ -77,7 +76,7 @@ namespace traverser
       w::tstring const                     root_path                  ;
       f::folder *                          root                       ;
       bool volatile                        continue_running           ;
-      w::thread const                      thread                     ;     
+      w::thread const                      thread                     ;
       std::size_t volatile                 processed_folder_count     ;
       std::size_t volatile                 unprocessed_folder_count   ;
 
@@ -113,10 +112,10 @@ namespace traverser
       }
 
       void update_view (
-         folder::folder const *  root_folder
-         ,  std::size_t const    unprocessed_folder_count
-         ,  std::size_t const    processed_folder_count
-         ,  bool const           force_update = false
+            folder::folder const *  root_folder
+         ,  std::size_t const       unprocessed_folder_count
+         ,  std::size_t const       processed_folder_count
+         ,  bool const              force_update = false
          )
       {
          auto tick_count = GetTickCount ();
@@ -139,7 +138,7 @@ namespace traverser
          }
       }
 
-      bool const skippable_reparse_point (DWORD const reparse_tag) throw ()
+      bool const skippable_reparse_point (DWORD const reparse_tag) noexcept
       {
          if (
                reparse_tag == IO_REPARSE_TAG_SYMLINK
@@ -184,7 +183,7 @@ namespace traverser
             {
                s::vector <
                      w::tstring
-                  ,  b::pool_allocator<w::tstring>>  
+                  ,  b::pool_allocator<w::tstring>>
                                        folder_names      ;
                big_size                size           (0);
                big_size                physical_size  (0);
@@ -211,7 +210,7 @@ namespace traverser
                   {
                      if (
                            !skippable_reparse_point (find_file.get_reparse_point_tag ())
-                        && name != _T (".") 
+                        && name != _T (".")
                         && name != _T (".."))
                      {
                         folder_names.push_back (find_file.get_name ());
@@ -240,7 +239,7 @@ namespace traverser
                         }
                         else
                         {
-                           // Potentially we should 
+                           // Potentially we should
                            physical_size += find_file.get_size ();
                         }
                      }
@@ -310,9 +309,9 @@ namespace traverser
          return EXIT_SUCCESS;
       }
 
-      w::thread::proc create_proc () throw ()
+      w::thread::proc create_proc () noexcept
       {
-         return st::bind (&impl::proc, this);
+         return s::bind (&impl::proc, this);
       }
    };
    // -------------------------------------------------------------------------
@@ -328,41 +327,41 @@ namespace traverser
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   traverser::~traverser () throw ()
+   traverser::~traverser () noexcept
    {
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   void traverser::stop_traversing () throw ()
+   void traverser::stop_traversing () noexcept
    {
       m_impl->continue_running = false;
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   w::tstring const & traverser::get_root_path () const throw ()
+   w::tstring const & traverser::get_root_path () const noexcept
    {
       return m_impl->root_path;
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   f::folder const * traverser::get_root () const throw ()
+   f::folder const * traverser::get_root () const noexcept
    {
       return m_impl->root;
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   std::size_t const traverser::get_processed_folder_count () const throw ()
+   std::size_t const traverser::get_processed_folder_count () const noexcept
    {
       return m_impl->processed_folder_count;
    }
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   std::size_t const traverser::get_unprocessed_folder_count () const throw ()
+   std::size_t const traverser::get_unprocessed_folder_count () const noexcept
    {
       return m_impl->unprocessed_folder_count;
    }

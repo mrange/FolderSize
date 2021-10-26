@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -66,7 +66,7 @@ namespace painter
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   typedef std::tr1::function<
+   typedef std::function<
       void ()
       > new_frame_available_callback;
    // -------------------------------------------------------------------------
@@ -75,7 +75,7 @@ namespace painter
    struct painter : boost::noncopyable
    {
       painter ();
-      ~painter () throw ();
+      ~painter () noexcept;
 
       void do_request (
             folder::folder const * const            root
@@ -83,7 +83,7 @@ namespace painter
          ,  std::size_t const                       processed_folder_count
          ,  std::size_t const                       unprocessed_folder_count
          ,  select_property::type                   select_property
-         ,  RECT const &                            rect   
+         ,  RECT const &                            rect
          ,  coordinate const &                      centre
          ,  zoom_factor const &                     zoom
          );
@@ -95,12 +95,12 @@ namespace painter
          ,  std::size_t const                      processed_folder_count
          ,  std::size_t const                      unprocessed_folder_count
          ,  select_property::type                  select_property
-         ,  RECT const &                           rect   
+         ,  RECT const &                           rect
          ,  coordinate const &                     centre
          ,  zoom_factor const &                    zoom
          );
 
-      rendered_folder const hit_test (
+      rendered_folder const & hit_test (
             POINT const & offset
          );
 

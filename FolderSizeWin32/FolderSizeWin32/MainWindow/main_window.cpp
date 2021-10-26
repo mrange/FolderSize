@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html file at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -23,8 +23,10 @@
 #include <shlobj.h>
 // ----------------------------------------------------------------------------
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <iterator>
+#include <optional>
 // ----------------------------------------------------------------------------
 #include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
@@ -56,7 +58,6 @@ namespace main_window
    namespace l    = linear          ;
    namespace p    = painter         ;
    namespace s    = std             ;
-   namespace st   = s::tr1          ;
    namespace t    = traverser       ;
    namespace u    = utility         ;
    namespace vt   = view_transform  ;
@@ -391,7 +392,7 @@ namespace main_window
                s_main_window
             ,  CSIDL_PERSONAL
             ,  nullptr
-            ,  SHGFP_TYPE_CURRENT 
+            ,  SHGFP_TYPE_CURRENT
             ,  known_folder_path
             );
 
@@ -425,7 +426,7 @@ namespace main_window
          UNUSED_VARIABLE (result);
 
          FS_ASSERT (result);
-         
+
          return calculate_size (rect);
       }
       // ----------------------------------------------------------------------
@@ -478,7 +479,7 @@ namespace main_window
             [sz] (child_window const & wc) -> iteration_control::type
             {
                auto child_window = wc.hwnd;
-               
+
                if (wc.hwnd && wc.window_type != window_type::nowindow)
                {
                   auto rect = calculate_window_coordinate (
@@ -797,7 +798,7 @@ namespace main_window
                auto wm_id     = LOWORD (w_param);
                auto wm_event  = HIWORD (w_param);
                // Parse the menu selections:
-               
+
                TCHAR buffer[string_buffer_size] = {0};
                _stprintf_s (
                      buffer
@@ -922,7 +923,7 @@ namespace main_window
                   );
 
                if (
-                     get_clipbox_result == SIMPLEREGION 
+                     get_clipbox_result == SIMPLEREGION
                   || get_clipbox_result == COMPLEXREGION
                   )
                {
@@ -1017,8 +1018,8 @@ namespace main_window
                auto mouse_coord = w::get_mouse_coordinate (l_param);
 
                if (
-                     s_state.get () 
-                  && s_state->mouse_current_coord 
+                     s_state.get ()
+                  && s_state->mouse_current_coord
                   && w::is_inside (folder_tree_rect, mouse_coord))
                {
                   auto mouse_current_coord = *s_state->mouse_current_coord;
@@ -1058,7 +1059,7 @@ namespace main_window
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
                   auto adjusted_coord  =  adjust_coord (folder_tree_rect, mouse_coord);
-                  auto found_folder    = s_state->painter.hit_test (adjusted_coord);
+                  auto & found_folder  = s_state->painter.hit_test (adjusted_coord);
 
                   if (found_folder.folder)
                   {
@@ -1101,7 +1102,7 @@ namespace main_window
                if (s_state.get () && w::is_inside (folder_tree_rect, mouse_coord))
                {
                   auto adjusted_coord  =  adjust_coord (folder_tree_rect, mouse_coord);
-                  auto found_folder    = s_state->painter.hit_test (adjusted_coord);
+                  auto & found_folder  = s_state->painter.hit_test (adjusted_coord);
 
                   if (found_folder.folder)
                   {
@@ -1340,8 +1341,8 @@ namespace main_window
                      wc.extended_style
                   ,  window_class
                   ,  w::load_string_resource (wc.id).c_str ()
-                  ,     wc.style 
-                     |  WS_CHILD 
+                  ,     wc.style
+                     |  WS_CHILD
                      |  WS_VISIBLE
                      |  WS_TABSTOP
                   ,  rect.left
@@ -1460,7 +1461,7 @@ namespace main_window
             {
             case VK_TAB:
                {
-                  auto forward = 
+                  auto forward =
                         IS_OFF (GetKeyState (VK_SHIFT), 0x8000)
                      && IS_OFF (GetKeyState (VK_RSHIFT), 0x8000);
 

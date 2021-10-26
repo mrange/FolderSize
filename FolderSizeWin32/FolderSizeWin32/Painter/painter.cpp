@@ -1,11 +1,11 @@
 /* ****************************************************************************
  *
- * Copyright (c) Mårten Rånge.
+ * Copyright (c) MÃ¥rten RÃ¥nge.
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
- * copy of the license can be found in the License.html folder_infole at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
- * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * This source code is subject to terms and conditions of the Microsoft Public License. A
+ * copy of the license can be found in the License.html folder_infole at the root of this distribution. If
+ * you cannot locate the  Microsoft Public License, please send an email to
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  * by the terms of the Microsoft Public License.
  *
  * You must not remove this notice, or any other, from this software.
@@ -41,7 +41,6 @@ namespace painter
    namespace b    = boost           ;
    namespace f    = folder          ;
    namespace s    = std             ;
-   namespace st   = s::tr1          ;
    namespace w    = win32           ;
    namespace l    = linear          ;
    namespace u    = utility         ;
@@ -66,13 +65,13 @@ namespace painter
             ,  s::size_t const                        processed_folder_count_
             ,  s::size_t const                        unprocessed_folder_count_
             ,  select_property::type const            select_property_
-            ,  coordinate const &                     centre_        
-            ,  zoom_factor const &                    zoom_          
-            ,  dimension const &                      screen_size_   
+            ,  coordinate const &                     centre_
+            ,  zoom_factor const &                    zoom_
+            ,  dimension const &                      screen_size_
             ,  int const                              bitmap_bits_
             ,  int const                              bitmap_planes_
             )
-            :  root                          (root_                           )  
+            :  root                          (root_                           )
             ,  new_frame_available           (new_frame_available_            )
             ,  processed_folder_count        (processed_folder_count_         )
             ,  unprocessed_folder_count      (unprocessed_folder_count_       )
@@ -82,7 +81,7 @@ namespace painter
             ,  bitmap_size                   (screen_size_                    )
             ,  bitmap_bits                   (bitmap_bits_                    )
             ,  bitmap_planes                 (bitmap_planes_                  )
-         {                                
+         {
          }
 
          folder::folder const * const  root                                ;
@@ -120,7 +119,7 @@ namespace painter
          WIN32_DEBUG_STRING (buffer);
 #endif
 
-         return 
+         return
             CreateBitmap (
                   IMPLICIT_CAST (cx)
                ,  IMPLICIT_CAST (cy)
@@ -141,7 +140,7 @@ namespace painter
             ,  centre                  (update_request_.centre                )
             ,  zoom                    (update_request_.zoom                  )
             ,  bitmap_size             (update_request_.bitmap_size           )
-            ,  bitmap                  (create_bitmap (                       
+            ,  bitmap                  (create_bitmap (
                   update_request_.bitmap_bits
                ,  update_request_.bitmap_planes
                ,  update_request_.bitmap_size
@@ -164,7 +163,7 @@ namespace painter
 
 //      typedef st::function<big_size const (f::folder const &)> TPropertyPickerPredicate;
       typedef big_size const (*TPropertyPickerPredicate)(f::folder const &);
-      
+
       big_size const size_picker (
          f::folder const & f
          )
@@ -208,7 +207,7 @@ namespace painter
             :  hdc               (hdc_             )
             ,  rendered_folders  (rendered_folders_)
             ,  transform         (transform_       )
-            ,  size              (size_            )    
+            ,  size              (size_            )
             ,  current_time      (current_time_    )
             ,  property_picker   (property_picker_ )
          {
@@ -232,7 +231,7 @@ namespace painter
          {
          }
 
-         ~background_painter () throw ()
+         ~background_painter () noexcept
          {
             shutdown_request.set ();
             thread.join (10000);
@@ -243,9 +242,9 @@ namespace painter
          w::event                                     new_frame_request       ;
 
       private:
-         w::thread::proc create_proc () throw ()
+         w::thread::proc create_proc () noexcept
          {
-            return st::bind (&background_painter::proc, this);
+            return s::bind (&background_painter::proc, this);
          }
 
          enum folder_operation_result
@@ -389,14 +388,14 @@ namespace painter
             }
 
             auto folder_count = folder->folder_count;
-   
+
             typedef std::pair<f::folder const *, big_size> sort_folder;
 
             s::vector<
                      sort_folder
                   ,  b::pool_allocator<sort_folder>
                > sorted_folders;
-            sorted_folders.resize (static_cast<s::size_t> (folder_count)); 
+            sorted_folders.resize (static_cast<s::size_t> (folder_count));
 
             s::transform (
                   folder->sub_folders.get ()
@@ -719,7 +718,7 @@ namespace painter
                   ,  false
                   ,  1000);
 
-               
+
                update_request::ptr request_ptr;
 
                switch (wait_result)
@@ -1015,7 +1014,7 @@ namespace painter
          ,  s::size_t const                        processed_folder_count
          ,  s::size_t const                        unprocessed_folder_count
          ,  select_property::type                  select_property
-         ,  RECT const &                           rect   
+         ,  RECT const &                           rect
          ,  int const                              bitmap_bits
          ,  int const                              bitmap_planes
          ,  coordinate const &                     centre
@@ -1052,7 +1051,7 @@ namespace painter
          ,  s::size_t const                        processed_folder_count
          ,  s::size_t const                        unprocessed_folder_count
          ,  select_property::type                  select_property
-         ,  RECT const &                           rect   
+         ,  RECT const &                           rect
          ,  coordinate const &                     centre
          ,  zoom_factor const &                    zoom
          )
@@ -1161,13 +1160,15 @@ namespace painter
          }
       }
 
-      rendered_folder const hit_test (
+      rendered_folder _empty_rendered_folder;
+
+      rendered_folder const & hit_test (
             POINT const & offset
          )
       {
          if (!update_response.get ())
          {
-            return rendered_folder ();
+            return _empty_rendered_folder;
          }
 
          rendered_folders const & current_rendered_folders = update_response->rendered_folders;
@@ -1183,7 +1184,7 @@ namespace painter
 
          if (find == end)
          {
-            return rendered_folder ();
+            return _empty_rendered_folder;
          }
 
          return *find;
@@ -1240,7 +1241,7 @@ namespace painter
       ,  s::size_t const                        processed_folder_count
       ,  s::size_t const                        unprocessed_folder_count
       ,  select_property::type                  select_property
-      ,  RECT const &                           rect   
+      ,  RECT const &                           rect
       ,  coordinate const &                     centre
       ,  zoom_factor const &                    zoom
       )
@@ -1269,7 +1270,7 @@ namespace painter
       ,  s::size_t const                        processed_folder_count
       ,  s::size_t const                        unprocessed_folder_count
       ,  select_property::type                  select_property
-      ,  RECT const &                           rect   
+      ,  RECT const &                           rect
       ,  coordinate const &                     centre
       ,  zoom_factor const &                    zoom
       )
@@ -1281,7 +1282,7 @@ namespace painter
          ,  processed_folder_count
          ,  unprocessed_folder_count
          ,  select_property
-         ,  rect   
+         ,  rect
          ,  centre
          ,  zoom
          );
@@ -1289,7 +1290,7 @@ namespace painter
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   rendered_folder const painter::hit_test (
+   rendered_folder const & painter::hit_test (
          POINT const & offset
       )
    {
