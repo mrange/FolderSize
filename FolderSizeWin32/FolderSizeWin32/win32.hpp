@@ -24,8 +24,6 @@
 #include <type_traits>
 #include <optional>
 // ----------------------------------------------------------------------------
-#include <boost/noncopyable.hpp>
-// ----------------------------------------------------------------------------
 #include "utility.hpp"
 // ----------------------------------------------------------------------------
 #define WIN32_INLINE inline
@@ -88,7 +86,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct handle : boost::noncopyable
+   struct handle : utility::refonly
    {
       explicit handle (HANDLE const hnd) noexcept;
       handle (handle const &&);
@@ -100,7 +98,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct dll : boost::noncopyable
+   struct dll : utility::refonly
    {
       explicit dll (LPCTSTR const dll_name) noexcept;
       dll (const dll &&);
@@ -113,7 +111,7 @@ namespace win32
 
    // -------------------------------------------------------------------------
    template<typename TFunctionPtr>
-   struct function_pointer : boost::noncopyable
+   struct function_pointer : utility::refonly
    {
       function_pointer (HMODULE module, LPCSTR const function_name)
          :  value (reinterpret_cast<TFunctionPtr> (GetProcAddress (module, function_name)))
@@ -131,7 +129,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct thread : boost::noncopyable
+   struct thread : utility::refonly
    {
       typedef std::function<unsigned int ()> proc;
       thread (
@@ -154,7 +152,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct find_file : boost::noncopyable
+   struct find_file : utility::refonly
    {
       explicit find_file (tstring const & path);
       find_file (find_file const &&);
@@ -221,7 +219,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct event : boost::noncopyable
+   struct event : utility::refonly
    {
       explicit event (event_type::type const event_type);
       event (event const &&);
@@ -233,7 +231,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct paint_device_context : boost::noncopyable
+   struct paint_device_context : utility::refonly
    {
       explicit paint_device_context (HWND const hwnd) noexcept;
       paint_device_context (paint_device_context const &&);
@@ -246,7 +244,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct window_device_context : boost::noncopyable
+   struct window_device_context : utility::refonly
    {
       explicit window_device_context (HWND const hwnd) noexcept;
       window_device_context (window_device_context const &&);
@@ -258,7 +256,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct device_context : boost::noncopyable
+   struct device_context : utility::refonly
    {
       explicit device_context (HDC const dc) noexcept;
       device_context (device_context const &&);
@@ -270,7 +268,7 @@ namespace win32
 
    // -------------------------------------------------------------------------
    template<typename TGdiObject>
-   struct gdi_object : boost::noncopyable
+   struct gdi_object : utility::refonly
    {
       explicit gdi_object (TGdiObject const obj) noexcept
          :  value (obj)
@@ -297,7 +295,7 @@ namespace win32
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct select_object : boost::noncopyable
+   struct select_object : utility::refonly
    {
       select_object (HDC const dc, HGDIOBJ obj) noexcept;
       select_object (select_object const &&);

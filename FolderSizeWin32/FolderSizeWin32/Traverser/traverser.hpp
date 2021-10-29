@@ -21,8 +21,6 @@
 #include <functional>
 #include <string>
 // ----------------------------------------------------------------------------
-#include <boost/noncopyable.hpp>
-// ----------------------------------------------------------------------------
 #include "../folder.hpp"
 #include "../win32.hpp"
 // ----------------------------------------------------------------------------
@@ -37,7 +35,7 @@ namespace traverser
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct traverser : boost::noncopyable
+   struct traverser : utility::refonly
    {
       traverser (
             folder_state_changed_callback const &  folder_state_changed

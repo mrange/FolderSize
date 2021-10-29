@@ -57,14 +57,12 @@ typedef unsigned __int64 big_size   ;
 // ----------------------------------------------------------------------------
 #pragma warning (push)
 #  pragma warning (disable: 4127) // conditional expression is constant
-#  include <boost/assert.hpp>
-#  include <boost/noncopyable.hpp>
 #  include <boost/pool/object_pool.hpp>
 #  include <boost/pool/pool.hpp>
 #  include <boost/pool/pool_alloc.hpp>
 #  include <boost/scoped_array.hpp>
 #pragma warning (pop)
 // ----------------------------------------------------------------------------
-#define FS_ASSERT BOOST_ASSERT
-#define FS_STATIC_ASSERT BOOST_STATIC_ASSERT
+#define FS_ASSERT assert
+#define FS_STATIC_ASSERT static_assert
 // ----------------------------------------------------------------------------

@@ -28,9 +28,6 @@
 #include <iterator>
 #include <optional>
 // ----------------------------------------------------------------------------
-#include <boost/assert.hpp>
-#include <boost/noncopyable.hpp>
-// ----------------------------------------------------------------------------
 #include "../Painter/painter.hpp"
 #include "../theme.hpp"
 #include "../Traverser/traverser.hpp"
@@ -567,7 +564,7 @@ namespace main_window
             TCHAR buffer[string_buffer_size] = {0};
             _stprintf_s (
                   buffer
-               ,  _T ("%16s : 0x%08X, 0x%04X, 0x%08X, 0x%08X")
+               ,  _T ("%16s : %p, 0x%04X, 0x%08X, 0x%08X")
                ,  prelude ? prelude : _T ("WM")
                ,  hwnd
                ,  message

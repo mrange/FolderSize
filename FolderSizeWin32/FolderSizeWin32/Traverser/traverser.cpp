@@ -22,7 +22,6 @@
 #include <string>
 #include <vector>
 // ----------------------------------------------------------------------------
-#include <boost/noncopyable.hpp>
 #include <boost/pool/object_pool.hpp>
 #include <boost/pool/pool.hpp>
 #include <boost/pool/pool_alloc.hpp>
@@ -45,7 +44,7 @@ namespace traverser
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
-   struct traverser::impl : b::noncopyable
+   struct traverser::impl : utility::refonly
    {
       struct job
       {

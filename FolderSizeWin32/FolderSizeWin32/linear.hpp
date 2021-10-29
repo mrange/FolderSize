@@ -19,8 +19,6 @@
 #include <cstddef>
 #include <type_traits>
 // ----------------------------------------------------------------------------
-#include <boost/assert.hpp>
-// ----------------------------------------------------------------------------
 #define LINEAR_INLINE __forceinline
 // ----------------------------------------------------------------------------
 namespace linear
@@ -278,26 +276,6 @@ namespace linear
 
       value_type  values[no_of_values];
    };
-   // -------------------------------------------------------------------------
-
-   // -------------------------------------------------------------------------
-   /* TODO: Remove
-   template<typename value_type_, std::size_t rows_, std::size_t columns_>
-   matrix<value_type_, columns_, rows_> const transpose_matrix (
-         matrix<value_type_, rows_, columns_> const & value
-      ) noexcept
-   {
-      using m = matrix<value_type_, columns_, rows_>;
-      m result (no_initialize::value);
-
-      for (auto iter = 0; iter < m::no_of_values; ++iter)
-      {
-         result.values[iter] = valuvalues[iter / 3 + (iter % 3) * columns];
-      }
-
-      return result;
-   }
-   */
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------

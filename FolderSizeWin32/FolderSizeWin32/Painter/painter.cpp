@@ -55,7 +55,7 @@ namespace painter
 
       typedef s::vector<rendered_folder> rendered_folders;
 
-      struct update_request : boost::noncopyable
+      struct update_request : utility::refonly
       {
          typedef s::unique_ptr<update_request> ptr;
 
@@ -128,7 +128,7 @@ namespace painter
                ,  nullptr);
       }
 
-      struct update_response : boost::noncopyable
+      struct update_response : utility::refonly
       {
          typedef s::unique_ptr<update_response> ptr;
 
@@ -194,7 +194,7 @@ namespace painter
       }
 
 
-      struct folder_traverser_context : b::noncopyable
+      struct folder_traverser_context : utility::refonly
       {
          folder_traverser_context (
                HDC const                           hdc_

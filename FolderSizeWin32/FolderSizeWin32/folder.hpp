@@ -20,7 +20,6 @@
 // ----------------------------------------------------------------------------
 #include <string>
 // ----------------------------------------------------------------------------
-#include <boost/noncopyable.hpp>
 #include <boost/scoped_array.hpp>
 // ----------------------------------------------------------------------------
 #include "win32.hpp"
@@ -31,7 +30,7 @@ namespace folder
    typedef std::basic_string<TCHAR> tstring;
    // -------------------------------------------------------------------------
    __declspec (align (8))
-   struct folder : boost::noncopyable
+   struct folder : utility::refonly
    {
       typedef boost::scoped_array<folder *> folder_array;
 

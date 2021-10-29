@@ -33,6 +33,16 @@
 namespace utility
 {
    // -------------------------------------------------------------------------
+   struct refonly
+   {
+      refonly ()                            = default;
+      refonly (refonly const &)             = delete;
+      refonly (refonly &&)                  = delete;
+
+      refonly& operator= (refonly const &)  = delete;
+      refonly& operator= (refonly &&)       = delete;
+   };
+   // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
    template<typename TCastToType, typename TValueType>
