@@ -57,7 +57,7 @@ namespace painter
 
       struct update_request : boost::noncopyable
       {
-         typedef s::auto_ptr<update_request> ptr;
+         typedef s::unique_ptr<update_request> ptr;
 
          update_request (
                folder::folder const * const           root_
@@ -130,7 +130,7 @@ namespace painter
 
       struct update_response : boost::noncopyable
       {
-         typedef s::auto_ptr<update_response> ptr;
+         typedef s::unique_ptr<update_response> ptr;
 
          update_response (
                update_request    &  update_request_
@@ -1060,7 +1060,7 @@ namespace painter
             auto response = background_painter.update_response_value.reset ();
             if (response.get ())
             {
-               update_response = response;
+               update_response = std::move(response);
             }
          }
 

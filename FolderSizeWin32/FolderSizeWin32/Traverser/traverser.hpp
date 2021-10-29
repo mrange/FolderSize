@@ -57,7 +57,7 @@ namespace traverser
    private:
       struct impl;
 
-      std::auto_ptr<impl> const m_impl;
+      std::unique_ptr<impl> const m_impl;
    };
    // -------------------------------------------------------------------------
 

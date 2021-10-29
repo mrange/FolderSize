@@ -22,8 +22,6 @@
 #include <string>
 #include <vector>
 // ----------------------------------------------------------------------------
-#include <boost/optional.hpp>
-// ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
 #include <boost/pool/object_pool.hpp>
 #include <boost/pool/pool.hpp>
@@ -80,7 +78,7 @@ namespace traverser
       std::size_t volatile                 processed_folder_count     ;
       std::size_t volatile                 unprocessed_folder_count   ;
 
-      boost::optional<DWORD>               send_next_update           ;
+      s::optional<DWORD>                   send_next_update           ;
 
       s::deque<job> const     create_initial_queue (job const & initial_job)
       {

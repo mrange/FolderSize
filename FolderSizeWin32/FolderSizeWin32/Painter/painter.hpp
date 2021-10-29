@@ -107,7 +107,7 @@ namespace painter
    private:
       struct impl;
 
-      std::auto_ptr<impl> m_impl;
+      std::unique_ptr<impl> m_impl;
    };
    // -------------------------------------------------------------------------
 }

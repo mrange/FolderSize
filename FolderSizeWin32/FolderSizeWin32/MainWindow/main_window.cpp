@@ -30,7 +30,6 @@
 // ----------------------------------------------------------------------------
 #include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/optional.hpp>
 // ----------------------------------------------------------------------------
 #include "../Painter/painter.hpp"
 #include "../theme.hpp"
@@ -166,15 +165,15 @@ namespace main_window
       // ----------------------------------------------------------------------
       struct state
       {
-         typedef s::auto_ptr<state> ptr               ;
+         typedef s::unique_ptr<state> ptr                 ;
 
-         vt::vector                 centre            ;
-         vt::vector                 zoom              ;
+         vt::vector                   centre              ;
+         vt::vector                   zoom                ;
 
-         t::traverser               traverser         ;
-         p::painter                 painter           ;
+         t::traverser                 traverser           ;
+         p::painter                   painter             ;
 
-         b::optional<POINT>         mouse_current_coord  ;
+         s::optional<POINT>           mouse_current_coord ;
 
          state (
                HWND const           main_hwnd
@@ -1130,7 +1129,7 @@ namespace main_window
             {
                if (s_state.get ())
                {
-                  s_state->mouse_current_coord = boost::optional<POINT> ();
+                  s_state->mouse_current_coord = s::optional<POINT> ();
                }
             }
             break;

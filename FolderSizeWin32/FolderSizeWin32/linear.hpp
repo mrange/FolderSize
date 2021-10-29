@@ -47,7 +47,7 @@ namespace linear
       };
 
       FS_STATIC_ASSERT (rows > 0);
-      FS_STATIC_ASSERT (std::is_pod<value_type>::value);
+      FS_STATIC_ASSERT (std::is_trivially_copyable<value_type>::value);
 
       typedef vector<value_type, rows> type;
 
@@ -257,7 +257,7 @@ namespace linear
 
       FS_STATIC_ASSERT (columns  > 0);
       FS_STATIC_ASSERT (rows     > 0);
-      FS_STATIC_ASSERT (std::is_pod<value_type>::value);
+      FS_STATIC_ASSERT (std::is_trivially_copyable<value_type>::value);
 
       typedef matrix<value_type, rows, columns> type;
 
@@ -281,20 +281,23 @@ namespace linear
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
+   /* TODO: Remove
    template<typename value_type_, std::size_t rows_, std::size_t columns_>
    matrix<value_type_, columns_, rows_> const transpose_matrix (
          matrix<value_type_, rows_, columns_> const & value
       ) noexcept
    {
-      matrix<value_type_, columns_, rows_> result (no_initialize::value);
+      using m = matrix<value_type_, columns_, rows_>;
+      m result (no_initialize::value);
 
-      for (auto iter = 0; iter < no_of_values; ++iter)
+      for (auto iter = 0; iter < m::no_of_values; ++iter)
       {
-         result.values[iter] = values[iter / 3 + (iter % 3) * columns];
+         result.values[iter] = valuvalues[iter / 3 + (iter % 3) * columns];
       }
 
       return result;
    }
+   */
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------

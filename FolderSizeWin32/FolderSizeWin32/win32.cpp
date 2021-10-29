@@ -602,7 +602,7 @@ namespace win32
          ;
    }
 
-   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) noexcept
+   s::optional<RECT> const intersect (RECT const & left, RECT const & right) noexcept
    {
       RECT result = {0};
 
@@ -616,7 +616,7 @@ namespace win32
       }
       else
       {
-         return boost::optional<RECT> ();
+         return s::optional<RECT> ();
       }
    }
    // -------------------------------------------------------------------------

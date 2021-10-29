@@ -22,9 +22,9 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <optional>
 // ----------------------------------------------------------------------------
 #include <boost/noncopyable.hpp>
-#include <boost/optional.hpp>
 // ----------------------------------------------------------------------------
 #include "utility.hpp"
 // ----------------------------------------------------------------------------
@@ -166,7 +166,7 @@ namespace win32
       big_size const get_size () const noexcept;
       FILETIME const get_creation_time () const noexcept;
       FILETIME const get_last_access_time () const noexcept;
-      FILETIME const find_file::get_last_write_time () const noexcept;
+      FILETIME const get_last_write_time () const noexcept;
       DWORD const    get_reparse_point_tag () const noexcept;
       DWORD const    get_file_attributes () const noexcept;
       LPCTSTR const  get_name () const noexcept;
@@ -186,7 +186,7 @@ namespace win32
       {
       }
 
-      std::auto_ptr<ValueType> reset (ValueType * const ptr = nullptr) noexcept
+      std::unique_ptr<ValueType> reset (ValueType * const ptr = nullptr) noexcept
       {
          auto pointer = m_ptr;
 
@@ -200,7 +200,7 @@ namespace win32
             pointer = m_ptr;
          }
 
-         return std::auto_ptr<ValueType> (reinterpret_cast<ValueType*> (pointer));
+         return std::unique_ptr<ValueType> (reinterpret_cast<ValueType*> (pointer));
       }
 
    private:
@@ -349,7 +349,7 @@ namespace win32
    // -------------------------------------------------------------------------
    RECT const  zero_rect ();
    bool const is_inside (RECT const & rect, POINT const & point) noexcept;
-   boost::optional<RECT> const intersect (RECT const & left, RECT const & right) noexcept;
+   std::optional<RECT> const intersect (RECT const & left, RECT const & right) noexcept;
    // -------------------------------------------------------------------------
 
    // -------------------------------------------------------------------------
@@ -368,7 +368,7 @@ namespace win32
       struct atomic_impl<TValue, 8>
       {
          static_assert (
-            std::is_pod<TValue>::value,
+            std::is_trivially_copyable<TValue>::value,
             "TValue must be pod-type"
             );
 
@@ -423,7 +423,7 @@ namespace win32
       struct atomic_impl<TValue, 4>
       {
          static_assert (
-            std::is_pod<TValue>::value,
+            std::is_trivially_copyable<TValue>::value,
             "TValue must be pod-type"
             );
 
@@ -478,7 +478,7 @@ namespace win32
    struct atomic
    {
       static_assert (
-         std::is_pod<TValue>::value,
+         std::is_trivially_copyable<TValue>::value,
          "TValue must be pod-type"
          );
 
